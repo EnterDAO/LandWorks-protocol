@@ -1,0 +1,19 @@
+{
+  "name": "landworks-contracts",
+  "version": "1.0.0",
+  "description": "LandWorks smart contracts",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EnterDAO/LandWorks-contracts.git"
+  },
+  "author": "Daniel Ivanov <daniel.k.ivanov95@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/EnterDAO/LandWorks-contracts/issues"
+  },
+  "homepage": "https://github.com/EnterDAO/LandWorks-contracts#readme"
+}
