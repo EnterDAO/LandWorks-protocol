@@ -15,5 +15,16 @@
   "bugs": {
     "url": "https://github.com/EnterDAO/LandWorks-contracts/issues"
   },
-  "homepage": "https://github.com/EnterDAO/LandWorks-contracts#readme"
+  "homepage": "https://github.com/EnterDAO/LandWorks-contracts#readme",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.4.7",
+    "hardhat": "^2.6.4"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.2"
+  }
 }
