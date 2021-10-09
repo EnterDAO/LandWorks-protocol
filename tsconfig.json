@@ -7,6 +7,9 @@
         "outDir": "dist",
         "resolveJsonModule": true
     },
+    "exclude": [
+        "contracts"
+    ],
     "include": [
         "./scripts",
         "./test"

@@ -27,13 +27,22 @@ npx hardhat compile
 
 ### Deployment
 Before running any `npx hardhat` scripts, you need to set the following environment variables
-in [hardhat config](./hardhat.config.js) 
-TODO 
+in [hardhat config](./hardhat.config.ts) 
+
+```markdown
+YOUR-INFURA-API-KEY
+YOUR-ETHERSCAN-API-KEY
+```
 
 * Deploys all the facets
 * Deploys the LandWorks Diamond with all the facets as diamond cuts
+* Inits the LandWorks Diamond with the provided `owner` address
+* Verifies all deployed contracts in Etherscan
 
-TODO bash script
+```shell
+npx hardhat deploy \
+    --network <network name> 
+```
 
 ### Tests
 
