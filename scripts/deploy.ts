@@ -56,7 +56,7 @@ async function deploy() {
     await hardhat.run('verify:verify', {
         address: diamond.address,
         constructorArguments: [
-            Diamond.getDiamondCut([cutFacet, loupeFacet, ownershipFacet]),
+            Diamond.getAsAddCuts([cutFacet, loupeFacet, ownershipFacet]),
             deployerAddress
         ]
     });

@@ -1,4 +1,5 @@
 import {Contract} from "ethers";
+import {ethers} from "hardhat";
 
 /**
  * Utility library for interacting with Diamonds
@@ -30,7 +31,7 @@ export namespace Diamond {
      * Computes all selectors for the provided contracts and returns them as {@link FacetCutAction} Add selectors
      * @param facets
      */
-    export function getDiamondCut (facets: Array<Contract>) {
+    export function getAsAddCuts (facets: Array<Contract>) {
         const diamondCut = [];
 
         for (const facet of facets) {
@@ -41,6 +42,15 @@ export namespace Diamond {
             ]);
         }
         return diamondCut;
+    }
+
+    /**
+     * Returns an instance of the Diamond contract with the provided facet ABI
+     * @param diamond
+     * @param facetName
+     */
+    export async function asFacet (diamond:Contract, facetName:string):Promise<Contract> {
+        return await ethers.getContractAt(facetName, diamond.address);
     }
 
 }

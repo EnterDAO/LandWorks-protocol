@@ -27,7 +27,7 @@ export namespace Deployer {
      * @param owner the initial owner of the diamond
      */
     export async function deployDiamond (name: string, facets: Array<Contract>, owner: string): Promise<Contract> {
-        const diamondCut = Diamond.getDiamondCut(facets);
+        const diamondCut = Diamond.getAsAddCuts(facets);
         const diamondFactory: ContractFactory = await ethers.getContractFactory(name);
         const deployedDiamond: Contract = await diamondFactory.deploy(diamondCut, owner);
         await deployedDiamond.deployed();

@@ -26,14 +26,17 @@ npx hardhat compile
 ```
 
 ### Deployment
-Before running any `npx hardhat` scripts, you need to set the following environment variables
-in [hardhat config](./hardhat.config.ts) 
+
+**Prerequisite**
+
+Before running the deploy `npx hardhat` script, you need to create and populate the `config.ts` file. You can use the `config.sample.ts` file and populate the following variables: 
 
 ```markdown
 YOUR-INFURA-API-KEY
 YOUR-ETHERSCAN-API-KEY
 ```
 
+**Deployment Script**
 * Deploys all the facets
 * Deploys the LandWorks Diamond with all the facets as diamond cuts
 * Inits the LandWorks Diamond with the provided `owner` address

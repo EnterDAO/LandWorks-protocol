@@ -2,19 +2,19 @@
 pragma solidity 0.8.9;
 
 import "./libraries/LibDiamond.sol";
+import "./libraries/LibOwnership.sol";
 import "./interfaces/IDiamondCut.sol";
 import "./interfaces/IDiamondLoupe.sol";
 import "./interfaces/IERC165.sol";
 import "./interfaces/IERC173.sol";
-
 
 contract LandWorks {
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner) payable {
         require(_owner != address(0), "owner must not be 0x0");
 
+        LibOwnership.setContractOwner(_owner);
         LibDiamond.diamondCut(_diamondCut, address(0), new bytes(0));
-        LibDiamond.setContractOwner(_owner);
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
@@ -26,12 +26,8 @@ contract LandWorks {
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {
-        LibDiamond.DiamondStorage storage ds;
-        bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
-        // get diamond storage
-        assembly {
-            ds.slot := position
-        }
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+
         // get facet from function selector
         address facet = ds.selectorToFacetAndPosition[msg.sig].facetAddress;
         require(facet != address(0), "Diamond: Function does not exist");

@@ -4,7 +4,8 @@ pragma solidity 0.8.9;
 import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
 
 library LibDiamond {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
+
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("com.enterdao.landworks.storage");
 
     struct FacetAddressAndPosition {
         address facetAddress;
@@ -36,23 +37,6 @@ library LibDiamond {
         assembly {
             ds.slot := position
         }
-    }
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    function setContractOwner(address _newOwner) internal {
-        DiamondStorage storage ds = diamondStorage();
-        address previousOwner = ds.contractOwner;
-        ds.contractOwner = _newOwner;
-        emit OwnershipTransferred(previousOwner, _newOwner);
-    }
-
-    function contractOwner() internal view returns (address contractOwner_) {
-        contractOwner_ = diamondStorage().contractOwner;
-    }
-
-    function enforceIsContractOwner() internal view {
-        require(msg.sender == diamondStorage().contractOwner, "LibDiamond: Must be contract owner");
     }
 
     event DiamondCut(IDiamondCut.FacetCut[] _diamondCut, address _init, bytes _calldata);
