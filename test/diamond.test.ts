@@ -7,27 +7,36 @@ import {Deployer} from "../utils/deployer";
 import FacetCutAction = Diamond.FacetCutAction;
 
 describe('LandWorks', function () {
-    let loupeFacet: Contract, cutFacet: Contract, ownershipFacet: Contract;
-    let diamond: Contract, loupe: DiamondLoupeFacet, cut: DiamondCutFacet, ownership: OwnershipFacet;
+    let loupe: Contract, cut: Contract, ownership: Contract, diamond: Contract;
+    let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet;
     let owner: Signer, nonOwner: Signer;
+    let snapshotId: any;
 
     before(async () => {
         const signers = await ethers.getSigners();
         owner = signers[0];
         nonOwner = signers[1];
 
-        cutFacet = await Deployer.deployContract('DiamondCutFacet');
-        loupeFacet = await Deployer.deployContract('DiamondLoupeFacet');
-        ownershipFacet = await Deployer.deployContract('OwnershipFacet');
+        cut = await Deployer.deployContract('DiamondCutFacet');
+        loupe = await Deployer.deployContract('DiamondLoupeFacet');
+        ownership = await Deployer.deployContract('OwnershipFacet');
         diamond = await Deployer.deployDiamond(
             'LandWorks',
-            [cutFacet, loupeFacet, ownershipFacet],
+            [cut, loupe, ownership],
             await owner.getAddress(),
         );
 
-        loupe = (await Diamond.asFacet(diamond, 'DiamondLoupeFacet')) as DiamondLoupeFacet;
-        cut = (await Diamond.asFacet(diamond, 'DiamondCutFacet')) as DiamondCutFacet;
-        ownership = (await Diamond.asFacet(diamond, 'OwnershipFacet')) as OwnershipFacet;
+        loupeFacet = (await Diamond.asFacet(diamond, 'DiamondLoupeFacet')) as DiamondLoupeFacet;
+        cutFacet = (await Diamond.asFacet(diamond, 'DiamondCutFacet')) as DiamondCutFacet;
+        ownershipFacet = (await Diamond.asFacet(diamond, 'OwnershipFacet')) as OwnershipFacet;
+    });
+
+    beforeEach(async function () {
+        snapshotId = await ethers.provider.send('evm_snapshot', []);
+    });
+
+    afterEach(async function () {
+        await ethers.provider.send('evm_revert', [snapshotId]);
     });
 
     describe('General Diamond Tests', () => {
@@ -45,63 +54,56 @@ describe('LandWorks', function () {
         });
 
         it('should have 3 facets', async () => {
-            const actualFacets = await loupe.facetAddresses();
+            const actualFacets = await loupeFacet.facetAddresses();
             expect(actualFacets.length).to.be.equal(3);
-            expect(actualFacets).to.eql([cutFacet.address, loupeFacet.address, ownershipFacet.address]);
+            expect(actualFacets).to.eql([cut.address, loupe.address, ownership.address]);
         });
 
         it('has correct function selectors linked to facet', async function () {
-            const actualCutSelectors: Array<string> = Diamond.getSelectorsFor(cutFacet);
-            expect(await loupe.facetFunctionSelectors(cutFacet.address)).to.deep.equal(actualCutSelectors);
+            const actualCutSelectors: Array<string> = Diamond.getSelectorsFor(cut);
+            expect(await loupeFacet.facetFunctionSelectors(cut.address)).to.deep.equal(actualCutSelectors);
 
-            const actualLoupeSelectors = Diamond.getSelectorsFor(loupeFacet);
-            expect(await loupe.facetFunctionSelectors(loupeFacet.address)).to.deep.equal(actualLoupeSelectors);
+            const actualLoupeSelectors = Diamond.getSelectorsFor(loupe);
+            expect(await loupeFacet.facetFunctionSelectors(loupe.address)).to.deep.equal(actualLoupeSelectors);
 
-            const actualOwnerSelectors = Diamond.getSelectorsFor(ownershipFacet);
-            expect(await loupe.facetFunctionSelectors(ownershipFacet.address)).to.deep.equal(actualOwnerSelectors);
+            const actualOwnerSelectors = Diamond.getSelectorsFor(ownership);
+            expect(await loupeFacet.facetFunctionSelectors(ownership.address)).to.deep.equal(actualOwnerSelectors);
         });
 
         it('associates selectors correctly to facets', async function () {
-            for (const sel of Diamond.getSelectorsFor(loupeFacet)) {
-                expect(await loupe.facetAddress(sel)).to.be.equal(loupeFacet.address);
+            for (const sel of Diamond.getSelectorsFor(loupe)) {
+                expect(await loupeFacet.facetAddress(sel)).to.be.equal(loupe.address);
             }
 
-            for (const sel of Diamond.getSelectorsFor(cutFacet)) {
-                expect(await loupe.facetAddress(sel)).to.be.equal(cutFacet.address);
+            for (const sel of Diamond.getSelectorsFor(cut)) {
+                expect(await loupeFacet.facetAddress(sel)).to.be.equal(cut.address);
             }
 
-            for (const sel of Diamond.getSelectorsFor(ownershipFacet)) {
-                expect(await loupe.facetAddress(sel)).to.be.equal(ownershipFacet.address);
+            for (const sel of Diamond.getSelectorsFor(ownership)) {
+                expect(await loupeFacet.facetAddress(sel)).to.be.equal(ownership.address);
             }
         });
 
         it('returns correct response when facets() is called', async function () {
-            const facets = await loupe.facets();
+            const facets = await loupeFacet.facets();
 
-            expect(facets[0].facetAddress).to.equal(cutFacet.address);
-            expect(facets[0].functionSelectors).to.eql(Diamond.getSelectorsFor(cutFacet));
+            expect(facets[0].facetAddress).to.equal(cut.address);
+            expect(facets[0].functionSelectors).to.eql(Diamond.getSelectorsFor(cut));
 
-            expect(facets[1].facetAddress).to.equal(loupeFacet.address);
-            expect(facets[1].functionSelectors).to.eql(Diamond.getSelectorsFor(loupeFacet));
+            expect(facets[1].facetAddress).to.equal(loupe.address);
+            expect(facets[1].functionSelectors).to.eql(Diamond.getSelectorsFor(loupe));
 
-            expect(facets[2].facetAddress).to.equal(ownershipFacet.address);
-            expect(facets[2].functionSelectors).to.eql(Diamond.getSelectorsFor(ownershipFacet));
+            expect(facets[2].facetAddress).to.equal(ownership.address);
+            expect(facets[2].functionSelectors).to.eql(Diamond.getSelectorsFor(ownership));
         });
     });
 
     describe('DiamondCut Facet', async () => {
         let test1Facet: Contract, test2Facet: Contract;
-        let snapshotId: any;
 
         beforeEach(async function () {
-            snapshotId = await ethers.provider.send('evm_snapshot', []);
-
             test1Facet = await Deployer.deployContract('Test1Facet');
             test2Facet = await Deployer.deployContract('Test2Facet');
-        });
-
-        afterEach(async function () {
-            await ethers.provider.send('evm_revert', [snapshotId]);
         });
 
         it('should fail if not called by contract owner', async function () {
@@ -112,7 +114,7 @@ describe('LandWorks', function () {
             }];
 
             await expect(
-                cut.connect(nonOwner).diamondCut(_diamondCut, ethers.constants.AddressZero, "0x")
+                cutFacet.connect(nonOwner).diamondCut(_diamondCut, ethers.constants.AddressZero, "0x")
             ).to.be.revertedWith('Must be contract owner');
         });
 
@@ -122,9 +124,9 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: Diamond.getSelectorsFor(test1Facet),
             }];
-            await expect(cut.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
+            await expect(cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
 
-            const facets = await loupe.facets();
+            const facets = await loupeFacet.facets();
             expect(facets[3].facetAddress).to.eql(test1Facet.address);
             expect(facets[3].functionSelectors).to.eql(Diamond.getSelectorsFor(test1Facet));
 
@@ -138,7 +140,7 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: Diamond.getSelectorsFor(test1Facet),
             }];
-            await cut.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
+            await cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
 
             const replaceTest1WithTest2Facet = [{
                 facetAddress: test2Facet.address,
@@ -146,7 +148,7 @@ describe('LandWorks', function () {
                 functionSelectors: Diamond.getSelectorsFor(test2Facet),
             }];
 
-            await expect(cut.connect(owner).diamondCut(replaceTest1WithTest2Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
+            await expect(cutFacet.connect(owner).diamondCut(replaceTest1WithTest2Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
 
             const test2 = (await Diamond.asFacet(diamond, 'Test2Facet')) as Test2Facet;
             expect(await test2.test1Func1()).to.be.equal(2);
@@ -158,7 +160,7 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: Diamond.getSelectorsFor(test1Facet),
             }];
-            await cut.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
+            await cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
 
             const removeTest1Func = [{
                 facetAddress: ethers.constants.AddressZero,
@@ -166,7 +168,7 @@ describe('LandWorks', function () {
                 functionSelectors: [test1Facet.interface.getSighash('test1Func1()')],
             }];
 
-            await expect(cut.connect(owner).diamondCut(removeTest1Func, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
+            await expect(cutFacet.connect(owner).diamondCut(removeTest1Func, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
 
             const test1 = (await Diamond.asFacet(diamond, 'Test1Facet')) as Test1Facet;
             await expect(test1.test1Func1()).to.be.revertedWith('Diamond: Function does not exist');
@@ -176,24 +178,96 @@ describe('LandWorks', function () {
     describe('Ownership Facet', async () => {
 
         it('should return owner', async function () {
-            expect(await ownership.owner()).to.equal(await owner.getAddress());
+            expect(await ownershipFacet.owner()).to.equal(await owner.getAddress());
         });
 
         it('should revert if transferOwnership not called by owner', async function () {
-            await expect(ownership.connect(nonOwner).transferOwnership(await nonOwner.getAddress()))
+            await expect(ownershipFacet.connect(nonOwner).transferOwnership(await nonOwner.getAddress()))
                 .to.be.revertedWith('Must be contract owner');
         });
 
         it('should revert if transferOwnership called with same address', async function () {
-            await expect(ownership.connect(owner).transferOwnership(await owner.getAddress()))
+            await expect(ownershipFacet.connect(owner).transferOwnership(await owner.getAddress()))
                 .to.be.revertedWith('Previous owner and new owner must be different');
         });
 
         it('should allow transferOwnership if called by owner', async function () {
-            await expect(ownership.connect(owner).transferOwnership(await nonOwner.getAddress()))
+            await expect(ownershipFacet.connect(owner).transferOwnership(await nonOwner.getAddress()))
                 .to.not.be.reverted;
 
-            expect(await ownership.owner()).to.equal(await nonOwner.getAddress());
+            expect(await ownershipFacet.owner()).to.equal(await nonOwner.getAddress());
+        });
+    });
+
+    /**
+     * The diamond example comes with 8 function selectors
+     * [cut, loupe, loupe, loupe, loupe, erc165, transferOwnership, owner]
+     * This bug manifests if you delete something from the final
+     * selector slot array, so we'll fill up a new slot with
+     * things, and have a fresh row to work with.
+     */
+    describe('Cache Bug', async () => {
+        const ownerSel = '0x8da5cb5b'
+
+        const sel0 = '0x19e3b533' // fills up slot 1
+        const sel1 = '0x0716c2ae' // fills up slot 1
+        const sel2 = '0x11046047' // fills up slot 1
+        const sel3 = '0xcf3bbe18' // fills up slot 1
+        const sel4 = '0x24c1d5a7' // fills up slot 1
+        const sel5 = '0xcbb835f6' // fills up slot 1
+        const sel6 = '0xcbb835f7' // fills up slot 1
+        const sel7 = '0xcbb835f8' // fills up slot 2
+        const sel8 = '0xcbb835f9' // fills up slot 2
+        const sel9 = '0xcbb835fa' // fills up slot 2
+        const sel10 = '0xcbb835fb' // fills up slot 2
+        const selectors = [
+            sel0,
+            sel1,
+            sel2,
+            sel3,
+            sel4,
+            sel5,
+            sel6,
+            sel7,
+            sel8,
+            sel9,
+            sel10
+        ];
+
+        it('should not exhibit the cache bug', async () => {
+            const test1Facet = await Deployer.deployContract('Test1Facet');
+            const addTest1Facet = [{
+                facetAddress: test1Facet.address,
+                action: FacetCutAction.Add,
+                functionSelectors: selectors
+            }];
+            await cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
+
+            // Remove the function selectors
+            const selectorsToRemove = [ownerSel, sel5, sel10];
+            const removeSelectorsFacet = [{
+                facetAddress: ethers.constants.AddressZero,
+                action: FacetCutAction.Remove,
+                functionSelectors: selectorsToRemove
+            }];
+            await cutFacet.connect(owner).diamondCut(removeSelectorsFacet, ethers.constants.AddressZero, '0x');
+
+            // Get the test1Facet's registered functions
+            let actualSelectors = await loupeFacet.facetFunctionSelectors(test1Facet.address);
+            // Check individual correctness
+            expect(actualSelectors).to.include(sel0, 'Does not contain sel0');
+            expect(actualSelectors).to.include(sel1, 'Does not contain sel1');
+            expect(actualSelectors).to.include(sel2, 'Does not contain sel2');
+            expect(actualSelectors).to.include(sel3, 'Does not contain sel3');
+            expect(actualSelectors).to.include(sel4, 'Does not contain sel4');
+            expect(actualSelectors).to.include(sel6, 'Does not contain sel6');
+            expect(actualSelectors).to.include(sel7, 'Does not contain sel7');
+            expect(actualSelectors).to.include(sel8, 'Does not contain sel8');
+            expect(actualSelectors).to.include(sel9, 'Does not contain sel9');
+
+            expect(actualSelectors).to.not.include(ownerSel, 'Contains ownerSel');
+            expect(actualSelectors).to.not.include(sel10, 'Contains sel10');
+            expect(actualSelectors).to.not.include(sel5, 'Contains sel5');
         });
     });
 });
