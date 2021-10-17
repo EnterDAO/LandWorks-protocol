@@ -25,5 +25,3 @@ library LibOwnership {
         require(msg.sender == LibDiamond.diamondStorage().contractOwner, "Must be contract owner");
     }
 }
-
-

@@ -33,6 +33,7 @@
     "hardhat-abi-exporter": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.3",
     "hardhat-typechain": "^0.3.3",
+    "land": "github:decentraland/land#7cd58341007d1d8884a22e16a726e133405b3bac",
     "solidity-coverage": "^0.7.12",
     "ts-node": "^10.2.1",
     "typechain": "^3.0.0",
