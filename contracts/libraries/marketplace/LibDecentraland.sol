@@ -6,10 +6,10 @@ library LibDecentraland {
         keccak256("com.enterdao.landworks.marketplace.decentraland");
 
     struct DecentralandStorage {
-        // Stores the operators for each eNft's rentals
-        mapping(uint256 => mapping(uint256 => address)) operators;
         // Administrative Operator to Estate/LANDs, when no rents are active
         address administrativeOperator;
+        // Stores the operators for each eNft's rentals
+        mapping(uint256 => mapping(uint256 => address)) operators;
     }
 
     function decentralandStorage()
@@ -35,5 +35,17 @@ library LibDecentraland {
         internal
     {
         decentralandStorage().administrativeOperator = _administrativeOperator;
+    }
+
+    function administrativeOperator() internal view returns (address) {
+        return decentralandStorage().administrativeOperator;
+    }
+
+    function operatorFor(uint256 _eNft, uint256 _rentId)
+        internal
+        view
+        returns (address)
+    {
+        return decentralandStorage().operators[_eNft][_rentId];
     }
 }

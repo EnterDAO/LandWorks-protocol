@@ -17,10 +17,10 @@ library LibReward {
         mapping(uint256 => mapping(address => Reward)) loanRewards;
         // Protocol fees
         mapping(address => Reward) fees;
-        // Protocol fee precision
-        uint256 feePrecision;
         // Protocol fee percentage
         uint256 feePercentage;
+        // Protocol fee precision
+        uint256 feePrecision;
     }
 
     function rewardStorage() internal pure returns (RewardStorage storage rs) {
@@ -77,5 +77,29 @@ library LibReward {
 
     function setFeePrecision(uint256 _feePrecision) internal {
         rewardStorage().feePrecision = _feePrecision;
+    }
+
+    function protocolFeeFor(address _token)
+        internal
+        view
+        returns (Reward memory)
+    {
+        return rewardStorage().fees[_token];
+    }
+
+    function loanRewardFor(uint256 _eNft, address _token)
+        internal
+        view
+        returns (Reward memory)
+    {
+        return rewardStorage().loanRewards[_eNft][_token];
+    }
+
+    function feePercentage() internal view returns (uint256) {
+        return rewardStorage().feePercentage;
+    }
+
+    function feePrecision() internal view returns (uint256) {
+        return rewardStorage().feePrecision;
     }
 }

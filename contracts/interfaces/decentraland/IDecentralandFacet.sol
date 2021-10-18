@@ -26,4 +26,11 @@ interface IDecentralandFacet {
 
     function updateAdministrativeOperator(address _administrativeOperator)
         external;
+
+    function administrativeOperator() external view returns (address);
+
+    function operatorFor(uint256 _eNft, uint256 _rentId)
+        external
+        view
+        returns (address);
 }

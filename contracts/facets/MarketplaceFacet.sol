@@ -26,6 +26,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         ms.landWorksNft = _landWorksNft;
     }
 
+    // TODO: setter landworks nft
+
     // TODO: extract params in calldata?
     function add(
         address _contract,
@@ -221,6 +223,50 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         require(_feePrecision >= 10, "_feePrecision must not be single-digit");
         LibReward.setFeePrecision(_feePrecision);
         emit SetFeePrecision(msg.sender, _feePrecision);
+    }
+
+    function landWorksNft() external view returns (address) {
+        return LibMarketplace.landWorksNft();
+    }
+
+    function loanAt(uint256 _eNft)
+        external
+        view
+        returns (LibMarketplace.Loan memory)
+    {
+        return LibMarketplace.loanAt(_eNft);
+    }
+
+    function rentAt(uint256 _eNft, uint256 _rentId)
+        external
+        view
+        returns (LibMarketplace.Rent memory)
+    {
+        return LibMarketplace.rentAt(_eNft, _rentId);
+    }
+
+    function protocolFeeFor(address _token)
+        external
+        view
+        returns (LibReward.Reward memory)
+    {
+        return LibReward.protocolFeeFor(_token);
+    }
+
+    function loanRewardFor(uint256 _eNft, address _token)
+        external
+        view
+        returns (LibReward.Reward memory)
+    {
+        return LibReward.loanRewardFor(_eNft, _token);
+    }
+
+    function feePercentage() external view returns (uint256) {
+        return LibReward.feePercentage();
+    }
+
+    function feePrecision() external view returns (uint256) {
+        return LibReward.feePrecision();
     }
 
     function claimReward(

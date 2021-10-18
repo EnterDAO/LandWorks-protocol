@@ -53,4 +53,20 @@ library LibGovernance {
     function supportsTokenPayment(address _token) internal view returns (bool) {
         return governanceStorage().tokenPayments.contains(_token);
     }
+
+    function totalRegistries() internal view returns (uint256) {
+        return governanceStorage().registries.length();
+    }
+
+    function totalTokenPayments() internal view returns (uint256) {
+        return governanceStorage().tokenPayments.length();
+    }
+
+    function registryAt(uint256 _index) internal view returns (address) {
+        return governanceStorage().registries.at(_index);
+    }
+
+    function tokenPaymentAt(uint256 _index) internal view returns (address) {
+        return governanceStorage().tokenPayments.at(_index);
+    }
 }

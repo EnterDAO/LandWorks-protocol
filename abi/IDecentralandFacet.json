@@ -107,6 +107,43 @@
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "administrativeOperator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_rentId",
+        "type": "uint256"
+      }
+    ],
+    "name": "operatorFor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",

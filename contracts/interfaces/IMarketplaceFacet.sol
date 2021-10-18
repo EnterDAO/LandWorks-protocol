@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
+import "../libraries/LibMarketplace.sol";
+import "../libraries/LibReward.sol";
+
 interface IMarketplaceFacet {
     event Add(
         uint256 _eNft,
@@ -73,4 +76,30 @@ interface IMarketplaceFacet {
     function setFee(uint256 _feePercentage) external;
 
     function setFeePrecision(uint256 _feePrecision) external;
+
+    function landWorksNft() external view returns (address);
+
+    function loanAt(uint256 _eNft)
+        external
+        view
+        returns (LibMarketplace.Loan memory);
+
+    function rentAt(uint256 _eNft, uint256 _rentId)
+        external
+        view
+        returns (LibMarketplace.Rent memory);
+
+    function protocolFeeFor(address _token)
+        external
+        view
+        returns (LibReward.Reward memory);
+
+    function loanRewardFor(uint256 _eNft, address _token)
+        external
+        view
+        returns (LibReward.Reward memory);
+
+    function feePercentage() external view returns (uint256);
+
+    function feePrecision() external view returns (uint256);
 }

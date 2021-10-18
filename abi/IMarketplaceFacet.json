@@ -336,6 +336,32 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "feePercentage",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "feePrecision",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -346,6 +372,152 @@
     "name": "initMarketplace",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "landWorksNft",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      }
+    ],
+    "name": "loanAt",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "contractAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "paymentToken",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minPeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFutureBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pricePerBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalRents",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum LibMarketplace.LoanStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct LibMarketplace.Loan",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      }
+    ],
+    "name": "loanRewardFor",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accumulatedAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibReward.Reward",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      }
+    ],
+    "name": "protocolFeeFor",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accumulatedAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibReward.Reward",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -377,6 +549,47 @@
     "name": "rent",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_rentId",
+        "type": "uint256"
+      }
+    ],
+    "name": "rentAt",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "renter",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endBlock",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibMarketplace.Rent",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

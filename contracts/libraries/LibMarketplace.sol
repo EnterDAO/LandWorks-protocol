@@ -67,4 +67,20 @@ library LibMarketplace {
 
         return newRentId;
     }
+
+    function landWorksNft() internal view returns (address) {
+        return marketplaceStorage().landWorksNft;
+    }
+
+    function loanAt(uint256 _eNft) internal view returns (Loan memory) {
+        return marketplaceStorage().loans[_eNft];
+    }
+
+    function rentAt(uint256 _eNft, uint256 _rentId)
+        internal
+        view
+        returns (Rent memory)
+    {
+        return marketplaceStorage().rents[_eNft][_rentId];
+    }
 }

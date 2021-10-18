@@ -111,4 +111,16 @@ contract DecentralandFacet is IDecentralandFacet {
 
         emit UpdateAdministrativeOperator(_administrativeOperator);
     }
+
+    function administrativeOperator() external view returns (address) {
+        return LibDecentraland.administrativeOperator();
+    }
+
+    function operatorFor(uint256 _eNft, uint256 _rentId)
+        external
+        view
+        returns (address)
+    {
+        return LibDecentraland.operatorFor(_eNft, _rentId);
+    }
 }
