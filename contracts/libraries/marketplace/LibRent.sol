@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../../interfaces/ILandWorksNFT.sol";
 import "../LibMarketplace.sol";
+import "../LibReward.sol";
 
 library LibRent {
     using SafeERC20 for IERC20;
@@ -58,7 +59,7 @@ library LibRent {
             );
         }
 
-        LibMarketplace.distributeFees(_eNft, loan.paymentToken, rentPayment);
+        LibReward.distributeFees(_eNft, loan.paymentToken, rentPayment);
         uint256 rentId = LibMarketplace.addRent(
             _eNft,
             msg.sender,

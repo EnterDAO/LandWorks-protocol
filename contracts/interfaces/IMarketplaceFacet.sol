@@ -38,7 +38,6 @@ interface IMarketplaceFacet {
     );
     event SetFee(address indexed _caller, uint256 _fee);
     event SetFeePrecision(address indexed _caller, uint256 _feePrecision);
-    event SetTokenPayment(address indexed _token, bool _status);
 
     function initMarketplace(address _landWorksNft) external;
 
@@ -74,6 +73,4 @@ interface IMarketplaceFacet {
     function setFee(uint256 _feePercentage) external;
 
     function setFeePrecision(uint256 _feePrecision) external;
-
-    function setTokenPayment(address _token, bool _status) external;
 }

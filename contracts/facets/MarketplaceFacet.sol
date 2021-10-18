@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../interfaces/ILandWorksNFT.sol";
 import "../interfaces/IMarketplaceFacet.sol";
+import "../libraries/LibGovernance.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibRent.sol";
@@ -35,7 +36,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         address _paymentToken,
         uint256 _pricePerBlock
     ) external {
-        // TODO: check if contract is supported?
         require(_contract != address(0), "_contract must not be 0x0");
         require(_minPeriod != 0, "_minPeriod must not be 0");
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
@@ -43,6 +43,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         require(
             _maxPeriod <= _maxFutureBlock,
             "_maxPeriod more than _maxFutureBlock"
+        );
+        require(
+            LibGovernance.supportsRegistry(_contract),
+            "_registry not supported"
         );
         enforceIsValidToken(_paymentToken);
 
@@ -106,7 +110,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         loan.maxPeriod = _maxPeriod;
         loan.pricePerBlock = _pricePerBlock;
 
-        uint256 amount = LibMarketplace.claimReward(_eNft, oldPaymentToken);
+        uint256 amount = LibReward.claimReward(_eNft, oldPaymentToken);
 
         claimReward(_eNft, oldPaymentToken, msg.sender, amount);
 
@@ -129,7 +133,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
 
         LibMarketplace.Loan memory loan = ms.loans[_eNft];
-        uint256 amount = LibMarketplace.claimReward(_eNft, loan.paymentToken);
+        uint256 amount = LibReward.claimReward(_eNft, loan.paymentToken);
 
         ms.loans[_eNft].status = LibMarketplace.LoanStatus.Delisted;
 
@@ -191,7 +195,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
 
         address paymentToken = ms.loans[_eNft].paymentToken;
-        uint256 amount = LibMarketplace.claimReward(_eNft, paymentToken);
+        uint256 amount = LibReward.claimReward(_eNft, paymentToken);
 
         claim(paymentToken, msg.sender, amount);
     }
@@ -199,7 +203,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     function claimFee(address _token) external {
         LibOwnership.enforceIsContractOwner();
 
-        uint256 amount = LibMarketplace.claimFee(_token);
+        uint256 amount = LibReward.claimFee(_token);
 
         claim(_token, msg.sender, amount);
 
@@ -208,24 +212,15 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
     function setFee(uint256 _feePercentage) external {
         LibOwnership.enforceIsContractOwner();
-        LibMarketplace.setFeePercentage(_feePercentage);
+        LibReward.setFeePercentage(_feePercentage);
         emit SetFee(msg.sender, _feePercentage);
     }
 
     function setFeePrecision(uint256 _feePrecision) external {
         LibOwnership.enforceIsContractOwner();
         require(_feePrecision >= 10, "_feePrecision must not be single-digit");
-        LibMarketplace.setFeePrecision(_feePrecision);
+        LibReward.setFeePrecision(_feePrecision);
         emit SetFeePrecision(msg.sender, _feePrecision);
-    }
-
-    function setTokenPayment(address _token, bool _status) external {
-        require(_token != address(0), "_token must not be 0x0");
-        LibOwnership.enforceIsContractOwner();
-
-        LibMarketplace.setTokenPayment(_token, _status);
-
-        emit SetTokenPayment(_token, _status);
     }
 
     function claimReward(
@@ -254,7 +249,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
     function enforceIsValidToken(address _token) internal view {
         require(
-            _token == address(0) || LibMarketplace.supportsTokenPayment(_token),
+            _token == address(0) || LibGovernance.supportsTokenPayment(_token),
             "token not supported"
         );
     }
