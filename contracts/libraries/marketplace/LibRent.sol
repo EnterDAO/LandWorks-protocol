@@ -12,8 +12,8 @@ library LibRent {
     using SafeERC20 for IERC20;
 
     event Rent(
-        uint256 indexed _eNft,
-        uint256 indexed _rentId,
+        uint256 _eNft,
+        uint256 _rentId,
         address indexed _renter,
         uint256 _startBlock,
         uint256 _endBlock
