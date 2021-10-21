@@ -16,6 +16,8 @@ import "../libraries/marketplace/LibRent.sol";
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     using SafeERC20 for IERC20;
 
+    /// @notice Initialises the MarketplaceFacet
+    /// @param _landWorksNft The LandWorks NFT
     function initMarketplace(address _landWorksNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -26,9 +28,18 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         ms.landWorksNft = _landWorksNft;
     }
 
-    // TODO: setter landworks nft
-
-    // TODO: extract params in calldata?
+    /// @notice Provides land of the given metaverse registry
+    /// Transfers and locks the provided metaverse land to the contract
+    /// and mints an eNft, representing the locked land.
+    /// @param _contract The metaverse registry
+    /// @param _tokenId The id from the metaverse registry
+    /// @param _minPeriod The minimum number of blocks the land can be rented
+    /// @param _maxPeriod The maximum number of blocks the land can be rented
+    /// @param _maxFutureBlock The block delta after which the protocol will not allow
+    /// the land to be rented at an any given moment.
+    /// @param _paymentToken The token which will be accepted as a form of payment.
+    /// Provide 0x0 for ETH
+    /// @param _pricePerBlock The price for rental per block
     function add(
         address _contract,
         uint256 _tokenId,
@@ -80,7 +91,19 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
     }
 
-    // TODO: extract input params as calldata struct?
+    /// @notice Updates the lending conditions for a given eNft
+    /// Pays out the current unclaimed rent reward to the caller.
+    /// Updated conditions apply the next time the land is rented.
+    /// Does not affect previous and queued rents
+    /// If any of the old conditions do not want to be modified, the old ones must be provided
+    /// @param _eNft The target eNft
+    /// @param _minPeriod The minimum number of blocks the land can be rented
+    /// @param _maxPeriod The maximum number of blocks the land can be rented
+    /// @param _maxFutureBlock The block delta after which the protocol will not allow
+    /// the land to be rented at an any given moment.
+    /// @param _paymentToken The token which will be accepted as a form of payment.
+    /// Provide 0x0 for ETH
+    /// @param _pricePerBlock The price for rental per block
     function updateConditions(
         uint256 _eNft,
         uint256 _minPeriod,
@@ -126,6 +149,11 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
     }
 
+    /// @notice Removes the land represented by the eNft from the marketplace
+    /// Pays out the current unclaimed rent reward to the caller.
+    /// If there are no active rents:
+    /// Burns the eNft and transfers the land represented by the eNft to the caller
+    /// @param _eNft The target eNft
     function remove(uint256 _eNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -156,6 +184,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit Remove(_eNft, msg.sender);
     }
 
+    /// @notice Withdraws the already delisted from marketplace eNft
+    /// Burns the eNft and transfers the land represented by the eNft to the caller
+    /// @param _eNft The target _eNft
     function withdraw(uint256 _eNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -184,10 +215,17 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit Withdraw(_eNft, msg.sender);
     }
 
+    /// @notice Rents eNft land for a given period
+    /// Charges user for the rent upfront. Rent starts from the last rented block
+    /// or from the current block of the transaction.
+    /// @param _eNft The target eNft
+    /// @param _period The target period the rent will be active
     function rent(uint256 _eNft, uint256 _period) external payable {
         LibRent.rent(_eNft, _period);
     }
 
+    /// @notice Claims accrued rent fees for a given eNft
+    /// @param _eNft The target _eNft
     function claimReward(uint256 _eNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -202,6 +240,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         claim(paymentToken, msg.sender, amount);
     }
 
+    /// @notice Claims protocol fees of a given payment token
+    /// Provide 0x0 for ETH
+    /// @param _token The target token
     function claimFee(address _token) external {
         LibOwnership.enforceIsContractOwner();
 
@@ -212,12 +253,17 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit ClaimFee(_token, msg.sender, amount);
     }
 
+    /// @notice Sets the protocol fee for land rentals
+    /// @param _feePercentage The fee percentage charged on every rent
     function setFee(uint256 _feePercentage) external {
         LibOwnership.enforceIsContractOwner();
         LibReward.setFeePercentage(_feePercentage);
         emit SetFee(msg.sender, _feePercentage);
     }
 
+    /// @notice Sets the protocol fee precision
+    /// Used to allow percentages with decimal franction
+    /// @param _feePrecision The fee precision
     function setFeePrecision(uint256 _feePrecision) external {
         LibOwnership.enforceIsContractOwner();
         require(_feePrecision >= 10, "_feePrecision must not be single-digit");
@@ -225,10 +271,13 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit SetFeePrecision(msg.sender, _feePrecision);
     }
 
+    /// @notice Gets the address of the LandWorks eNFT
     function landWorksNft() external view returns (address) {
         return LibMarketplace.landWorksNft();
     }
 
+    /// @notice Gets all loan data for a specific eNft
+    /// @param _eNft The target eNft
     function loanAt(uint256 _eNft)
         external
         view
@@ -237,6 +286,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         return LibMarketplace.loanAt(_eNft);
     }
 
+    /// @notice Gets all data for a specific rent of an eNft
+    /// @param _eNft The taget eNft
+    /// @param _rentId The target rent
     function rentAt(uint256 _eNft, uint256 _rentId)
         external
         view
@@ -245,6 +297,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         return LibMarketplace.rentAt(_eNft, _rentId);
     }
 
+    /// @notice Gets the accumulated and paid amount of fees for a payment token
+    /// @param _token The target token
     function protocolFeeFor(address _token)
         external
         view
@@ -253,6 +307,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         return LibReward.protocolFeeFor(_token);
     }
 
+    /// @notice Gets the accumulated and paid amount of loan rewards of a payment
+    /// token for an eNft
+    /// @param _eNft The target eNft
+    /// @param _token The target token
     function loanRewardFor(uint256 _eNft, address _token)
         external
         view
@@ -261,10 +319,12 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         return LibReward.loanRewardFor(_eNft, _token);
     }
 
+    /// @notice Gets the fee percentage
     function feePercentage() external view returns (uint256) {
         return LibReward.feePercentage();
     }
 
+    /// @notice Gets the fee precision
     function feePrecision() external view returns (uint256) {
         return LibReward.feePrecision();
     }

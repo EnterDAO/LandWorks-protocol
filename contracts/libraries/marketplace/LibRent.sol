@@ -20,6 +20,10 @@ library LibRent {
         uint256 _endBlock
     );
 
+    /// @dev Rents eNft land for a given period
+    /// Rent is added to the queue of pending rents.
+    /// Rent start will begin from the last rented block.
+    /// If no active rents are found, rents starts from the current block.
     function rent(uint256 _eNft, uint256 _period) internal returns (uint256) {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();

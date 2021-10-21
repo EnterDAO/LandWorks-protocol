@@ -14,7 +14,8 @@ contract LandWorksNFT is ERC721Burnable, Ownable {
 
     constructor() ERC721("LandWorks NFT", "eNFT") {}
 
-    /// @dev Mints token to beneficiary
+    /// @notice Mints token to beneficiary
+    /// @param _beneficiary The beneficiary to which the token will be minted
     function mint(address _beneficiary) public onlyOwner returns (uint256) {
         uint256 tokenId = _total.current();
 
@@ -24,7 +25,9 @@ contract LandWorksNFT is ERC721Burnable, Ownable {
         return tokenId;
     }
 
-    /// @dev Returns whether the spender is allowed to manage `tokenId`
+    /// @notice Returns whether the spender is allowed to manage the tokenId
+    /// @param _spender The target spender
+    /// @param _tokenId The target tokenId
     function isApprovedOrOwner(address _spender, uint256 _tokenId)
         public
         view

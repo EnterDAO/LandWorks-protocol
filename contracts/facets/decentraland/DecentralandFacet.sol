@@ -8,6 +8,10 @@ import "../../libraries/marketplace/LibRent.sol";
 import "../../libraries/marketplace/LibDecentraland.sol";
 
 contract DecentralandFacet is IDecentralandFacet {
+    /// @notice Rents Decentraland Estate/LAND.
+    /// @param _eNft The target eNft loan
+    /// @param _period The target period of the rental
+    /// @param _operator The target operator, which will be set as operator once the rent is active
     function rentDecentraland(
         uint256 _eNft,
         uint256 _period,
@@ -21,6 +25,11 @@ contract DecentralandFacet is IDecentralandFacet {
         emit RentDecentraland(_eNft, rentId, _operator);
     }
 
+    /// @notice Updates the corresponding Estate/LAND operator from the given rent.
+    /// When the rent becomes active (the current block.number is between the rent's start and end),
+    /// this function is executed to set the provided rent operator to the Estate/LAND scene operator.
+    /// @param _eNft The target eNft which will map to its corresponding Estate/LAND
+    /// @param _rentId The target rent
     function updateState(uint256 _eNft, uint256 _rentId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -52,6 +61,8 @@ contract DecentralandFacet is IDecentralandFacet {
         emit UpdateState(_eNft, _rentId, operator);
     }
 
+    /// @notice Updates the corresponding Estate/LAND operator with the administrative operator
+    /// @param _eNft The target eNft which will map to its corresponding Estate/LAND
     function updateAdministrativeState(uint256 _eNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -76,6 +87,10 @@ contract DecentralandFacet is IDecentralandFacet {
         emit UpdateAdministrativeState(_eNft, operator);
     }
 
+    /// @notice Updates the operator for the given renf of an eNft
+    /// @param _eNft The target eNft
+    /// @param _rentId The target rentId to the eNft
+    /// @param _newOperator The to-be-set new operator
     function updateOperator(
         uint256 _eNft,
         uint256 _rentId,
@@ -98,6 +113,8 @@ contract DecentralandFacet is IDecentralandFacet {
         emit UpdateOperator(_eNft, _rentId, _newOperator);
     }
 
+    /// @notice Updates the administrative operator
+    /// @param _administrativeOperator The to-be-set administrative operator
     function updateAdministrativeOperator(address _administrativeOperator)
         external
     {
@@ -112,10 +129,14 @@ contract DecentralandFacet is IDecentralandFacet {
         emit UpdateAdministrativeOperator(_administrativeOperator);
     }
 
+    /// @notice Gets the administrative operator
     function administrativeOperator() external view returns (address) {
         return LibDecentraland.administrativeOperator();
     }
 
+    /// @notice Gets the operator of the rent for the an eNft
+    /// @param _eNft The target eNft
+    /// @param _rentId The target rentId
     function operatorFor(uint256 _eNft, uint256 _rentId)
         external
         view
