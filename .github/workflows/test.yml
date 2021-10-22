@@ -26,4 +26,5 @@ jobs:
 
       - run: npm install
       - run: cp config.sample.ts config.ts
+      - run: npx hardhat compile
       - run: npx hardhat test
