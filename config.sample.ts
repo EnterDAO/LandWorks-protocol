@@ -5,18 +5,18 @@ export const networks: NetworksUserConfig = {
     coverage: {
         url: 'http://localhost:8555',
     },
-    rinkeby: {
-        url: 'https://rinkeby.infura.io/v3/YOUR-INFURA-API-KEY',
-        chainId: 4,
-        accounts: [ "YOUR_PK_HERE" ]
-    },
-    mainnet: {
-        url: 'https://mainnet.infura.io/v3/YOUR-INFURA-KEY',
-        chainId: 1,
-        accounts: [ "YOUR_PK_HERE" ]
-    },
+    // rinkeby: {
+    //     url: 'https://rinkeby.infura.io/v3/YOUR-INFURA-API-KEY',
+    //     chainId: 4,
+    //     accounts: [ "YOUR_PK_HERE" ]
+    // },
+    // mainnet: {
+    //     url: 'https://mainnet.infura.io/v3/YOUR-INFURA-KEY',
+    //     chainId: 1,
+    //     accounts: [ "YOUR_PK_HERE" ]
+    // },
 };
 
 export const etherscan: EtherscanConfig = {
-    apiKey: 'YOUR-ETHERSCAN-API-KEY',
+    // apiKey: 'YOUR-ETHERSCAN-API-KEY',
 };
