@@ -25,4 +25,5 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - run: npm install
+      - run: cp config.sample.ts config.ts
       - run: npx hardhat compile
