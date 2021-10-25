@@ -11,13 +11,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_contract",
+        "name": "_metaverseRegistry",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_contractTokenId",
+        "name": "_metaverseAssetId",
         "type": "uint256"
       },
       {
@@ -126,7 +126,7 @@
         "type": "address"
       }
     ],
-    "name": "Remove",
+    "name": "Delist",
     "type": "event"
   },
   {
@@ -170,38 +170,19 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
-        "name": "_caller",
+        "name": "_registry",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "_fee",
-        "type": "uint256"
+        "internalType": "bool",
+        "name": "_status",
+        "type": "bool"
       }
     ],
-    "name": "SetFee",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_caller",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_feePrecision",
-        "type": "uint256"
-      }
-    ],
-    "name": "SetFeePrecision",
+    "name": "SetRegistry",
     "type": "event"
   },
   {
@@ -270,12 +251,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_contract",
+        "name": "_metaverseRegistry",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "_tokenId",
+        "name": "_metaverseAssetId",
         "type": "uint256"
       },
       {
@@ -312,101 +293,23 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      }
-    ],
-    "name": "claimFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "_eNft",
         "type": "uint256"
       }
     ],
-    "name": "claimReward",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "feePercentage",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "feePrecision",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_landWorksNft",
-        "type": "address"
-      }
-    ],
-    "name": "initMarketplace",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "landWorksNft",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_eNft",
-        "type": "uint256"
-      }
-    ],
-    "name": "loanAt",
+    "name": "assetAt",
     "outputs": [
       {
         "components": [
           {
             "internalType": "address",
-            "name": "contractAddress",
+            "name": "metaverseRegistry",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "tokenId",
+            "name": "metaverseAssetId",
             "type": "uint256"
           },
           {
@@ -440,12 +343,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum LibMarketplace.LoanStatus",
+            "internalType": "enum LibMarketplace.AssetStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct LibMarketplace.Loan",
+        "internalType": "struct LibMarketplace.Asset",
         "name": "",
         "type": "tuple"
       }
@@ -466,7 +369,7 @@
         "type": "address"
       }
     ],
-    "name": "loanRewardFor",
+    "name": "assetRewardFor",
     "outputs": [
       {
         "components": [
@@ -484,6 +387,71 @@
         "internalType": "struct LibReward.Reward",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      }
+    ],
+    "name": "claimFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      }
+    ],
+    "name": "delist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_landWorksNft",
+        "type": "address"
+      }
+    ],
+    "name": "initMarketplace",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "landWorksNft",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -524,13 +492,19 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_index",
         "type": "uint256"
       }
     ],
-    "name": "remove",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "registryAt",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -595,12 +569,17 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_feePercentage",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_registry",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_status",
+        "type": "bool"
       }
     ],
-    "name": "setFee",
+    "name": "setRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -608,14 +587,33 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_registry",
+        "type": "address"
+      }
+    ],
+    "name": "supportsRegistry",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalRegistries",
+    "outputs": [
+      {
         "internalType": "uint256",
-        "name": "_feePrecision",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "name": "setFeePrecision",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

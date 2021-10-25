@@ -3,19 +3,38 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "_registry",
+        "name": "_caller",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "_status",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "_fee",
+        "type": "uint256"
       }
     ],
-    "name": "SetRegistry",
+    "name": "SetFee",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_caller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_feePrecision",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetFeePrecision",
     "type": "event"
   },
   {
@@ -38,19 +57,26 @@
     "type": "event"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "feePercentage",
+    "outputs": [
       {
         "internalType": "uint256",
-        "name": "_index",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "name": "registryAt",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "feePrecision",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -59,17 +85,25 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_registry",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_status",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "_feePercentage",
+        "type": "uint256"
       }
     ],
-    "name": "setRegistry",
+    "name": "setFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_feePrecision",
+        "type": "uint256"
+      }
+    ],
+    "name": "setFeePrecision",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -90,25 +124,6 @@
     "name": "setTokenPayment",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_registry",
-        "type": "address"
-      }
-    ],
-    "name": "supportsRegistry",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -144,19 +159,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalRegistries",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",

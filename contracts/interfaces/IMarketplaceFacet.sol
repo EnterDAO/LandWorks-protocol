@@ -7,8 +7,8 @@ import "../libraries/LibReward.sol";
 interface IMarketplaceFacet {
     event Add(
         uint256 _eNft,
-        address _contract,
-        uint256 _contractTokenId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureBlock,
@@ -30,7 +30,7 @@ interface IMarketplaceFacet {
         uint256 _startBlock,
         uint256 _endBlock
     );
-    event Remove(uint256 _eNft, address indexed _caller);
+    event Delist(uint256 _eNft, address indexed _caller);
     event Withdraw(uint256 _eNft, address indexed _caller);
     event ClaimFee(address _token, address _recipient, uint256 _amount);
     event ClaimReward(
@@ -39,14 +39,13 @@ interface IMarketplaceFacet {
         address indexed _recipient,
         uint256 _amount
     );
-    event SetFee(address indexed _caller, uint256 _fee);
-    event SetFeePrecision(address indexed _caller, uint256 _feePrecision);
+    event SetRegistry(address _registry, bool _status);
 
     function initMarketplace(address _landWorksNft) external;
 
     function add(
-        address _contract,
-        uint256 _tokenId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureBlock,
@@ -63,7 +62,7 @@ interface IMarketplaceFacet {
         uint256 _pricePerBlock
     ) external;
 
-    function remove(uint256 _eNft) external;
+    function delist(uint256 _eNft) external;
 
     function withdraw(uint256 _eNft) external;
 
@@ -73,16 +72,20 @@ interface IMarketplaceFacet {
 
     function claimFee(address _token) external;
 
-    function setFee(uint256 _feePercentage) external;
+    function setRegistry(address _registry, bool _status) external;
 
-    function setFeePrecision(uint256 _feePrecision) external;
+    function supportsRegistry(address _registry) external view returns (bool);
+
+    function totalRegistries() external view returns (uint256);
+
+    function registryAt(uint256 _index) external view returns (address);
 
     function landWorksNft() external view returns (address);
 
-    function loanAt(uint256 _eNft)
+    function assetAt(uint256 _eNft)
         external
         view
-        returns (LibMarketplace.Loan memory);
+        returns (LibMarketplace.Asset memory);
 
     function rentAt(uint256 _eNft, uint256 _rentId)
         external
@@ -94,12 +97,8 @@ interface IMarketplaceFacet {
         view
         returns (LibReward.Reward memory);
 
-    function loanRewardFor(uint256 _eNft, address _token)
+    function assetRewardFor(uint256 _eNft, address _token)
         external
         view
         returns (LibReward.Reward memory);
-
-    function feePercentage() external view returns (uint256);
-
-    function feePrecision() external view returns (uint256);
 }

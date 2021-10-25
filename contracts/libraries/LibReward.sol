@@ -4,6 +4,8 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 library LibReward {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     bytes32 constant REWARD_STORAGE_POSITION =
         keccak256("com.enterdao.landworks.reward");
 
@@ -13,8 +15,10 @@ library LibReward {
     }
 
     struct RewardStorage {
-        // Loan owners' rewards
-        mapping(uint256 => mapping(address => Reward)) loanRewards;
+        // Supported tokens as a form of payment
+        EnumerableSet.AddressSet tokenPayments;
+        // Asset owners' rewards
+        mapping(uint256 => mapping(address => Reward)) assetRewards;
         // Protocol fees
         mapping(address => Reward) fees;
         // Protocol fee percentage
@@ -40,7 +44,7 @@ library LibReward {
 
         uint256 rentFee = (_amount * ms.feePercentage) / ms.feePrecision;
         uint256 lenderReward = _amount - rentFee;
-        ms.loanRewards[_eNft][_token].accumulatedAmount += lenderReward;
+        ms.assetRewards[_eNft][_token].accumulatedAmount += lenderReward;
         ms.fees[_token].accumulatedAmount += rentFee;
     }
 
@@ -48,7 +52,7 @@ library LibReward {
         internal
         returns (uint256)
     {
-        LibReward.Reward storage rewards = rewardStorage().loanRewards[_eNft][
+        LibReward.Reward storage rewards = rewardStorage().assetRewards[_eNft][
             _token
         ];
 
@@ -79,6 +83,27 @@ library LibReward {
         rewardStorage().feePrecision = _feePrecision;
     }
 
+    function setTokenPayment(address _token, bool _status) internal {
+        RewardStorage storage gs = rewardStorage();
+        if (_status) {
+            require(gs.tokenPayments.add(_token), "_token already added");
+        } else {
+            require(gs.tokenPayments.remove(_token), "_token not found");
+        }
+    }
+
+    function supportsTokenPayment(address _token) internal view returns (bool) {
+        return rewardStorage().tokenPayments.contains(_token);
+    }
+
+    function totalTokenPayments() internal view returns (uint256) {
+        return rewardStorage().tokenPayments.length();
+    }
+
+    function tokenPaymentAt(uint256 _index) internal view returns (address) {
+        return rewardStorage().tokenPayments.at(_index);
+    }
+
     function protocolFeeFor(address _token)
         internal
         view
@@ -87,12 +112,12 @@ library LibReward {
         return rewardStorage().fees[_token];
     }
 
-    function loanRewardFor(uint256 _eNft, address _token)
+    function assetRewardFor(uint256 _eNft, address _token)
         internal
         view
         returns (Reward memory)
     {
-        return rewardStorage().loanRewards[_eNft][_token];
+        return rewardStorage().assetRewards[_eNft][_token];
     }
 
     function feePercentage() internal view returns (uint256) {

@@ -32,38 +32,38 @@ library LibRent {
             ILandWorksNFT(ms.landWorksNft).ownerOf(_eNft) != address(0),
             "_eNft not found"
         );
-        LibMarketplace.Loan memory loan = ms.loans[_eNft];
+        LibMarketplace.Asset memory asset = ms.assets[_eNft];
         require(
-            loan.status == LibMarketplace.LoanStatus.Listed,
+            asset.status == LibMarketplace.AssetStatus.Listed,
             "_eNft delisted"
         );
-        require(_period >= loan.minPeriod, "_period less than minPeriod");
-        require(_period <= loan.maxPeriod, "_period more than maxPeriod");
+        require(_period >= asset.minPeriod, "_period less than minPeriod");
+        require(_period <= asset.maxPeriod, "_period more than maxPeriod");
 
         uint256 rentStartBlock = block.number;
-        uint256 lastRentEndBlock = ms.rents[_eNft][loan.totalRents].endBlock;
+        uint256 lastRentEndBlock = ms.rents[_eNft][asset.totalRents].endBlock;
         if (lastRentEndBlock > rentStartBlock) {
             rentStartBlock = lastRentEndBlock;
         }
 
         uint256 rentEndBlock = rentStartBlock + _period;
         require(
-            rentEndBlock <= block.number + loan.maxFutureBlock,
+            rentEndBlock <= block.number + asset.maxFutureBlock,
             "rent more than max future block rental"
         );
 
-        uint256 rentPayment = _period * loan.pricePerBlock;
-        if (loan.paymentToken == address(0)) {
+        uint256 rentPayment = _period * asset.pricePerBlock;
+        if (asset.paymentToken == address(0)) {
             require(msg.value == rentPayment, "invalid msg.value");
         } else {
-            IERC20(loan.paymentToken).safeTransferFrom(
+            IERC20(asset.paymentToken).safeTransferFrom(
                 msg.sender,
                 address(this),
                 rentPayment
             );
         }
 
-        LibReward.distributeFees(_eNft, loan.paymentToken, rentPayment);
+        LibReward.distributeFees(_eNft, asset.paymentToken, rentPayment);
         uint256 rentId = LibMarketplace.addRent(
             _eNft,
             msg.sender,

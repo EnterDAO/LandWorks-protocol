@@ -9,7 +9,7 @@ import "../../libraries/marketplace/LibDecentraland.sol";
 
 contract DecentralandFacet is IDecentralandFacet {
     /// @notice Rents Decentraland Estate/LAND.
-    /// @param _eNft The target eNft loan
+    /// @param _eNft The target eNft asset
     /// @param _period The target period of the rental
     /// @param _operator The target operator, which will be set as operator once the rent is active
     function rentDecentraland(
@@ -48,13 +48,13 @@ contract DecentralandFacet is IDecentralandFacet {
             "block number more than or equal to rent end"
         );
 
-        LibMarketplace.Loan memory loan = ms.loans[_eNft];
+        LibMarketplace.Asset memory asset = ms.assets[_eNft];
         address operator = LibDecentraland.decentralandStorage().operators[
             _eNft
         ][_rentId];
 
-        IDecentralandRegistry(loan.contractAddress).setUpdateOperator(
-            loan.tokenId,
+        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
+            asset.metaverseAssetId,
             operator
         );
 
@@ -70,18 +70,18 @@ contract DecentralandFacet is IDecentralandFacet {
             ILandWorksNFT(ms.landWorksNft).ownerOf(_eNft) != address(0),
             "_eNft not found"
         );
-        LibMarketplace.Loan memory loan = ms.loans[_eNft];
+        LibMarketplace.Asset memory asset = ms.assets[_eNft];
 
         require(
-            block.number > ms.rents[_eNft][loan.totalRents].endBlock,
+            block.number > ms.rents[_eNft][asset.totalRents].endBlock,
             "_eNft has an active rent"
         );
 
         address operator = LibDecentraland
             .decentralandStorage()
             .administrativeOperator;
-        IDecentralandRegistry(loan.contractAddress).setUpdateOperator(
-            loan.tokenId,
+        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
+            asset.metaverseAssetId,
             operator
         );
         emit UpdateAdministrativeState(_eNft, operator);
