@@ -39,12 +39,12 @@ contract RewardFacet is IRewardFacet {
         LibClaim.claimReward(_eNft, paymentToken, msg.sender, amount);
     }
 
-    /// @notice Sets the protocol fee for land rentals
-    /// @param _feePercentage The fee percentage charged on every rent
-    function setFee(uint256 _feePercentage) external {
+    /// @notice Sets the protocol fee for token payments
+    /// @param _token The target token
+    /// @param _feePercentage The fee percentage, charged on every rent
+    function setFee(address _token, uint256 _feePercentage) external {
         LibOwnership.enforceIsContractOwner();
-        LibReward.setFeePercentage(_feePercentage);
-        emit SetFee(msg.sender, _feePercentage);
+        LibReward.setFeePercentage(_token, _feePercentage);
     }
 
     /// @notice Sets the protocol fee precision
@@ -57,16 +57,20 @@ contract RewardFacet is IRewardFacet {
         emit SetFeePrecision(msg.sender, _feePrecision);
     }
 
-    /// @notice Sets status of token payment (accepted or not)
+    /// @notice Sets status of token payment (accepted or not) and its fee
     /// @param _token The target token
+    /// @param _feePercentage The fee percentage, charged on every rent
     /// @param _status Whether the token will be approved or not
-    function setTokenPayment(address _token, bool _status) external {
+    function setTokenPayment(
+        address _token,
+        uint256 _feePercentage,
+        bool _status
+    ) external {
         require(_token != address(0), "_token must not be 0x0");
         LibOwnership.enforceIsContractOwner();
 
         LibReward.setTokenPayment(_token, _status);
-
-        emit SetTokenPayment(_token, _status);
+        LibReward.setFeePercentage(_token, _feePercentage);
     }
 
     /// @notice Gets whether the token payment is supported
@@ -85,9 +89,10 @@ contract RewardFacet is IRewardFacet {
         return LibReward.tokenPaymentAt(_index);
     }
 
-    /// @notice Gets the fee percentage
-    function feePercentage() external view returns (uint256) {
-        return LibReward.feePercentage();
+    /// @notice Gets the fee percentage for a token payment
+    /// @param _token The target token
+    function feePercentage(address _token) external view returns (uint256) {
+        return LibReward.feePercentage(_token);
     }
 
     /// @notice Gets the fee precision

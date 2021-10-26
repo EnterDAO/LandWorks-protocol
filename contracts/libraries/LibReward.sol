@@ -9,6 +9,9 @@ library LibReward {
     bytes32 constant REWARD_STORAGE_POSITION =
         keccak256("com.enterdao.landworks.reward");
 
+    event SetTokenPayment(address _token, bool _status);
+    event SetFee(address _token, uint256 _fee);
+
     struct Reward {
         uint256 paidAmount;
         uint256 accumulatedAmount;
@@ -17,12 +20,12 @@ library LibReward {
     struct RewardStorage {
         // Supported tokens as a form of payment
         EnumerableSet.AddressSet tokenPayments;
+        // Protocol fee percentages for tokens
+        mapping(address => uint256) feePercentages;
         // Asset owners' rewards
         mapping(uint256 => mapping(address => Reward)) assetRewards;
         // Protocol fees
         mapping(address => Reward) fees;
-        // Protocol fee percentage
-        uint256 feePercentage;
         // Protocol fee precision
         uint256 feePrecision;
     }
@@ -42,7 +45,8 @@ library LibReward {
     ) internal {
         LibReward.RewardStorage storage ms = rewardStorage();
 
-        uint256 rentFee = (_amount * ms.feePercentage) / ms.feePrecision;
+        uint256 rentFee = (_amount * ms.feePercentages[_token]) /
+            ms.feePrecision;
         uint256 lenderReward = _amount - rentFee;
         ms.assetRewards[_eNft][_token].accumulatedAmount += lenderReward;
         ms.fees[_token].accumulatedAmount += rentFee;
@@ -71,12 +75,14 @@ library LibReward {
         return transferAmount;
     }
 
-    function setFeePercentage(uint256 _feePercentage) internal {
+    function setFeePercentage(address _token, uint256 _feePercentage) internal {
         require(
             _feePercentage < rewardStorage().feePrecision,
             "_feePercentage exceeds or equal to feePrecision"
         );
-        rewardStorage().feePercentage = _feePercentage;
+        rewardStorage().feePercentages[_token] = _feePercentage;
+
+        emit SetFee(_token, _feePercentage);
     }
 
     function setFeePrecision(uint256 _feePrecision) internal {
@@ -90,6 +96,8 @@ library LibReward {
         } else {
             require(gs.tokenPayments.remove(_token), "_token not found");
         }
+
+        emit SetTokenPayment(_token, _status);
     }
 
     function supportsTokenPayment(address _token) internal view returns (bool) {
@@ -120,8 +128,8 @@ library LibReward {
         return rewardStorage().assetRewards[_eNft][_token];
     }
 
-    function feePercentage() internal view returns (uint256) {
-        return rewardStorage().feePercentage;
+    function feePercentage(address _token) internal view returns (uint256) {
+        return rewardStorage().feePercentages[_token];
     }
 
     function feePrecision() internal view returns (uint256) {

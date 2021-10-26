@@ -59,9 +59,9 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
-        "name": "_caller",
+        "name": "_token",
         "type": "address"
       },
       {
@@ -139,7 +139,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      }
+    ],
     "name": "feePercentage",
     "outputs": [
       {
@@ -166,6 +172,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "_feePercentage",
@@ -196,6 +207,11 @@
         "internalType": "address",
         "name": "_token",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_feePercentage",
+        "type": "uint256"
       },
       {
         "internalType": "bool",
