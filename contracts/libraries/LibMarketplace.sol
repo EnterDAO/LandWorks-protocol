@@ -15,6 +15,7 @@ library LibMarketplace {
     }
 
     struct Asset {
+        uint256 metaverseId;
         address metaverseRegistry;
         uint256 metaverseAssetId;
         address paymentToken;
@@ -32,12 +33,19 @@ library LibMarketplace {
         uint256 endBlock;
     }
 
+    struct MetaverseRegistry {
+        // Name of the Metaverse
+        string name;
+        // Supported registries
+        EnumerableSet.AddressSet registries;
+    }
+
     struct MarketplaceStorage {
         bool initialized;
         // Address of the LandWorks NFT
         address landWorksNft;
-        // Supported land registries of metaverses
-        EnumerableSet.AddressSet registries;
+        // Supported metaverse registries
+        mapping(uint256 => MetaverseRegistry) metaverseRegistries;
         // Assets
         mapping(uint256 => Asset) assets;
         // Rents
@@ -55,25 +63,59 @@ library LibMarketplace {
         }
     }
 
-    function setRegistry(address _registry, bool _status) internal {
-        LibMarketplace.MarketplaceStorage storage ms = marketplaceStorage();
+    function setMetaverseName(uint256 _metaverse, string memory _name)
+        internal
+    {
+        marketplaceStorage().metaverseRegistries[_metaverse].name = _name;
+    }
+
+    function setRegistry(
+        uint256 _metaverse,
+        address _registry,
+        bool _status
+    ) internal {
+        LibMarketplace.MetaverseRegistry storage mr = marketplaceStorage()
+            .metaverseRegistries[_metaverse];
         if (_status) {
-            require(ms.registries.add(_registry), "_registry already added");
+            require(mr.registries.add(_registry), "_registry already added");
         } else {
-            require(ms.registries.remove(_registry), "_registry not found");
+            require(mr.registries.remove(_registry), "_registry not found");
         }
     }
 
-    function supportsRegistry(address _registry) internal view returns (bool) {
-        return marketplaceStorage().registries.contains(_registry);
+    function supportsRegistry(uint256 _metaverse, address _registry)
+        internal
+        view
+        returns (bool)
+    {
+        return
+            marketplaceStorage()
+                .metaverseRegistries[_metaverse]
+                .registries
+                .contains(_registry);
     }
 
-    function totalRegistries() internal view returns (uint256) {
-        return marketplaceStorage().registries.length();
+    function totalRegistries(uint256 _metaverse)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            marketplaceStorage()
+                .metaverseRegistries[_metaverse]
+                .registries
+                .length();
     }
 
-    function registryAt(uint256 _index) internal view returns (address) {
-        return marketplaceStorage().registries.at(_index);
+    function registryAt(uint256 _metaverse, uint256 _index)
+        internal
+        view
+        returns (address)
+    {
+        return
+            marketplaceStorage().metaverseRegistries[_metaverse].registries.at(
+                _index
+            );
     }
 
     function addRent(

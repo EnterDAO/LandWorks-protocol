@@ -10,6 +10,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_metaverseRegistry",
         "type": "address"
@@ -146,6 +152,31 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      }
+    ],
+    "name": "SetMetaverseName",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_registry",
         "type": "address"
@@ -225,6 +256,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_metaverseRegistry",
         "type": "address"
@@ -277,6 +313,11 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "uint256",
+            "name": "metaverseId",
+            "type": "uint256"
+          },
           {
             "internalType": "address",
             "name": "metaverseRegistry",
@@ -441,6 +482,11 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "_index",
         "type": "uint256"
       }
@@ -518,6 +564,29 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      }
+    ],
+    "name": "setMetaverseName",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_registry",
         "type": "address"
@@ -536,6 +605,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_registry",
         "type": "address"
@@ -553,7 +627,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      }
+    ],
     "name": "totalRegistries",
     "outputs": [
       {

@@ -29,7 +29,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @notice Provides land of the given metaverse registry
     /// Transfers and locks the provided metaverse land to the contract
     /// and mints an eNft, representing the locked land.
-    /// @param _metaverseRegistry The metaverse registry
+    /// @param _metaverseId The id of the metaverse
+    /// @param _metaverseRegistry The registry of the metaverse
     /// @param _metaverseAssetId The id from the metaverse registry
     /// @param _minPeriod The minimum number of blocks the land can be rented
     /// @param _maxPeriod The maximum number of blocks the land can be rented
@@ -39,6 +40,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// Provide 0x0 for ETH
     /// @param _pricePerBlock The price for rental per block
     function add(
+        uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
         uint256 _minPeriod,
@@ -56,7 +58,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_maxPeriod more than _maxFutureBlock"
         );
         require(
-            LibMarketplace.supportsRegistry(_metaverseRegistry),
+            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
             "_registry not supported"
         );
         enforceIsValidToken(_paymentToken);
@@ -73,6 +75,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         uint256 eNft = ILandWorksNFT(ms.landWorksNft).mint(msg.sender);
 
         LibMarketplace.Asset storage asset = ms.assets[eNft];
+
+        asset.metaverseId = _metaverseId;
         asset.metaverseRegistry = _metaverseRegistry;
         asset.metaverseAssetId = _metaverseAssetId;
         asset.paymentToken = _paymentToken;
@@ -83,6 +87,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         emit Add(
             eNft,
+            _metaverseId,
             _metaverseRegistry,
             _metaverseAssetId,
             _minPeriod,
@@ -230,32 +235,65 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibRent.rent(_eNft, _period);
     }
 
-    /// @notice Sets Metaverse registry to the contract
+    /// @notice Sets name to Metaverse
+    /// @param _metaverseId The target metaverse
+    /// @param _name Name of the metaverse
+    function setMetaverseName(uint256 _metaverseId, string memory _name)
+        external
+    {
+        LibOwnership.enforceIsContractOwner();
+        LibMarketplace.setMetaverseName(_metaverseId, _name);
+
+        emit SetMetaverseName(_metaverseId, _name);
+    }
+
+    /// @notice Sets Metaverse registry to a metaverse
+    /// @param _metaverseId The target metaverse
     /// @param _registry The registry to be set
     /// @param _status Whether the registry will be added/removed
-    function setRegistry(address _registry, bool _status) external {
+    function setRegistry(
+        uint256 _metaverseId,
+        address _registry,
+        bool _status
+    ) external {
         require(_registry != address(0), "_registy must not be 0x0");
         LibOwnership.enforceIsContractOwner();
 
-        LibMarketplace.setRegistry(_registry, _status);
+        LibMarketplace.setRegistry(_metaverseId, _registry, _status);
 
-        emit SetRegistry(_registry, _status);
+        emit SetRegistry(_metaverseId, _registry, _status);
     }
 
-    /// @notice Get whether the metaverse registry is supported
+    /// @notice Get whether the registry is supported for a metaverse
+    /// @param _metaverseId The target metaverse
     /// @param _registry The target registry
-    function supportsRegistry(address _registry) external view returns (bool) {
-        return LibMarketplace.supportsRegistry(_registry);
+    function supportsRegistry(uint256 _metaverseId, address _registry)
+        external
+        view
+        returns (bool)
+    {
+        return LibMarketplace.supportsRegistry(_metaverseId, _registry);
     }
 
-    /// @notice Gets the total amount of metaverse registries
-    function totalRegistries() external view returns (uint256) {
-        return LibMarketplace.totalRegistries();
+    /// @notice Gets the total amount of registries for a metaverse
+    /// @param _metaverseId The target metaverse
+    function totalRegistries(uint256 _metaverseId)
+        external
+        view
+        returns (uint256)
+    {
+        return LibMarketplace.totalRegistries(_metaverseId);
     }
 
-    /// @notice Gets the metaverse registry at a given index
-    function registryAt(uint256 _index) external view returns (address) {
-        return LibMarketplace.registryAt(_index);
+    /// @notice Gets a metaverse registry at a given index
+    /// @param _metaverseId The target metaverse
+    /// @param _index The target index
+    function registryAt(uint256 _metaverseId, uint256 _index)
+        external
+        view
+        returns (address)
+    {
+        return LibMarketplace.registryAt(_metaverseId, _index);
     }
 
     /// @notice Gets the address of the LandWorks eNFT

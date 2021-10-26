@@ -7,6 +7,7 @@ import "../libraries/LibReward.sol";
 interface IMarketplaceFacet {
     event Add(
         uint256 _eNft,
+        uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
         uint256 _minPeriod,
@@ -38,11 +39,13 @@ interface IMarketplaceFacet {
         address indexed _recipient,
         uint256 _amount
     );
-    event SetRegistry(address _registry, bool _status);
+    event SetMetaverseName(uint256 _metaverseId, string _name);
+    event SetRegistry(uint256 _metaverseId, address _registry, bool _status);
 
     function initMarketplace(address _landWorksNft) external;
 
     function add(
+        uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
         uint256 _minPeriod,
@@ -67,13 +70,29 @@ interface IMarketplaceFacet {
 
     function rent(uint256 _eNft, uint256 _period) external payable;
 
-    function setRegistry(address _registry, bool _status) external;
+    function setMetaverseName(uint256 _metaverseId, string memory _name)
+        external;
 
-    function supportsRegistry(address _registry) external view returns (bool);
+    function setRegistry(
+        uint256 _metaverseId,
+        address _registry,
+        bool _status
+    ) external;
 
-    function totalRegistries() external view returns (uint256);
+    function supportsRegistry(uint256 _metaverseId, address _registry)
+        external
+        view
+        returns (bool);
 
-    function registryAt(uint256 _index) external view returns (address);
+    function totalRegistries(uint256 _metaverseId)
+        external
+        view
+        returns (uint256);
+
+    function registryAt(uint256 _metaverseId, uint256 _index)
+        external
+        view
+        returns (address);
 
     function landWorksNft() external view returns (address);
 
