@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../interfaces/ILandWorksNFT.sol";
 import "../interfaces/IMarketplaceFacet.sol";
+import "../libraries/LibClaim.sol";
 import "../libraries/LibReward.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibRent.sol";
 
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
-    using SafeERC20 for IERC20;
-
     /// @notice Initialises the MarketplaceFacet
     /// @param _landWorksNft The LandWorks NFT
     function initMarketplace(address _landWorksNft) external {
@@ -141,7 +139,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         uint256 amount = LibReward.claimReward(_eNft, oldPaymentToken);
 
-        claimReward(_eNft, oldPaymentToken, msg.sender, amount);
+        LibClaim.claimReward(_eNft, oldPaymentToken, msg.sender, amount);
 
         emit UpdateConditions(
             _eNft,
@@ -167,15 +165,17 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
 
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
-        uint256 amount = LibReward.claimReward(_eNft, asset.paymentToken);
 
         ms.assets[_eNft].status = LibMarketplace.AssetStatus.Delisted;
-        claimReward(_eNft, asset.paymentToken, msg.sender, amount);
 
         emit Delist(_eNft, msg.sender);
 
         if (block.number > ms.rents[_eNft][asset.totalRents].endBlock) {
+            uint256 amount = LibReward.claimReward(_eNft, asset.paymentToken);
+            LibClaim.claimReward(_eNft, asset.paymentToken, msg.sender, amount);
+
             delete ms.assets[_eNft];
+
             ILandWorksNFT(ms.landWorksNft).burn(_eNft);
             IERC721(asset.metaverseRegistry).safeTransferFrom(
                 address(this),
@@ -207,6 +207,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_eNft has an active rent"
         );
 
+        uint256 amount = LibReward.claimReward(_eNft, asset.paymentToken);
+        LibClaim.claimReward(_eNft, asset.paymentToken, msg.sender, amount);
+
         delete ms.assets[_eNft];
         ILandWorksNFT(ms.landWorksNft).burn(_eNft);
         IERC721(asset.metaverseRegistry).safeTransferFrom(
@@ -225,35 +228,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _period The target period the rent will be active
     function rent(uint256 _eNft, uint256 _period) external payable {
         LibRent.rent(_eNft, _period);
-    }
-
-    /// @notice Claims accrued rent fees for a given eNft
-    /// @param _eNft The target _eNft
-    function claimReward(uint256 _eNft) external {
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
-        require(
-            ILandWorksNFT(ms.landWorksNft).isApprovedOrOwner(msg.sender, _eNft),
-            "caller must be approved or owner of eNft"
-        );
-
-        address paymentToken = ms.assets[_eNft].paymentToken;
-        uint256 amount = LibReward.claimReward(_eNft, paymentToken);
-
-        claim(paymentToken, msg.sender, amount);
-    }
-
-    /// @notice Claims protocol fees of a given payment token
-    /// Provide 0x0 for ETH
-    /// @param _token The target token
-    function claimFee(address _token) external {
-        LibOwnership.enforceIsContractOwner();
-
-        uint256 amount = LibReward.claimFee(_token);
-
-        claim(_token, msg.sender, amount);
-
-        emit ClaimFee(_token, msg.sender, amount);
     }
 
     /// @notice Sets Metaverse registry to the contract
@@ -330,30 +304,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         returns (LibReward.Reward memory)
     {
         return LibReward.assetRewardFor(_eNft, _token);
-    }
-
-    function claimReward(
-        uint256 _eNft,
-        address _token,
-        address _recipient,
-        uint256 _amount
-    ) internal {
-        claim(_token, _recipient, _amount);
-        emit ClaimReward(_eNft, _token, _recipient, _amount);
-    }
-
-    function claim(
-        address _token,
-        address _recipient,
-        uint256 _amount
-    ) internal {
-        if (_amount != 0) {
-            if (_token == address(0)) {
-                payable(_recipient).transfer(_amount);
-            } else {
-                IERC20(_token).safeTransfer(_recipient, _amount);
-            }
-        }
     }
 
     function enforceIsValidToken(address _token) internal view {

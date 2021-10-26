@@ -32,7 +32,6 @@ interface IMarketplaceFacet {
     );
     event Delist(uint256 _eNft, address indexed _caller);
     event Withdraw(uint256 _eNft, address indexed _caller);
-    event ClaimFee(address _token, address _recipient, uint256 _amount);
     event ClaimReward(
         uint256 _eNft,
         address _token,
@@ -67,10 +66,6 @@ interface IMarketplaceFacet {
     function withdraw(uint256 _eNft) external;
 
     function rent(uint256 _eNft, uint256 _period) external payable;
-
-    function claimReward(uint256 _eNft) external;
-
-    function claimFee(address _token) external;
 
     function setRegistry(address _registry, bool _status) external;
 

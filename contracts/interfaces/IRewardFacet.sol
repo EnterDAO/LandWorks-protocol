@@ -2,9 +2,20 @@
 pragma solidity ^0.8.9;
 
 interface IRewardFacet {
+    event ClaimFee(address _token, address _recipient, uint256 _amount);
+    event ClaimReward(
+        uint256 _eNft,
+        address _token,
+        address indexed _recipient,
+        uint256 _amount
+    );
     event SetFee(address indexed _caller, uint256 _fee);
     event SetFeePrecision(address indexed _caller, uint256 _feePrecision);
     event SetTokenPayment(address _token, bool _status);
+
+    function claimReward(uint256 _eNft) external;
+
+    function claimFee(address _token) external;
 
     function setFee(uint256 _feePercentage) external;
 

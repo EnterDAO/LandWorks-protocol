@@ -1,11 +1,44 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "../interfaces/ILandWorksNFT.sol";
+
 import "../interfaces/IRewardFacet.sol";
+import "../libraries/LibClaim.sol";
+import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibReward.sol";
 
 contract RewardFacet is IRewardFacet {
+    /// @notice Claims protocol fees of a given payment token
+    /// Provide 0x0 for ETH
+    /// @param _token The target token
+    function claimFee(address _token) external {
+        LibOwnership.enforceIsContractOwner();
+
+        uint256 amount = LibReward.claimFee(_token);
+
+        LibClaim.claim(_token, msg.sender, amount);
+
+        emit ClaimFee(_token, msg.sender, amount);
+    }
+
+    /// @notice Claims accrued rent fees for a given eNft
+    /// @param _eNft The target _eNft
+    function claimReward(uint256 _eNft) external {
+        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
+            .marketplaceStorage();
+        require(
+            ILandWorksNFT(ms.landWorksNft).isApprovedOrOwner(msg.sender, _eNft),
+            "caller must be approved or owner of eNft"
+        );
+
+        address paymentToken = ms.assets[_eNft].paymentToken;
+        uint256 amount = LibReward.claimReward(_eNft, paymentToken);
+
+        LibClaim.claimReward(_eNft, paymentToken, msg.sender, amount);
+    }
+
     /// @notice Sets the protocol fee for land rentals
     /// @param _feePercentage The fee percentage charged on every rent
     function setFee(uint256 _feePercentage) external {
