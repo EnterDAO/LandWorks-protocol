@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../interfaces/ILandWorksNFT.sol";
 import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibClaim.sol";
-import "../libraries/LibReward.sol";
+import "../libraries/LibFee.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibRent.sol";
@@ -39,7 +39,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0 for ETH
     /// @param _pricePerBlock The price for rental per block
-    function add(
+    function list(
         uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
@@ -85,7 +85,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         asset.maxFutureBlock = _maxFutureBlock;
         asset.pricePerBlock = _pricePerBlock;
 
-        emit Add(
+        emit List(
             eNft,
             _metaverseId,
             _metaverseRegistry,
@@ -99,7 +99,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     }
 
     /// @notice Updates the lending conditions for a given eNft
-    /// Pays out the current unclaimed rent reward to the caller.
+    /// Pays out the current unclaimed rent fees to the caller.
     /// Updated conditions apply the next time the land is rented.
     /// Does not affect previous and queued rents
     /// If any of the old conditions do not want to be modified, the old ones must be provided
@@ -142,9 +142,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         asset.maxPeriod = _maxPeriod;
         asset.pricePerBlock = _pricePerBlock;
 
-        uint256 amount = LibReward.claimReward(_eNft, oldPaymentToken);
+        uint256 rentFee = LibFee.claimRentFee(_eNft, oldPaymentToken);
 
-        LibClaim.claimReward(_eNft, oldPaymentToken, msg.sender, amount);
+        LibClaim.transferRentFee(_eNft, oldPaymentToken, msg.sender, rentFee);
 
         emit UpdateConditions(
             _eNft,
@@ -157,7 +157,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     }
 
     /// @notice Removes the land represented by the eNft from the marketplace
-    /// Pays out the current unclaimed rent reward to the caller.
+    /// Pays out the current unclaimed rent fees to the caller.
     /// If there are no active rents:
     /// Burns the eNft and transfers the land represented by the eNft to the caller
     /// @param _eNft The target eNft
@@ -176,8 +176,13 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit Delist(_eNft, msg.sender);
 
         if (block.number > ms.rents[_eNft][asset.totalRents].endBlock) {
-            uint256 amount = LibReward.claimReward(_eNft, asset.paymentToken);
-            LibClaim.claimReward(_eNft, asset.paymentToken, msg.sender, amount);
+            uint256 rentFee = LibFee.claimRentFee(_eNft, asset.paymentToken);
+            LibClaim.transferRentFee(
+                _eNft,
+                asset.paymentToken,
+                msg.sender,
+                rentFee
+            );
 
             delete ms.assets[_eNft];
 
@@ -212,8 +217,13 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_eNft has an active rent"
         );
 
-        uint256 amount = LibReward.claimReward(_eNft, asset.paymentToken);
-        LibClaim.claimReward(_eNft, asset.paymentToken, msg.sender, amount);
+        uint256 rentFee = LibFee.claimRentFee(_eNft, asset.paymentToken);
+        LibClaim.transferRentFee(
+            _eNft,
+            asset.paymentToken,
+            msg.sender,
+            rentFee
+        );
 
         delete ms.assets[_eNft];
         ILandWorksNFT(ms.landWorksNft).burn(_eNft);
@@ -327,26 +337,26 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     function protocolFeeFor(address _token)
         external
         view
-        returns (LibReward.Reward memory)
+        returns (LibFee.Fee memory)
     {
-        return LibReward.protocolFeeFor(_token);
+        return LibFee.protocolFeeFor(_token);
     }
 
-    /// @notice Gets the accumulated and paid amount of asset rewards of a payment
+    /// @notice Gets the accumulated and paid amount of asset rent fees of a payment
     /// token for an eNft
     /// @param _eNft The target eNft
     /// @param _token The target token
-    function assetRewardFor(uint256 _eNft, address _token)
+    function assetRentFeesFor(uint256 _eNft, address _token)
         external
         view
-        returns (LibReward.Reward memory)
+        returns (LibFee.Fee memory)
     {
-        return LibReward.assetRewardFor(_eNft, _token);
+        return LibFee.assetRentFeesFor(_eNft, _token);
     }
 
     function enforceIsValidToken(address _token) internal view {
         require(
-            _token == address(0) || LibReward.supportsTokenPayment(_token),
+            _token == address(0) || LibFee.supportsTokenPayment(_token),
             "token not supported"
         );
     }

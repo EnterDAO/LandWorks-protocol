@@ -7,24 +7,24 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 library LibClaim {
     using SafeERC20 for IERC20;
 
-    event ClaimReward(
+    event ClaimRentFee(
         uint256 _eNft,
         address _token,
         address indexed _recipient,
         uint256 _amount
     );
 
-    function claimReward(
+    function transferRentFee(
         uint256 _eNft,
         address _token,
         address _recipient,
         uint256 _amount
     ) internal {
-        claim(_token, _recipient, _amount);
-        emit ClaimReward(_eNft, _token, _recipient, _amount);
+        transfer(_token, _recipient, _amount);
+        emit ClaimRentFee(_eNft, _token, _recipient, _amount);
     }
 
-    function claim(
+    function transfer(
         address _token,
         address _recipient,
         uint256 _amount

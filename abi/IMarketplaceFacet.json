@@ -10,6 +10,56 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimRentFee",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_caller",
+        "type": "address"
+      }
+    ],
+    "name": "Delist",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "_metaverseId",
         "type": "uint256"
@@ -57,57 +107,7 @@
         "type": "uint256"
       }
     ],
-    "name": "Add",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_eNft",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_recipient",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "ClaimReward",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_eNft",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_caller",
-        "type": "address"
-      }
-    ],
-    "name": "Delist",
+    "name": "List",
     "type": "event"
   },
   {
@@ -257,54 +257,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_metaverseId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_metaverseRegistry",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_metaverseAssetId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_minPeriod",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxPeriod",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxFutureBlock",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_paymentToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pricePerBlock",
-        "type": "uint256"
-      }
-    ],
-    "name": "add",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_eNft",
         "type": "uint256"
       }
@@ -385,7 +337,7 @@
         "type": "address"
       }
     ],
-    "name": "assetRewardFor",
+    "name": "assetRentFeesFor",
     "outputs": [
       {
         "components": [
@@ -400,7 +352,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct LibReward.Reward",
+        "internalType": "struct LibFee.Fee",
         "name": "",
         "type": "tuple"
       }
@@ -450,6 +402,54 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_metaverseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_metaverseRegistry",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_metaverseAssetId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxFutureBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_paymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pricePerBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "list",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_token",
         "type": "address"
@@ -470,7 +470,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct LibReward.Reward",
+        "internalType": "struct LibFee.Fee",
         "name": "",
         "type": "tuple"
       }

@@ -2,10 +2,10 @@
 pragma solidity 0.8.9;
 
 import "../libraries/LibMarketplace.sol";
-import "../libraries/LibReward.sol";
+import "../libraries/LibFee.sol";
 
 interface IMarketplaceFacet {
-    event Add(
+    event List(
         uint256 _eNft,
         uint256 _metaverseId,
         address _metaverseRegistry,
@@ -33,7 +33,7 @@ interface IMarketplaceFacet {
     );
     event Delist(uint256 _eNft, address indexed _caller);
     event Withdraw(uint256 _eNft, address indexed _caller);
-    event ClaimReward(
+    event ClaimRentFee(
         uint256 _eNft,
         address _token,
         address indexed _recipient,
@@ -44,7 +44,7 @@ interface IMarketplaceFacet {
 
     function initMarketplace(address _landWorksNft) external;
 
-    function add(
+    function list(
         uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
@@ -109,10 +109,10 @@ interface IMarketplaceFacet {
     function protocolFeeFor(address _token)
         external
         view
-        returns (LibReward.Reward memory);
+        returns (LibFee.Fee memory);
 
-    function assetRewardFor(uint256 _eNft, address _token)
+    function assetRentFeesFor(uint256 _eNft, address _token)
         external
         view
-        returns (LibReward.Reward memory);
+        returns (LibFee.Fee memory);
 }

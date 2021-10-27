@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-interface IRewardFacet {
+interface IFeeFacet {
     event ClaimFee(address _token, address _recipient, uint256 _amount);
-    event ClaimReward(
+    event ClaimRentFee(
         uint256 _eNft,
         address _token,
         address indexed _recipient,
@@ -13,9 +13,9 @@ interface IRewardFacet {
     event SetFeePrecision(address indexed _caller, uint256 _feePrecision);
     event SetTokenPayment(address _token, bool _status);
 
-    function claimReward(uint256 _eNft) external;
+    function claimRentFee(uint256 _eNft) external;
 
-    function claimFee(address _token) external;
+    function claimProtocolFee(address _token) external;
 
     function setFee(address _token, uint256 _feePercentage) external;
 

@@ -3,29 +3,29 @@ pragma solidity ^0.8.9;
 
 import "../interfaces/ILandWorksNFT.sol";
 
-import "../interfaces/IRewardFacet.sol";
+import "../interfaces/IFeeFacet.sol";
 import "../libraries/LibClaim.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
-import "../libraries/LibReward.sol";
+import "../libraries/LibFee.sol";
 
-contract RewardFacet is IRewardFacet {
+contract FeeFacet is IFeeFacet {
     /// @notice Claims protocol fees of a given payment token
     /// Provide 0x0 for ETH
     /// @param _token The target token
-    function claimFee(address _token) external {
+    function claimProtocolFee(address _token) external {
         LibOwnership.enforceIsContractOwner();
 
-        uint256 amount = LibReward.claimFee(_token);
+        uint256 protocolFee = LibFee.claimProtocolFee(_token);
 
-        LibClaim.claim(_token, msg.sender, amount);
+        LibClaim.transfer(_token, msg.sender, protocolFee);
 
-        emit ClaimFee(_token, msg.sender, amount);
+        emit ClaimFee(_token, msg.sender, protocolFee);
     }
 
     /// @notice Claims accrued rent fees for a given eNft
     /// @param _eNft The target _eNft
-    function claimReward(uint256 _eNft) external {
+    function claimRentFee(uint256 _eNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
@@ -34,9 +34,9 @@ contract RewardFacet is IRewardFacet {
         );
 
         address paymentToken = ms.assets[_eNft].paymentToken;
-        uint256 amount = LibReward.claimReward(_eNft, paymentToken);
+        uint256 amount = LibFee.claimRentFee(_eNft, paymentToken);
 
-        LibClaim.claimReward(_eNft, paymentToken, msg.sender, amount);
+        LibClaim.transferRentFee(_eNft, paymentToken, msg.sender, amount);
     }
 
     /// @notice Sets the protocol fee for token payments
@@ -44,7 +44,7 @@ contract RewardFacet is IRewardFacet {
     /// @param _feePercentage The fee percentage, charged on every rent
     function setFee(address _token, uint256 _feePercentage) external {
         LibOwnership.enforceIsContractOwner();
-        LibReward.setFeePercentage(_token, _feePercentage);
+        LibFee.setFeePercentage(_token, _feePercentage);
     }
 
     /// @notice Sets the protocol fee precision
@@ -53,7 +53,7 @@ contract RewardFacet is IRewardFacet {
     function setFeePrecision(uint256 _feePrecision) external {
         LibOwnership.enforceIsContractOwner();
         require(_feePrecision >= 10, "_feePrecision must not be single-digit");
-        LibReward.setFeePrecision(_feePrecision);
+        LibFee.setFeePrecision(_feePrecision);
         emit SetFeePrecision(msg.sender, _feePrecision);
     }
 
@@ -69,34 +69,34 @@ contract RewardFacet is IRewardFacet {
         require(_token != address(0), "_token must not be 0x0");
         LibOwnership.enforceIsContractOwner();
 
-        LibReward.setTokenPayment(_token, _status);
-        LibReward.setFeePercentage(_token, _feePercentage);
+        LibFee.setTokenPayment(_token, _status);
+        LibFee.setFeePercentage(_token, _feePercentage);
     }
 
     /// @notice Gets whether the token payment is supported
     /// @param _token The target token
     function supportsTokenPayment(address _token) external view returns (bool) {
-        return LibReward.supportsTokenPayment(_token);
+        return LibFee.supportsTokenPayment(_token);
     }
 
     /// @notice Gets the total amount of token payments
     function totalTokenPayments() external view returns (uint256) {
-        return LibReward.totalTokenPayments();
+        return LibFee.totalTokenPayments();
     }
 
     /// @notice Gets the token payment at a given index
     function tokenPaymentAt(uint256 _index) external view returns (address) {
-        return LibReward.tokenPaymentAt(_index);
+        return LibFee.tokenPaymentAt(_index);
     }
 
     /// @notice Gets the fee percentage for a token payment
     /// @param _token The target token
     function feePercentage(address _token) external view returns (uint256) {
-        return LibReward.feePercentage(_token);
+        return LibFee.feePercentage(_token);
     }
 
     /// @notice Gets the fee precision
     function feePrecision() external view returns (uint256) {
-        return LibReward.feePrecision();
+        return LibFee.feePrecision();
     }
 }
