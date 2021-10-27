@@ -42,8 +42,6 @@ interface IMarketplaceFacet {
     event SetMetaverseName(uint256 _metaverseId, string _name);
     event SetRegistry(uint256 _metaverseId, address _registry, bool _status);
 
-    function initMarketplace(address _landWorksNft) external;
-
     function list(
         uint256 _metaverseId,
         address _metaverseRegistry,
@@ -93,8 +91,6 @@ interface IMarketplaceFacet {
         external
         view
         returns (address);
-
-    function landWorksNft() external view returns (address);
 
     function assetAt(uint256 _eNft)
         external

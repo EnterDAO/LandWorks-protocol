@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../interfaces/ILandWorksNFT.sol";
 import "../interfaces/IMarketplaceFacet.sol";
+import "../libraries/LibERC721.sol";
 import "../libraries/LibClaim.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibMarketplace.sol";
@@ -14,18 +14,6 @@ import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibRent.sol";
 
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
-    /// @notice Initialises the MarketplaceFacet
-    /// @param _landWorksNft The LandWorks NFT
-    function initMarketplace(address _landWorksNft) external {
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
-        require(!ms.initialized, "MarketplaceStorage already initialized");
-        require(_landWorksNft != address(0), "landWorksNft must not be 0x0");
-
-        ms.initialized = true;
-        ms.landWorksNft = _landWorksNft;
-    }
-
     /// @notice Provides land of the given metaverse registry
     /// Transfers and locks the provided metaverse land to the contract
     /// and mints an eNft, representing the locked land.
@@ -72,7 +60,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        uint256 eNft = ILandWorksNFT(ms.landWorksNft).mint(msg.sender);
+        uint256 eNft = LibERC721._mint(msg.sender);
 
         LibMarketplace.Asset storage asset = ms.assets[eNft];
 
@@ -122,7 +110,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            ILandWorksNFT(ms.landWorksNft).isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of _eNft"
         );
         require(_minPeriod != 0, "_minPeriod must not be 0");
@@ -165,7 +153,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            ILandWorksNFT(ms.landWorksNft).isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of _eNft"
         );
 
@@ -186,7 +174,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
             delete ms.assets[_eNft];
 
-            ILandWorksNFT(ms.landWorksNft).burn(_eNft);
+            LibERC721._burn(_eNft);
             IERC721(asset.metaverseRegistry).safeTransferFrom(
                 address(this),
                 msg.sender,
@@ -204,7 +192,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            ILandWorksNFT(ms.landWorksNft).isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of _eNft"
         );
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
@@ -226,7 +214,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
 
         delete ms.assets[_eNft];
-        ILandWorksNFT(ms.landWorksNft).burn(_eNft);
+        LibERC721._burn(_eNft);
         IERC721(asset.metaverseRegistry).safeTransferFrom(
             address(this),
             msg.sender,
@@ -304,11 +292,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         returns (address)
     {
         return LibMarketplace.registryAt(_metaverseId, _index);
-    }
-
-    /// @notice Gets the address of the LandWorks eNFT
-    function landWorksNft() external view returns (address) {
-        return LibMarketplace.landWorksNft();
     }
 
     /// @notice Gets all asset data for a specific eNft

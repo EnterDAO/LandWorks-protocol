@@ -1,9 +1,9 @@
-import {ethers} from 'hardhat';
-import {expect} from 'chai';
-import {Contract, Signer} from 'ethers';
-import {Diamond} from '../utils/diamond';
-import {DiamondCutFacet, DiamondLoupeFacet, OwnershipFacet, Test1Facet, Test2Facet} from '../typechain';
-import {Deployer} from "../utils/deployer";
+import { ethers } from 'hardhat';
+import { expect } from 'chai';
+import { Contract, Signer } from 'ethers';
+import { Diamond } from '../utils/diamond';
+import { DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, FeeFacet, LandRegistry, MarketplaceFacet, OwnershipFacet, Test1Facet, Test2Facet } from '../typechain';
+import { Deployer } from "../utils/deployer";
 import FacetCutAction = Diamond.FacetCutAction;
 
 describe('LandWorks', function () {
@@ -268,6 +268,106 @@ describe('LandWorks', function () {
             expect(actualSelectors).to.not.include(ownerSel, 'Contains ownerSel');
             expect(actualSelectors).to.not.include(sel10, 'Contains sel10');
             expect(actualSelectors).to.not.include(sel5, 'Contains sel5');
+        });
+    });
+
+    describe('ERC721 Test', async () => {
+        const ERC721Symbol = 'LW';
+        const ERC721Name = 'LandWorks';
+
+        let erc721: Contract;
+        let erc721Facet: Erc721Facet;
+        let marketplace: Contract;
+        let marketplaceFacet: MarketplaceFacet;
+        let fee: Contract;
+        let feeFacet: FeeFacet;
+
+        let decentralandProxy: Contract;
+        let decentralandLandRegistry: Contract;
+        let landRegistry: LandRegistry;
+
+        beforeEach(async () => {
+            const signers = await ethers.getSigners();
+            owner = signers[0];
+            nonOwner = signers[1];
+
+            const deployedLib = await Deployer.deployContract('LibERC721');
+
+            cut = await Deployer.deployContract('DiamondCutFacet');
+            loupe = await Deployer.deployContract('DiamondLoupeFacet');
+            ownership = await Deployer.deployContract('OwnershipFacet');
+            erc721 = await Deployer.deployContract('ERC721Facet', {
+                libraries: {
+                    LibERC721: deployedLib.address
+                }
+            });
+            marketplace = await Deployer.deployContract('MarketplaceFacet');
+            fee = await Deployer.deployContract('FeeFacet');
+            diamond = await Deployer.deployDiamond(
+                'LandWorks',
+                [cut, loupe, ownership, erc721, marketplace, fee],
+                await owner.getAddress(),
+            );
+
+            loupeFacet = (await Diamond.asFacet(diamond, 'DiamondLoupeFacet')) as DiamondLoupeFacet;
+            cutFacet = (await Diamond.asFacet(diamond, 'DiamondCutFacet')) as DiamondCutFacet;
+            ownershipFacet = (await Diamond.asFacet(diamond, 'OwnershipFacet')) as OwnershipFacet;
+            erc721Facet = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
+            marketplaceFacet = (await Diamond.asFacet(diamond, 'MarketplaceFacet')) as MarketplaceFacet;
+            feeFacet = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
+
+            // Init ERC721
+            await erc721Facet.initERC721(ERC721Name, ERC721Symbol);
+
+            // Deploy Decentraland LAND
+            decentralandProxy = await Deployer.deployContract('LANDProxyMock');
+            decentralandLandRegistry = await Deployer.deployContract('LANDRegistryMock');
+
+            await decentralandProxy.upgrade(decentralandLandRegistry.address, await owner.getAddress());
+
+            landRegistry = (await ethers.getContractAt('LANDRegistryMock', decentralandProxy.address)) as LandRegistry;
+        });
+
+        it('should properly initialised erc721', async () => {
+            expect(await erc721Facet.name()).to.equal(ERC721Name);
+            expect(await erc721Facet.symbol()).to.equal(ERC721Symbol);
+        });
+
+        it('should list decentraland asset and issue eNft', async () => {
+            // given:
+            const decentralandMetaverseId = 0;
+            await marketplaceFacet.setMetaverseName(decentralandMetaverseId, 'Decentraland');
+            await marketplaceFacet.setRegistry(decentralandMetaverseId, landRegistry.address, true);
+            // and:
+            const x = 0, y = 0;
+            await landRegistry.authorizeDeploy(await owner.getAddress());
+            await landRegistry.assignNewParcel(x, y, await owner.getAddress());
+            const landId = await landRegistry.encodeTokenId(x, y);
+            // and:
+            await landRegistry.approve(marketplaceFacet.address, landId);
+            const minPeriod = 1;
+            const maxPeriod = 100;
+            const maxFutureBlock = 120;
+            const pricePerBlock = 1337;
+
+            // when:
+            await marketplaceFacet.list(decentralandMetaverseId, landRegistry.address, landId, minPeriod, maxPeriod, maxFutureBlock, ethers.constants.AddressZero, pricePerBlock);
+
+            // then:
+            expect(await landRegistry.ownerOf(landId)).to.equal(marketplaceFacet.address);
+            expect(await erc721Facet.ownerOf(0)).to.equal(await owner.getAddress());
+            // and:
+            const asset = await marketplaceFacet.assetAt(0);
+            expect(asset.metaverseId).to.equal(decentralandMetaverseId);
+            expect(asset.metaverseRegistry).to.equal(landRegistry.address);
+            expect(asset.metaverseAssetId).to.equal(landId);
+            expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+            expect(asset.minPeriod).to.equal(minPeriod);
+            expect(asset.maxPeriod).to.equal(maxPeriod);
+            expect(asset.maxFutureBlock).to.equal(maxFutureBlock);
+            expect(asset.pricePerBlock).equal(pricePerBlock);
+            expect(asset.status).to.equal(0); // Listed
+            expect(asset.totalRents).to.equal(0);
         });
     });
 });

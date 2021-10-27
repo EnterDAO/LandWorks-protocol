@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../../interfaces/ILandWorksNFT.sol";
+import "../LibERC721.sol";
 import "../LibMarketplace.sol";
 import "../LibFee.sol";
 
@@ -28,10 +28,7 @@ library LibRent {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        require(
-            ILandWorksNFT(ms.landWorksNft).ownerOf(_eNft) != address(0),
-            "_eNft not found"
-        );
+        require(LibERC721._ownerOf(_eNft) != address(0), "_eNft not found");
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
         require(
             asset.status == LibMarketplace.AssetStatus.Listed,

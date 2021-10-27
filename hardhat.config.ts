@@ -43,7 +43,7 @@ module.exports = {
     networks: config.networks,
     etherscan: config.etherscan,
     abiExporter: {
-        only: ['LandWorks', 'DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet', 'IRewardFacet', 'IMarketplaceFacet', 'IDecentralandFacet'],
+        only: ['LandWorks', 'DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet', 'IFeeFacet', 'IMarketplaceFacet', 'IDecentralandFacet', 'ERC721Facet'],
         except: ['.*Mock$'],
         clear: true,
         flat: true,

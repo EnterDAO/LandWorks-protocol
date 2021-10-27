@@ -41,9 +41,6 @@ library LibMarketplace {
     }
 
     struct MarketplaceStorage {
-        bool initialized;
-        // Address of the LandWorks NFT
-        address landWorksNft;
         // Supported metaverse registries
         mapping(uint256 => MetaverseRegistry) metaverseRegistries;
         // Assets
@@ -135,10 +132,6 @@ library LibMarketplace {
         });
 
         return newRentId;
-    }
-
-    function landWorksNft() internal view returns (address) {
-        return marketplaceStorage().landWorksNft;
     }
 
     function assetAt(uint256 _eNft) internal view returns (Asset memory) {

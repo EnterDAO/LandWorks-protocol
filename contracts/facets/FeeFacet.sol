@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../interfaces/ILandWorksNFT.sol";
-
 import "../interfaces/IFeeFacet.sol";
+import "../libraries/LibERC721.sol";
 import "../libraries/LibClaim.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
@@ -29,7 +28,7 @@ contract FeeFacet is IFeeFacet {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            ILandWorksNFT(ms.landWorksNft).isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of eNft"
         );
 
