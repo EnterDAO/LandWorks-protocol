@@ -72,6 +72,28 @@ contract FeeFacet is IFeeFacet {
         LibFee.setFeePercentage(_token, _feePercentage);
     }
 
+    /// @notice Gets the accumulated and paid amount of fees for a payment token
+    /// @param _token The target token
+    function protocolFeeFor(address _token)
+        external
+        view
+        returns (LibFee.Fee memory)
+    {
+        return LibFee.protocolFeeFor(_token);
+    }
+
+    /// @notice Gets the accumulated and paid amount of asset rent fees of a payment
+    /// token for an eNft
+    /// @param _eNft The target eNft
+    /// @param _token The target token
+    function assetRentFeesFor(uint256 _eNft, address _token)
+        external
+        view
+        returns (LibFee.Fee memory)
+    {
+        return LibFee.assetRentFeesFor(_eNft, _token);
+    }
+
     /// @notice Gets whether the token payment is supported
     /// @param _token The target token
     function supportsTokenPayment(address _token) external view returns (bool) {

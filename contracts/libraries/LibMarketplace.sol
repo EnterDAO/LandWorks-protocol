@@ -60,19 +60,27 @@ library LibMarketplace {
         }
     }
 
-    function setMetaverseName(uint256 _metaverse, string memory _name)
+    function setMetaverseName(uint256 _metaverseId, string memory _name)
         internal
     {
-        marketplaceStorage().metaverseRegistries[_metaverse].name = _name;
+        marketplaceStorage().metaverseRegistries[_metaverseId].name = _name;
+    }
+
+    function metaverseName(uint256 _metaverseId)
+        internal
+        view
+        returns (string memory)
+    {
+        return marketplaceStorage().metaverseRegistries[_metaverseId].name;
     }
 
     function setRegistry(
-        uint256 _metaverse,
+        uint256 _metaverseId,
         address _registry,
         bool _status
     ) internal {
         LibMarketplace.MetaverseRegistry storage mr = marketplaceStorage()
-            .metaverseRegistries[_metaverse];
+            .metaverseRegistries[_metaverseId];
         if (_status) {
             require(mr.registries.add(_registry), "_registry already added");
         } else {
@@ -80,39 +88,40 @@ library LibMarketplace {
         }
     }
 
-    function supportsRegistry(uint256 _metaverse, address _registry)
+    function supportsRegistry(uint256 _metaverseId, address _registry)
         internal
         view
         returns (bool)
     {
         return
             marketplaceStorage()
-                .metaverseRegistries[_metaverse]
+                .metaverseRegistries[_metaverseId]
                 .registries
                 .contains(_registry);
     }
 
-    function totalRegistries(uint256 _metaverse)
+    function totalRegistries(uint256 _metaverseId)
         internal
         view
         returns (uint256)
     {
         return
             marketplaceStorage()
-                .metaverseRegistries[_metaverse]
+                .metaverseRegistries[_metaverseId]
                 .registries
                 .length();
     }
 
-    function registryAt(uint256 _metaverse, uint256 _index)
+    function registryAt(uint256 _metaverseId, uint256 _index)
         internal
         view
         returns (address)
     {
         return
-            marketplaceStorage().metaverseRegistries[_metaverse].registries.at(
-                _index
-            );
+            marketplaceStorage()
+                .metaverseRegistries[_metaverseId]
+                .registries
+                .at(_index);
     }
 
     function addRent(

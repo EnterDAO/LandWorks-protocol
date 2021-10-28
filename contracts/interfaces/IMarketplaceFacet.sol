@@ -2,7 +2,6 @@
 pragma solidity 0.8.9;
 
 import "../libraries/LibMarketplace.sol";
-import "../libraries/LibFee.sol";
 
 interface IMarketplaceFacet {
     event List(
@@ -77,6 +76,11 @@ interface IMarketplaceFacet {
         bool _status
     ) external;
 
+    function metaverseName(uint256 _metaverseId)
+        external
+        view
+        returns (string memory);
+
     function supportsRegistry(uint256 _metaverseId, address _registry)
         external
         view
@@ -101,14 +105,4 @@ interface IMarketplaceFacet {
         external
         view
         returns (LibMarketplace.Rent memory);
-
-    function protocolFeeFor(address _token)
-        external
-        view
-        returns (LibFee.Fee memory);
-
-    function assetRentFeesFor(uint256 _eNft, address _token)
-        external
-        view
-        returns (LibFee.Fee memory);
 }

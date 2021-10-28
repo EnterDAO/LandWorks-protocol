@@ -262,6 +262,14 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit SetRegistry(_metaverseId, _registry, _status);
     }
 
+    function metaverseName(uint256 _metaverseId)
+        external
+        view
+        returns (string memory)
+    {
+        return LibMarketplace.metaverseName(_metaverseId);
+    }
+
     /// @notice Get whether the registry is supported for a metaverse
     /// @param _metaverseId The target metaverse
     /// @param _registry The target registry
@@ -313,28 +321,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         returns (LibMarketplace.Rent memory)
     {
         return LibMarketplace.rentAt(_eNft, _rentId);
-    }
-
-    /// @notice Gets the accumulated and paid amount of fees for a payment token
-    /// @param _token The target token
-    function protocolFeeFor(address _token)
-        external
-        view
-        returns (LibFee.Fee memory)
-    {
-        return LibFee.protocolFeeFor(_token);
-    }
-
-    /// @notice Gets the accumulated and paid amount of asset rent fees of a payment
-    /// token for an eNft
-    /// @param _eNft The target eNft
-    /// @param _token The target token
-    function assetRentFeesFor(uint256 _eNft, address _token)
-        external
-        view
-        returns (LibFee.Fee memory)
-    {
-        return LibFee.assetRentFeesFor(_eNft, _token);
     }
 
     function enforceIsValidToken(address _token) internal view {
