@@ -177,6 +177,24 @@ library LibERC721 {
 
     /**
      * @dev Safely mints `tokenId` and transfers it to `to`.
+     * Returns `tokenId`.
+     *
+     * Its `tokenId` will be automatically assigned (available on the emitted {IERC721-Transfer} event).
+     *
+     * See {xref-LibERC721-safeMint-address-uint256-}[`safeMint`]
+     */
+    function safeMint(address to) internal returns (uint256) {
+        ERC721Storage storage erc721 = erc721Storage();
+        uint256 tokenId = erc721.total.current();
+
+        erc721.total.increment();
+        safeMint(to, tokenId);
+
+        return tokenId;
+    }
+
+    /**
+     * @dev Safely mints `tokenId` and transfers it to `to`.
      *
      * Requirements:
      *
@@ -190,7 +208,7 @@ library LibERC721 {
     }
 
     /**
-     * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
+     * @dev Same as {xref-LibERC721-safeMint-address-uint256-}[`safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
     function safeMint(
@@ -203,17 +221,6 @@ library LibERC721 {
             checkOnERC721Received(address(0), to, tokenId, _data),
             "ERC721: transfer to non ERC721Receiver implementer"
         );
-    }
-
-    // TODO:
-    function mint(address to) internal returns (uint256) {
-        ERC721Storage storage erc721 = erc721Storage();
-        uint256 tokenId = erc721.total.current();
-
-        erc721.total.increment();
-        mint(to, tokenId);
-
-        return tokenId;
     }
 
     /**

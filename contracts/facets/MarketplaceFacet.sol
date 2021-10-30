@@ -60,7 +60,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        uint256 eNft = LibERC721.mint(msg.sender);
+        uint256 eNft = LibERC721.safeMint(msg.sender);
 
         LibMarketplace.Asset storage asset = ms.assets[eNft];
 
