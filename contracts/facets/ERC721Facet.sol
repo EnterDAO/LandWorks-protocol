@@ -3,12 +3,11 @@ pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../libraries/LibERC721.sol";
 
-contract ERC721Facet is Context {
+contract ERC721Facet {
     using Strings for uint256;
 
     function initERC721(string memory name_, string memory symbol_) external {
@@ -85,7 +84,7 @@ contract ERC721Facet is Context {
         require(to != owner, "ERC721: approval to current owner");
 
         require(
-            _msgSender() == owner || isApprovedForAll(owner, _msgSender()),
+            msg.sender == owner || isApprovedForAll(owner, msg.sender),
             "ERC721: approve caller is not owner nor approved for all"
         );
 
@@ -103,12 +102,12 @@ contract ERC721Facet is Context {
      * @dev See {IERC721-setApprovalForAll}.
      */
     function setApprovalForAll(address operator, bool approved) external {
-        require(operator != _msgSender(), "ERC721: approve to caller");
+        require(operator != msg.sender, "ERC721: approve to caller");
 
-        LibERC721.erc721Storage()._operatorApprovals[_msgSender()][
+        LibERC721.erc721Storage()._operatorApprovals[msg.sender][
             operator
         ] = approved;
-        emit LibERC721.ApprovalForAll(_msgSender(), operator, approved);
+        emit LibERC721.ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -132,7 +131,7 @@ contract ERC721Facet is Context {
     ) public {
         //solhint-disable-next-line max-line-length
         require(
-            LibERC721._isApprovedOrOwner(_msgSender(), tokenId),
+            LibERC721._isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
 
@@ -160,7 +159,7 @@ contract ERC721Facet is Context {
         bytes memory _data
     ) public {
         require(
-            LibERC721._isApprovedOrOwner(_msgSender(), tokenId),
+            LibERC721._isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
         LibERC721._safeTransfer(from, to, tokenId, _data);
@@ -178,7 +177,7 @@ contract ERC721Facet is Context {
      */
     function burn(uint256 tokenId) public {
         require(
-            LibERC721._isApprovedOrOwner(_msgSender(), tokenId),
+            LibERC721._isApprovedOrOwner(msg.sender, tokenId),
             "ERC721Burnable: caller is not owner nor approved"
         );
         LibERC721._burn(tokenId);
