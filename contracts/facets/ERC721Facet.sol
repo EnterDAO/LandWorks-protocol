@@ -5,18 +5,24 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
+import "../libraries/LibOwnership.sol";
 import "../libraries/LibERC721.sol";
 
 contract ERC721Facet {
     using Strings for uint256;
 
-    function initERC721(string memory name_, string memory symbol_) external {
+    function initERC721(
+        string memory _name,
+        string memory _symbol,
+        string memory _baseURI
+    ) external {
         LibERC721.ERC721Storage storage erc721 = LibERC721.erc721Storage();
         require(!erc721.initialized, "ERC721 Storage already initialized");
 
         erc721.initialized = true;
-        erc721._name = name_;
-        erc721._symbol = symbol_;
+        erc721.name = _name;
+        erc721.symbol = _symbol;
+        erc721.baseURI = _baseURI;
     }
 
     /**
@@ -27,7 +33,7 @@ contract ERC721Facet {
             owner != address(0),
             "ERC721: balance query for the zero address"
         );
-        return LibERC721.erc721Storage()._balances[owner];
+        return LibERC721.erc721Storage().balances[owner];
     }
 
     /**
@@ -41,14 +47,14 @@ contract ERC721Facet {
      * @dev See {IERC721Metadata-name}.
      */
     function name() public view returns (string memory) {
-        return LibERC721.erc721Storage()._name;
+        return LibERC721.erc721Storage().name;
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
     function symbol() public view returns (string memory) {
-        return LibERC721.erc721Storage()._symbol;
+        return LibERC721.erc721Storage().symbol;
     }
 
     /**
@@ -60,10 +66,10 @@ contract ERC721Facet {
             "ERC721Metadata: URI query for nonexistent token"
         );
 
-        string memory baseURI = _baseURI();
+        string memory base = ERC721Facet.baseURI();
         return
-            bytes(baseURI).length > 0
-                ? string(abi.encodePacked(baseURI, tokenId.toString()))
+            bytes(base).length > 0
+                ? string(abi.encodePacked(base, tokenId.toString()))
                 : "";
     }
 
@@ -72,8 +78,15 @@ contract ERC721Facet {
      * token will be the concatenation of the `baseURI` and the `tokenId`. Empty
      * by default, can be overriden in child contracts.
      */
-    function _baseURI() internal view virtual returns (string memory) {
-        return ""; // TODO:
+    function baseURI() public view returns (string memory) {
+        return LibERC721.erc721Storage().baseURI;
+    }
+
+    function setBaseURI(string memory _baseURI) public {
+        LibOwnership.enforceIsContractOwner();
+
+        LibERC721.erc721Storage().baseURI = _baseURI;
+        emit LibERC721.SetBaseURI(_baseURI);
     }
 
     /**
@@ -104,7 +117,7 @@ contract ERC721Facet {
     function setApprovalForAll(address operator, bool approved) external {
         require(operator != msg.sender, "ERC721: approve to caller");
 
-        LibERC721.erc721Storage()._operatorApprovals[msg.sender][
+        LibERC721.erc721Storage().operatorApprovals[msg.sender][
             operator
         ] = approved;
         emit LibERC721.ApprovalForAll(msg.sender, operator, approved);
