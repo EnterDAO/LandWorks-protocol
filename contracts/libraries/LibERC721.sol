@@ -86,15 +86,15 @@ library LibERC721 {
      *
      * Emits a {Transfer} event.
      */
-    function _safeTransfer(
+    function safeTransfer(
         address from,
         address to,
         uint256 tokenId,
         bytes memory _data
     ) internal {
-        _transfer(from, to, tokenId);
+        transfer(from, to, tokenId);
         require(
-            _checkOnERC721Received(from, to, tokenId, _data),
+            checkOnERC721Received(from, to, tokenId, _data),
             "ERC721: transfer to non ERC721Receiver implementer"
         );
     }
@@ -107,14 +107,14 @@ library LibERC721 {
      * Tokens start existing when they are minted (`_mint`),
      * and stop existing when they are burned (`_burn`).
      */
-    function _exists(uint256 tokenId) internal view returns (bool) {
+    function exists(uint256 tokenId) internal view returns (bool) {
         return LibERC721.erc721Storage()._owners[tokenId] != address(0);
     }
 
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function _ownerOf(uint256 tokenId) internal view returns (address) {
+    function ownerOf(uint256 tokenId) internal view returns (address) {
         address owner = erc721Storage()._owners[tokenId];
         require(
             owner != address(0),
@@ -126,9 +126,9 @@ library LibERC721 {
     /**
      * @dev See {IERC721-getApproved}.
      */
-    function _getApproved(uint256 tokenId) public view returns (address) {
+    function getApproved(uint256 tokenId) public view returns (address) {
         require(
-            _exists(tokenId),
+            exists(tokenId),
             "ERC721: approved query for nonexistent token"
         );
 
@@ -138,7 +138,7 @@ library LibERC721 {
     /**
      * @dev See {IERC721-isApprovedForAll}.
      */
-    function _isApprovedForAll(address owner, address operator)
+    function isApprovedForAll(address owner, address operator)
         public
         view
         returns (bool)
@@ -153,19 +153,19 @@ library LibERC721 {
      *
      * - `tokenId` must exist.
      */
-    function _isApprovedOrOwner(address spender, uint256 tokenId)
+    function isApprovedOrOwner(address spender, uint256 tokenId)
         internal
         view
         returns (bool)
     {
         require(
-            _exists(tokenId),
+            exists(tokenId),
             "ERC721: operator query for nonexistent token"
         );
-        address owner = _ownerOf(tokenId);
+        address owner = ownerOf(tokenId);
         return (spender == owner ||
-            _getApproved(tokenId) == spender ||
-            _isApprovedForAll(owner, spender));
+            getApproved(tokenId) == spender ||
+            isApprovedForAll(owner, spender));
     }
 
     /**
@@ -178,33 +178,33 @@ library LibERC721 {
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address to, uint256 tokenId) internal {
-        _safeMint(to, tokenId, "");
+    function safeMint(address to, uint256 tokenId) internal {
+        safeMint(to, tokenId, "");
     }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(
+    function safeMint(
         address to,
         uint256 tokenId,
         bytes memory _data
     ) internal {
-        _mint(to, tokenId);
+        mint(to, tokenId);
         require(
-            _checkOnERC721Received(address(0), to, tokenId, _data),
+            checkOnERC721Received(address(0), to, tokenId, _data),
             "ERC721: transfer to non ERC721Receiver implementer"
         );
     }
 
     // TODO:
-    function _mint(address to) internal returns (uint256) {
+    function mint(address to) internal returns (uint256) {
         ERC721Storage storage erc721 = erc721Storage();
         uint256 tokenId = erc721._total.current();
 
         erc721._total.increment();
-        _mint(to, tokenId);
+        mint(to, tokenId);
 
         return tokenId;
     }
@@ -221,11 +221,11 @@ library LibERC721 {
      *
      * Emits a {Transfer} event.
      */
-    function _mint(address to, uint256 tokenId) internal {
+    function mint(address to, uint256 tokenId) internal {
         require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId), "ERC721: token already minted");
+        require(!exists(tokenId), "ERC721: token already minted");
 
-        _beforeTokenTransfer(address(0), to, tokenId);
+        beforeTokenTransfer(address(0), to, tokenId);
 
         erc721Storage()._balances[to] += 1;
         erc721Storage()._owners[tokenId] = to;
@@ -243,13 +243,13 @@ library LibERC721 {
      *
      * Emits a {Transfer} event.
      */
-    function _burn(uint256 tokenId) internal {
-        address owner = _ownerOf(tokenId);
+    function burn(uint256 tokenId) internal {
+        address owner = ownerOf(tokenId);
 
-        _beforeTokenTransfer(owner, address(0), tokenId);
+        beforeTokenTransfer(owner, address(0), tokenId);
 
         // Clear approvals
-        _approve(address(0), tokenId);
+        approve(address(0), tokenId);
 
         erc721Storage()._balances[owner] -= 1;
         delete erc721Storage()._owners[tokenId];
@@ -268,21 +268,21 @@ library LibERC721 {
      *
      * Emits a {Transfer} event.
      */
-    function _transfer(
+    function transfer(
         address from,
         address to,
         uint256 tokenId
     ) internal {
         require(
-            _ownerOf(tokenId) == from,
+            ownerOf(tokenId) == from,
             "ERC721: transfer of token that is not own"
         );
         require(to != address(0), "ERC721: transfer to the zero address");
 
-        _beforeTokenTransfer(from, to, tokenId);
+        beforeTokenTransfer(from, to, tokenId);
 
         // Clear approvals from the previous owner
-        _approve(address(0), tokenId);
+        approve(address(0), tokenId);
 
         ERC721Storage storage erc721 = LibERC721.erc721Storage();
 
@@ -298,9 +298,9 @@ library LibERC721 {
      *
      * Emits a {Approval} event.
      */
-    function _approve(address to, uint256 tokenId) internal {
+    function approve(address to, uint256 tokenId) internal {
         erc721Storage()._tokenApprovals[tokenId] = to;
-        emit Approval(_ownerOf(tokenId), to, tokenId);
+        emit Approval(ownerOf(tokenId), to, tokenId);
     }
 
     /**
@@ -317,7 +317,7 @@ library LibERC721 {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(
+    function beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
@@ -333,7 +333,7 @@ library LibERC721 {
      * @param _data bytes optional data to send along with the call
      * @return bool whether the call correctly returned the expected magic value
      */
-    function _checkOnERC721Received(
+    function checkOnERC721Received(
         address from,
         address to,
         uint256 tokenId,

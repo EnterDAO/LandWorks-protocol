@@ -28,7 +28,7 @@ contract FeeFacet is IFeeFacet {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of eNft"
         );
 

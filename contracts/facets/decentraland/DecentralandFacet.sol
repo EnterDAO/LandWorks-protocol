@@ -33,7 +33,7 @@ contract DecentralandFacet is IDecentralandFacet {
     function updateState(uint256 _eNft, uint256 _rentId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
-        require(LibERC721._ownerOf(_eNft) != address(0), "_eNft not found");
+        require(LibERC721.exists(_eNft), "_eNft not found");
         LibMarketplace.Rent memory rent = ms.rents[_eNft][_rentId];
 
         require(
@@ -63,7 +63,7 @@ contract DecentralandFacet is IDecentralandFacet {
     function updateAdministrativeState(uint256 _eNft) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
-        require(LibERC721._ownerOf(_eNft) != address(0), "_eNft not found");
+        require(LibERC721.exists(_eNft), "_eNft not found");
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
 
         require(
@@ -93,7 +93,7 @@ contract DecentralandFacet is IDecentralandFacet {
         require(_newOperator != address(0), "operator must not be 0x0");
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
-        require(LibERC721._ownerOf(_eNft) != address(0), "_eNft not found");
+        require(LibERC721.exists(_eNft), "_eNft not found");
 
         require(
             msg.sender == ms.rents[_eNft][_rentId].renter,

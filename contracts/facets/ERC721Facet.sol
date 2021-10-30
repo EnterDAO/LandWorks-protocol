@@ -34,7 +34,7 @@ contract ERC721Facet {
      * @dev See {IERC721-ownerOf}.
      */
     function ownerOf(uint256 tokenId) public view returns (address) {
-        return LibERC721._ownerOf(tokenId);
+        return LibERC721.ownerOf(tokenId);
     }
 
     /**
@@ -56,7 +56,7 @@ contract ERC721Facet {
      */
     function tokenURI(uint256 tokenId) public view returns (string memory) {
         require(
-            LibERC721._exists(tokenId),
+            LibERC721.exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
 
@@ -88,14 +88,14 @@ contract ERC721Facet {
             "ERC721: approve caller is not owner nor approved for all"
         );
 
-        LibERC721._approve(to, tokenId);
+        LibERC721.approve(to, tokenId);
     }
 
     /**
      * @dev See {IERC721-getApproved}.
      */
     function getApproved(uint256 tokenId) public view returns (address) {
-        return LibERC721._getApproved(tokenId);
+        return LibERC721.getApproved(tokenId);
     }
 
     /**
@@ -118,7 +118,7 @@ contract ERC721Facet {
         view
         returns (bool)
     {
-        return LibERC721._isApprovedForAll(owner, operator);
+        return LibERC721.isApprovedForAll(owner, operator);
     }
 
     /**
@@ -131,11 +131,11 @@ contract ERC721Facet {
     ) public {
         //solhint-disable-next-line max-line-length
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, tokenId),
+            LibERC721.isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
 
-        LibERC721._transfer(from, to, tokenId);
+        LibERC721.transfer(from, to, tokenId);
     }
 
     /**
@@ -159,10 +159,10 @@ contract ERC721Facet {
         bytes memory _data
     ) public {
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, tokenId),
+            LibERC721.isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
-        LibERC721._safeTransfer(from, to, tokenId, _data);
+        LibERC721.safeTransfer(from, to, tokenId, _data);
     }
 
     /**
@@ -177,9 +177,9 @@ contract ERC721Facet {
      */
     function burn(uint256 tokenId) public {
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, tokenId),
+            LibERC721.isApprovedOrOwner(msg.sender, tokenId),
             "ERC721Burnable: caller is not owner nor approved"
         );
-        LibERC721._burn(tokenId);
+        LibERC721.burn(tokenId);
     }
 }

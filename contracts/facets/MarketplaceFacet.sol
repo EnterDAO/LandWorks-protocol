@@ -60,7 +60,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        uint256 eNft = LibERC721._mint(msg.sender);
+        uint256 eNft = LibERC721.mint(msg.sender);
 
         LibMarketplace.Asset storage asset = ms.assets[eNft];
 
@@ -110,7 +110,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of _eNft"
         );
         require(_minPeriod != 0, "_minPeriod must not be 0");
@@ -153,7 +153,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of _eNft"
         );
 
@@ -174,7 +174,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
             delete ms.assets[_eNft];
 
-            LibERC721._burn(_eNft);
+            LibERC721.burn(_eNft);
             IERC721(asset.metaverseRegistry).safeTransferFrom(
                 address(this),
                 msg.sender,
@@ -192,7 +192,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721._isApprovedOrOwner(msg.sender, _eNft),
+            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
             "caller must be approved or owner of _eNft"
         );
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
@@ -214,7 +214,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
 
         delete ms.assets[_eNft];
-        LibERC721._burn(_eNft);
+        LibERC721.burn(_eNft);
         IERC721(asset.metaverseRegistry).safeTransferFrom(
             address(this),
             msg.sender,

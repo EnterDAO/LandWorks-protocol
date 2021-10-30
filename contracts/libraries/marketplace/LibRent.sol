@@ -28,7 +28,7 @@ library LibRent {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        require(LibERC721._ownerOf(_eNft) != address(0), "_eNft not found");
+        require(LibERC721.ownerOf(_eNft) != address(0), "_eNft not found");
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
         require(
             asset.status == LibMarketplace.AssetStatus.Listed,
