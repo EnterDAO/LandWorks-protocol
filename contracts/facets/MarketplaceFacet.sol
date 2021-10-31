@@ -37,7 +37,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         address _paymentToken,
         uint256 _pricePerBlock
     ) external {
-        require(_metaverseRegistry != address(0), "_contract must not be 0x0");
+        require(
+            _metaverseRegistry != address(0),
+            "_metaverseRegistry must not be 0x0"
+        );
         require(_minPeriod != 0, "_minPeriod must not be 0");
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
         require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
@@ -51,7 +54,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
         enforceIsValidToken(_paymentToken);
 
-        IERC721(_metaverseRegistry).transferFrom(
+        IERC721(_metaverseRegistry).safeTransferFrom(
             msg.sender,
             address(this),
             _metaverseAssetId
@@ -128,6 +131,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         asset.paymentToken = _paymentToken;
         asset.minPeriod = _minPeriod;
         asset.maxPeriod = _maxPeriod;
+        asset.maxFutureBlock = _maxFutureBlock;
         asset.pricePerBlock = _pricePerBlock;
 
         uint256 rentFee = LibFee.claimRentFee(_eNft, oldPaymentToken);
@@ -163,25 +167,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         emit Delist(_eNft, msg.sender);
 
-        if (block.number > ms.rents[_eNft][asset.totalRents].endBlock) {
-            uint256 rentFee = LibFee.claimRentFee(_eNft, asset.paymentToken);
-            LibClaim.transferRentFee(
-                _eNft,
-                asset.paymentToken,
-                msg.sender,
-                rentFee
-            );
-
-            delete ms.assets[_eNft];
-
-            LibERC721.burn(_eNft);
-            IERC721(asset.metaverseRegistry).safeTransferFrom(
-                address(this),
-                msg.sender,
-                asset.metaverseAssetId
-            );
-
-            emit Withdraw(_eNft, msg.sender);
+        if (block.number >= ms.rents[_eNft][asset.totalRents].endBlock) {
+            withdraw(_eNft, asset);
         }
     }
 
@@ -201,27 +188,11 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_eNft not delisted"
         );
         require(
-            block.number > ms.rents[_eNft][asset.totalRents].endBlock,
+            block.number >= ms.rents[_eNft][asset.totalRents].endBlock,
             "_eNft has an active rent"
         );
 
-        uint256 rentFee = LibFee.claimRentFee(_eNft, asset.paymentToken);
-        LibClaim.transferRentFee(
-            _eNft,
-            asset.paymentToken,
-            msg.sender,
-            rentFee
-        );
-
-        delete ms.assets[_eNft];
-        LibERC721.burn(_eNft);
-        IERC721(asset.metaverseRegistry).safeTransferFrom(
-            address(this),
-            msg.sender,
-            asset.metaverseAssetId
-        );
-
-        emit Withdraw(_eNft, msg.sender);
+        withdraw(_eNft, asset);
     }
 
     /// @notice Rents eNft land for a given period
@@ -262,6 +233,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit SetRegistry(_metaverseId, _registry, _status);
     }
 
+    /// @notice Gets the name of the metaverse
+    /// @param _metaverseId The target metaverse
     function metaverseName(uint256 _metaverseId)
         external
         view
@@ -321,6 +294,29 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         returns (LibMarketplace.Rent memory)
     {
         return LibMarketplace.rentAt(_eNft, _rentId);
+    }
+
+    function withdraw(uint256 _eNft, LibMarketplace.Asset memory asset)
+        internal
+    {
+        delete LibMarketplace.marketplaceStorage().assets[_eNft];
+        LibERC721.burn(_eNft);
+
+        uint256 rentFee = LibFee.claimRentFee(_eNft, asset.paymentToken);
+        LibClaim.transferRentFee(
+            _eNft,
+            asset.paymentToken,
+            msg.sender,
+            rentFee
+        );
+
+        IERC721(asset.metaverseRegistry).safeTransferFrom(
+            address(this),
+            msg.sender,
+            asset.metaverseAssetId
+        );
+
+        emit Withdraw(_eNft, msg.sender);
     }
 
     function enforceIsValidToken(address _token) internal view {

@@ -263,8 +263,10 @@ library LibERC721 {
         // Clear approvals
         approve(address(0), tokenId);
 
-        erc721Storage().balances[owner] -= 1;
-        delete erc721Storage().owners[tokenId];
+        ERC721Storage storage erc721 = LibERC721.erc721Storage();
+
+        erc721.balances[owner] -= 1;
+        delete erc721.owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
     }

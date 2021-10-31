@@ -20,7 +20,7 @@ library LibRent {
         uint256 _endBlock
     );
 
-    /// @dev Rents eNft land for a given period
+    /// @dev Rents asset for a given period
     /// Rent is added to the queue of pending rents.
     /// Rent start will begin from the last rented block.
     /// If no active rents are found, rents starts from the current block.
@@ -28,11 +28,11 @@ library LibRent {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        require(LibERC721.ownerOf(_eNft) != address(0), "_eNft not found");
+        require(LibERC721.exists(_eNft), "_eNft not found");
         LibMarketplace.Asset memory asset = ms.assets[_eNft];
         require(
             asset.status == LibMarketplace.AssetStatus.Listed,
-            "_eNft delisted"
+            "_eNft not listed"
         );
         require(_period >= asset.minPeriod, "_period less than minPeriod");
         require(_period <= asset.maxPeriod, "_period more than maxPeriod");
@@ -45,8 +45,8 @@ library LibRent {
 
         uint256 rentEndBlock = rentStartBlock + _period;
         require(
-            rentEndBlock <= block.number + asset.maxFutureBlock,
-            "rent more than max future block rental"
+            block.number + asset.maxFutureBlock >= rentEndBlock,
+            "rent more than current maxFutureBlock"
         );
 
         uint256 rentPayment = _period * asset.pricePerBlock;

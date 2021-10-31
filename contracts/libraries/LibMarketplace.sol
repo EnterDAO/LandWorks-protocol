@@ -134,7 +134,7 @@ library LibMarketplace {
         uint256 newRentId = ms.assets[_eNft].totalRents + 1;
 
         ms.assets[_eNft].totalRents = newRentId;
-        ms.rents[_eNft][ms.assets[_eNft].totalRents] = LibMarketplace.Rent({
+        ms.rents[_eNft][newRentId] = LibMarketplace.Rent({
             renter: _renter,
             startBlock: _startBlock,
             endBlock: _endBlock

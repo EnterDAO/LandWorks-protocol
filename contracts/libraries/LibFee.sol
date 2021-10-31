@@ -45,11 +45,12 @@ library LibFee {
     ) internal {
         LibFee.FeeStorage storage fs = feeStorage();
 
-        uint256 rentFee = (_amount * fs.feePercentages[_token]) /
+        uint256 protocolFee = (_amount * fs.feePercentages[_token]) /
             fs.feePrecision;
-        uint256 lenderFee = _amount - rentFee;
-        fs.assetRentFees[_eNft][_token].accumulatedAmount += lenderFee;
-        fs.protocolFees[_token].accumulatedAmount += rentFee;
+
+        uint256 rentFee = _amount - protocolFee;
+        fs.assetRentFees[_eNft][_token].accumulatedAmount += rentFee;
+        fs.protocolFees[_token].accumulatedAmount += protocolFee;
     }
 
     function claimRentFee(uint256 _eNft, address _token)
