@@ -8,20 +8,20 @@ library LibClaim {
     using SafeERC20 for IERC20;
 
     event ClaimRentFee(
-        uint256 _eNft,
+        uint256 _assetId,
         address _token,
         address indexed _recipient,
         uint256 _amount
     );
 
     function transferRentFee(
-        uint256 _eNft,
+        uint256 _assetId,
         address _token,
         address _recipient,
         uint256 _amount
     ) internal {
         transfer(_token, _recipient, _amount);
-        emit ClaimRentFee(_eNft, _token, _recipient, _amount);
+        emit ClaimRentFee(_assetId, _token, _recipient, _amount);
     }
 
     function transfer(

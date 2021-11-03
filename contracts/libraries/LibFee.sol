@@ -39,7 +39,7 @@ library LibFee {
     }
 
     function distributeFees(
-        uint256 _eNft,
+        uint256 _assetId,
         address _token,
         uint256 _amount
     ) internal {
@@ -49,15 +49,15 @@ library LibFee {
             fs.feePrecision;
 
         uint256 rentFee = _amount - protocolFee;
-        fs.assetRentFees[_eNft][_token].accumulatedAmount += rentFee;
+        fs.assetRentFees[_assetId][_token].accumulatedAmount += rentFee;
         fs.protocolFees[_token].accumulatedAmount += protocolFee;
     }
 
-    function claimRentFee(uint256 _eNft, address _token)
+    function claimRentFee(uint256 _assetId, address _token)
         internal
         returns (uint256)
     {
-        LibFee.Fee storage fees = feeStorage().assetRentFees[_eNft][_token];
+        LibFee.Fee storage fees = feeStorage().assetRentFees[_assetId][_token];
 
         uint256 transferAmount = fees.accumulatedAmount - fees.paidAmount;
         fees.paidAmount = fees.accumulatedAmount;
@@ -116,12 +116,12 @@ library LibFee {
         return feeStorage().protocolFees[_token];
     }
 
-    function assetRentFeesFor(uint256 _eNft, address _token)
+    function assetRentFeesFor(uint256 _assetId, address _token)
         internal
         view
         returns (Fee memory)
     {
-        return feeStorage().assetRentFees[_eNft][_token];
+        return feeStorage().assetRentFees[_assetId][_token];
     }
 
     function feePercentage(address _token) internal view returns (uint256) {

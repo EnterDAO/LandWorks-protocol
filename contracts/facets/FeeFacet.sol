@@ -22,20 +22,20 @@ contract FeeFacet is IFeeFacet {
         emit ClaimFee(_token, msg.sender, protocolFee);
     }
 
-    /// @notice Claims accrued rent fees for a given eNft
-    /// @param _eNft The target _eNft
-    function claimRentFee(uint256 _eNft) external {
+    /// @notice Claims accrued rent fees for a given asset
+    /// @param _assetId The target _assetId
+    function claimRentFee(uint256 _assetId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
-            "caller must be approved or owner of eNft"
+            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
+            "caller must be approved or owner of asset"
         );
 
-        address paymentToken = ms.assets[_eNft].paymentToken;
-        uint256 amount = LibFee.claimRentFee(_eNft, paymentToken);
+        address paymentToken = ms.assets[_assetId].paymentToken;
+        uint256 amount = LibFee.claimRentFee(_assetId, paymentToken);
 
-        LibClaim.transferRentFee(_eNft, paymentToken, msg.sender, amount);
+        LibClaim.transferRentFee(_assetId, paymentToken, msg.sender, amount);
     }
 
     /// @notice Sets the protocol fee for token payments
@@ -83,15 +83,15 @@ contract FeeFacet is IFeeFacet {
     }
 
     /// @notice Gets the accumulated and paid amount of asset rent fees of a payment
-    /// token for an eNft
-    /// @param _eNft The target eNft
+    /// token for an asset
+    /// @param _assetId The target asset
     /// @param _token The target token
-    function assetRentFeesFor(uint256 _eNft, address _token)
+    function assetRentFeesFor(uint256 _assetId, address _token)
         external
         view
         returns (LibFee.Fee memory)
     {
-        return LibFee.assetRentFeesFor(_eNft, _token);
+        return LibFee.assetRentFeesFor(_assetId, _token);
     }
 
     /// @notice Gets whether the token payment is supported

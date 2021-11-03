@@ -6,7 +6,7 @@ import "../libraries/LibFee.sol";
 interface IFeeFacet {
     event ClaimFee(address _token, address _recipient, uint256 _amount);
     event ClaimRentFee(
-        uint256 _eNft,
+        uint256 _assetId,
         address _token,
         address indexed _recipient,
         uint256 _amount
@@ -15,7 +15,7 @@ interface IFeeFacet {
     event SetFeePrecision(address indexed _caller, uint256 _feePrecision);
     event SetTokenPayment(address _token, bool _status);
 
-    function claimRentFee(uint256 _eNft) external;
+    function claimRentFee(uint256 _assetId) external;
 
     function claimProtocolFee(address _token) external;
 
@@ -34,7 +34,7 @@ interface IFeeFacet {
         view
         returns (LibFee.Fee memory);
 
-    function assetRentFeesFor(uint256 _eNft, address _token)
+    function assetRentFeesFor(uint256 _assetId, address _token)
         external
         view
         returns (LibFee.Fee memory);

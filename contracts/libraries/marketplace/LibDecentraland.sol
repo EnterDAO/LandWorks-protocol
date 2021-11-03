@@ -8,7 +8,7 @@ library LibDecentraland {
     struct DecentralandStorage {
         // Administrative Operator to Estate/LANDs, when no rents are active
         address administrativeOperator;
-        // Stores the operators for each eNft's rentals
+        // Stores the operators for each asset's rentals
         mapping(uint256 => mapping(uint256 => address)) operators;
     }
 
@@ -24,11 +24,11 @@ library LibDecentraland {
     }
 
     function setOperator(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _rentId,
         address _operator
     ) internal {
-        decentralandStorage().operators[_eNft][_rentId] = _operator;
+        decentralandStorage().operators[_assetId][_rentId] = _operator;
     }
 
     function setAdministrativeOperator(address _administrativeOperator)
@@ -41,11 +41,11 @@ library LibDecentraland {
         return decentralandStorage().administrativeOperator;
     }
 
-    function operatorFor(uint256 _eNft, uint256 _rentId)
+    function operatorFor(uint256 _assetId, uint256 _rentId)
         internal
         view
         returns (address)
     {
-        return decentralandStorage().operators[_eNft][_rentId];
+        return decentralandStorage().operators[_assetId][_rentId];
     }
 }

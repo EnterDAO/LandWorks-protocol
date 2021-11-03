@@ -13,7 +13,7 @@ library LibRent {
     using SafeERC20 for IERC20;
 
     event Rent(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _rentId,
         address indexed _renter,
         uint256 _startBlock,
@@ -24,21 +24,25 @@ library LibRent {
     /// Rent is added to the queue of pending rents.
     /// Rent start will begin from the last rented block.
     /// If no active rents are found, rents starts from the current block.
-    function rent(uint256 _eNft, uint256 _period) internal returns (uint256) {
+    function rent(uint256 _assetId, uint256 _period)
+        internal
+        returns (uint256)
+    {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        require(LibERC721.exists(_eNft), "_eNft not found");
-        LibMarketplace.Asset memory asset = ms.assets[_eNft];
+        require(LibERC721.exists(_assetId), "_assetId not found");
+        LibMarketplace.Asset memory asset = ms.assets[_assetId];
         require(
             asset.status == LibMarketplace.AssetStatus.Listed,
-            "_eNft not listed"
+            "_assetId not listed"
         );
         require(_period >= asset.minPeriod, "_period less than minPeriod");
         require(_period <= asset.maxPeriod, "_period more than maxPeriod");
 
         uint256 rentStartBlock = block.number;
-        uint256 lastRentEndBlock = ms.rents[_eNft][asset.totalRents].endBlock;
+        uint256 lastRentEndBlock = ms
+        .rents[_assetId][asset.totalRents].endBlock;
         if (lastRentEndBlock > rentStartBlock) {
             rentStartBlock = lastRentEndBlock;
         }
@@ -60,15 +64,15 @@ library LibRent {
             );
         }
 
-        LibFee.distributeFees(_eNft, asset.paymentToken, rentPayment);
+        LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
         uint256 rentId = LibMarketplace.addRent(
-            _eNft,
+            _assetId,
             msg.sender,
             rentStartBlock,
             rentEndBlock
         );
 
-        emit Rent(_eNft, rentId, msg.sender, rentStartBlock, rentEndBlock);
+        emit Rent(_assetId, rentId, msg.sender, rentStartBlock, rentEndBlock);
 
         return rentId;
     }

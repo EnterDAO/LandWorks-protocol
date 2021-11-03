@@ -125,16 +125,16 @@ library LibMarketplace {
     }
 
     function addRent(
-        uint256 _eNft,
+        uint256 _assetId,
         address _renter,
         uint256 _startBlock,
         uint256 _endBlock
     ) internal returns (uint256) {
         LibMarketplace.MarketplaceStorage storage ms = marketplaceStorage();
-        uint256 newRentId = ms.assets[_eNft].totalRents + 1;
+        uint256 newRentId = ms.assets[_assetId].totalRents + 1;
 
-        ms.assets[_eNft].totalRents = newRentId;
-        ms.rents[_eNft][newRentId] = LibMarketplace.Rent({
+        ms.assets[_assetId].totalRents = newRentId;
+        ms.rents[_assetId][newRentId] = LibMarketplace.Rent({
             renter: _renter,
             startBlock: _startBlock,
             endBlock: _endBlock
@@ -143,15 +143,15 @@ library LibMarketplace {
         return newRentId;
     }
 
-    function assetAt(uint256 _eNft) internal view returns (Asset memory) {
-        return marketplaceStorage().assets[_eNft];
+    function assetAt(uint256 _assetId) internal view returns (Asset memory) {
+        return marketplaceStorage().assets[_assetId];
     }
 
-    function rentAt(uint256 _eNft, uint256 _rentId)
+    function rentAt(uint256 _assetId, uint256 _rentId)
         internal
         view
         returns (Rent memory)
     {
-        return marketplaceStorage().rents[_eNft][_rentId];
+        return marketplaceStorage().rents[_assetId][_rentId];
     }
 }

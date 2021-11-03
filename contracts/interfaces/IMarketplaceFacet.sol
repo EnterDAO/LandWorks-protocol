@@ -5,7 +5,7 @@ import "../libraries/LibMarketplace.sol";
 
 interface IMarketplaceFacet {
     event List(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
@@ -16,7 +16,7 @@ interface IMarketplaceFacet {
         uint256 _pricePerBlock
     );
     event UpdateConditions(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureBlock,
@@ -24,16 +24,16 @@ interface IMarketplaceFacet {
         uint256 _pricePerBlock
     );
     event Rent(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _rentId,
         address indexed _renter,
         uint256 _startBlock,
         uint256 _endBlock
     );
-    event Delist(uint256 _eNft, address indexed _caller);
-    event Withdraw(uint256 _eNft, address indexed _caller);
+    event Delist(uint256 _assetId, address indexed _caller);
+    event Withdraw(uint256 _assetId, address indexed _caller);
     event ClaimRentFee(
-        uint256 _eNft,
+        uint256 _assetId,
         address _token,
         address indexed _recipient,
         uint256 _amount
@@ -53,7 +53,7 @@ interface IMarketplaceFacet {
     ) external;
 
     function updateConditions(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureBlock,
@@ -61,11 +61,11 @@ interface IMarketplaceFacet {
         uint256 _pricePerBlock
     ) external;
 
-    function delist(uint256 _eNft) external;
+    function delist(uint256 _assetId) external;
 
-    function withdraw(uint256 _eNft) external;
+    function withdraw(uint256 _assetId) external;
 
-    function rent(uint256 _eNft, uint256 _period) external payable;
+    function rent(uint256 _assetId, uint256 _period) external payable;
 
     function setMetaverseName(uint256 _metaverseId, string memory _name)
         external;
@@ -96,12 +96,12 @@ interface IMarketplaceFacet {
         view
         returns (address);
 
-    function assetAt(uint256 _eNft)
+    function assetAt(uint256 _assetId)
         external
         view
         returns (LibMarketplace.Asset memory);
 
-    function rentAt(uint256 _eNft, uint256 _rentId)
+    function rentAt(uint256 _assetId, uint256 _rentId)
         external
         view
         returns (LibMarketplace.Rent memory);

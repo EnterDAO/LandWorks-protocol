@@ -5,7 +5,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -36,7 +36,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -55,7 +55,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -116,7 +116,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -197,7 +197,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -240,7 +240,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -257,7 +257,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       }
     ],
@@ -328,7 +328,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       }
     ],
@@ -432,7 +432,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -450,7 +450,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -575,7 +575,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       },
       {
@@ -613,7 +613,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_eNft",
+        "name": "_assetId",
         "type": "uint256"
       }
     ],

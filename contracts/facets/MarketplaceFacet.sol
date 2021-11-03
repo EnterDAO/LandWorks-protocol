@@ -16,7 +16,7 @@ import "../libraries/marketplace/LibRent.sol";
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @notice Provides land of the given metaverse registry
     /// Transfers and locks the provided metaverse land to the contract
-    /// and mints an eNft, representing the locked land.
+    /// and mints an asset, representing the locked land.
     /// @param _metaverseId The id of the metaverse
     /// @param _metaverseRegistry The registry of the metaverse
     /// @param _metaverseAssetId The id from the metaverse registry
@@ -63,21 +63,23 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        uint256 eNft = LibERC721.safeMint(msg.sender);
+        uint256 asset = LibERC721.safeMint(msg.sender);
 
-        LibMarketplace.Asset storage asset = ms.assets[eNft];
-
-        asset.metaverseId = _metaverseId;
-        asset.metaverseRegistry = _metaverseRegistry;
-        asset.metaverseAssetId = _metaverseAssetId;
-        asset.paymentToken = _paymentToken;
-        asset.minPeriod = _minPeriod;
-        asset.maxPeriod = _maxPeriod;
-        asset.maxFutureBlock = _maxFutureBlock;
-        asset.pricePerBlock = _pricePerBlock;
+        ms.assets[asset] = LibMarketplace.Asset({
+            metaverseId: _metaverseId,
+            metaverseRegistry: _metaverseRegistry,
+            metaverseAssetId: _metaverseAssetId,
+            paymentToken: _paymentToken,
+            minPeriod: _minPeriod,
+            maxPeriod: _maxPeriod,
+            maxFutureBlock: _maxFutureBlock,
+            pricePerBlock: _pricePerBlock,
+            status: LibMarketplace.AssetStatus.Listed,
+            totalRents: 0
+        });
 
         emit List(
-            eNft,
+            asset,
             _metaverseId,
             _metaverseRegistry,
             _metaverseAssetId,
@@ -89,12 +91,12 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
     }
 
-    /// @notice Updates the lending conditions for a given eNft
+    /// @notice Updates the lending conditions for a given asset
     /// Pays out the current unclaimed rent fees to the caller.
     /// Updated conditions apply the next time the land is rented.
     /// Does not affect previous and queued rents
     /// If any of the old conditions do not want to be modified, the old ones must be provided
-    /// @param _eNft The target eNft
+    /// @param _assetId The target asset
     /// @param _minPeriod The minimum number of blocks the land can be rented
     /// @param _maxPeriod The maximum number of blocks the land can be rented
     /// @param _maxFutureBlock The block delta after which the protocol will not allow
@@ -103,7 +105,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// Provide 0x0 for ETH
     /// @param _pricePerBlock The price for rental per block
     function updateConditions(
-        uint256 _eNft,
+        uint256 _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureBlock,
@@ -113,8 +115,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
-            "caller must be approved or owner of _eNft"
+            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
+            "caller must be approved or owner of _assetId"
         );
         require(_minPeriod != 0, "_minPeriod must not be 0");
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
@@ -125,7 +127,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
         enforceIsValidToken(_paymentToken);
 
-        LibMarketplace.Asset storage asset = ms.assets[_eNft];
+        LibMarketplace.Asset storage asset = ms.assets[_assetId];
         address oldPaymentToken = asset.paymentToken;
 
         asset.paymentToken = _paymentToken;
@@ -134,12 +136,17 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         asset.maxFutureBlock = _maxFutureBlock;
         asset.pricePerBlock = _pricePerBlock;
 
-        uint256 rentFee = LibFee.claimRentFee(_eNft, oldPaymentToken);
+        uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
 
-        LibClaim.transferRentFee(_eNft, oldPaymentToken, msg.sender, rentFee);
+        LibClaim.transferRentFee(
+            _assetId,
+            oldPaymentToken,
+            msg.sender,
+            rentFee
+        );
 
         emit UpdateConditions(
-            _eNft,
+            _assetId,
             _minPeriod,
             _maxPeriod,
             _maxFutureBlock,
@@ -148,60 +155,60 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
     }
 
-    /// @notice Removes the land represented by the eNft from the marketplace
+    /// @notice Removes the land represented by the asset from the marketplace
     /// Pays out the current unclaimed rent fees to the caller.
     /// If there are no active rents:
-    /// Burns the eNft and transfers the land represented by the eNft to the caller
-    /// @param _eNft The target eNft
-    function delist(uint256 _eNft) external {
+    /// Burns the asset and transfers the land represented by the asset to the caller
+    /// @param _assetId The target asset
+    function delist(uint256 _assetId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
-            "caller must be approved or owner of _eNft"
+            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
+            "caller must be approved or owner of _assetId"
         );
 
-        LibMarketplace.Asset memory asset = ms.assets[_eNft];
+        LibMarketplace.Asset memory asset = ms.assets[_assetId];
 
-        ms.assets[_eNft].status = LibMarketplace.AssetStatus.Delisted;
+        ms.assets[_assetId].status = LibMarketplace.AssetStatus.Delisted;
 
-        emit Delist(_eNft, msg.sender);
+        emit Delist(_assetId, msg.sender);
 
-        if (block.number >= ms.rents[_eNft][asset.totalRents].endBlock) {
-            withdraw(_eNft, asset);
+        if (block.number >= ms.rents[_assetId][asset.totalRents].endBlock) {
+            withdraw(_assetId, asset);
         }
     }
 
-    /// @notice Withdraws the already delisted from marketplace eNft
-    /// Burns the eNft and transfers the land represented by the eNft to the caller
-    /// @param _eNft The target _eNft
-    function withdraw(uint256 _eNft) external {
+    /// @notice Withdraws the already delisted from marketplace asset
+    /// Burns the asset and transfers the land represented by the asset to the caller
+    /// @param _assetId The target _assetId
+    function withdraw(uint256 _assetId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721.isApprovedOrOwner(msg.sender, _eNft),
-            "caller must be approved or owner of _eNft"
+            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
+            "caller must be approved or owner of _assetId"
         );
-        LibMarketplace.Asset memory asset = ms.assets[_eNft];
+        LibMarketplace.Asset memory asset = ms.assets[_assetId];
         require(
             asset.status == LibMarketplace.AssetStatus.Delisted,
-            "_eNft not delisted"
+            "_assetId not delisted"
         );
         require(
-            block.number >= ms.rents[_eNft][asset.totalRents].endBlock,
-            "_eNft has an active rent"
+            block.number >= ms.rents[_assetId][asset.totalRents].endBlock,
+            "_assetId has an active rent"
         );
 
-        withdraw(_eNft, asset);
+        withdraw(_assetId, asset);
     }
 
-    /// @notice Rents eNft land for a given period
+    /// @notice Rents asset land for a given period
     /// Charges user for the rent upfront. Rent starts from the last rented block
     /// or from the current block of the transaction.
-    /// @param _eNft The target eNft
+    /// @param _assetId The target asset
     /// @param _period The target period the rent will be active
-    function rent(uint256 _eNft, uint256 _period) external payable {
-        LibRent.rent(_eNft, _period);
+    function rent(uint256 _assetId, uint256 _period) external payable {
+        LibRent.rent(_assetId, _period);
     }
 
     /// @notice Sets name to Metaverse
@@ -275,36 +282,36 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         return LibMarketplace.registryAt(_metaverseId, _index);
     }
 
-    /// @notice Gets all asset data for a specific eNft
-    /// @param _eNft The target eNft
-    function assetAt(uint256 _eNft)
+    /// @notice Gets all asset data for a specific asset
+    /// @param _assetId The target asset
+    function assetAt(uint256 _assetId)
         external
         view
         returns (LibMarketplace.Asset memory)
     {
-        return LibMarketplace.assetAt(_eNft);
+        return LibMarketplace.assetAt(_assetId);
     }
 
-    /// @notice Gets all data for a specific rent of an eNft
-    /// @param _eNft The taget eNft
+    /// @notice Gets all data for a specific rent of an asset
+    /// @param _assetId The taget asset
     /// @param _rentId The target rent
-    function rentAt(uint256 _eNft, uint256 _rentId)
+    function rentAt(uint256 _assetId, uint256 _rentId)
         external
         view
         returns (LibMarketplace.Rent memory)
     {
-        return LibMarketplace.rentAt(_eNft, _rentId);
+        return LibMarketplace.rentAt(_assetId, _rentId);
     }
 
-    function withdraw(uint256 _eNft, LibMarketplace.Asset memory asset)
+    function withdraw(uint256 _assetId, LibMarketplace.Asset memory asset)
         internal
     {
-        delete LibMarketplace.marketplaceStorage().assets[_eNft];
-        LibERC721.burn(_eNft);
+        delete LibMarketplace.marketplaceStorage().assets[_assetId];
+        LibERC721.burn(_assetId);
 
-        uint256 rentFee = LibFee.claimRentFee(_eNft, asset.paymentToken);
+        uint256 rentFee = LibFee.claimRentFee(_assetId, asset.paymentToken);
         LibClaim.transferRentFee(
-            _eNft,
+            _assetId,
             asset.paymentToken,
             msg.sender,
             rentFee
@@ -316,7 +323,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             asset.metaverseAssetId
         );
 
-        emit Withdraw(_eNft, msg.sender);
+        emit Withdraw(_assetId, msg.sender);
     }
 
     function enforceIsValidToken(address _token) internal view {
