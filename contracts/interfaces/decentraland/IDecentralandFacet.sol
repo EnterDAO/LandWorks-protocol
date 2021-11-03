@@ -2,6 +2,13 @@
 pragma solidity ^0.8.9;
 
 interface IDecentralandFacet {
+    event Rent(
+        uint256 _eNft,
+        uint256 _rentId,
+        address indexed _renter,
+        uint256 _startBlock,
+        uint256 _endBlock
+    );
     event RentDecentraland(uint256 _eNft, uint256 _rentId, address _operator);
     event UpdateState(uint256 _eNft, uint256 _rentId, address _operator);
     event UpdateAdministrativeState(uint256 _eNft, address indexed _operator);

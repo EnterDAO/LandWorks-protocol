@@ -15,6 +15,43 @@
         "type": "uint256"
       },
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_renter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_startBlock",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_endBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "Rent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_eNft",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_rentId",
+        "type": "uint256"
+      },
+      {
         "indexed": false,
         "internalType": "address",
         "name": "_operator",

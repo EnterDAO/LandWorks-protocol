@@ -211,22 +211,4 @@ contract ERC721Facet {
         );
         LibERC721.safeTransfer(from, to, tokenId, _data);
     }
-
-    /**
-     * @dev Destroys `tokenId`.
-     * The approval is cleared when the token is burned.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     *
-     * Emits a {Transfer} event.
-     */
-    function burn(uint256 tokenId) public {
-        require(
-            LibERC721.isApprovedOrOwner(msg.sender, tokenId),
-            "ERC721Burnable: caller is not owner nor approved"
-        );
-        LibERC721.burn(tokenId);
-    }
 }
