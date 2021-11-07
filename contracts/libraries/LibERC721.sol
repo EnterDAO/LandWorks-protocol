@@ -188,23 +188,9 @@ library LibERC721 {
         uint256 tokenId = erc721.total.current();
 
         erc721.total.increment();
-        safeMint(to, tokenId);
+        safeMint(to, tokenId, "");
 
         return tokenId;
-    }
-
-    /**
-     * @dev Safely mints `tokenId` and transfers it to `to`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
-     */
-    function safeMint(address to, uint256 tokenId) internal {
-        safeMint(to, tokenId, "");
     }
 
     /**
