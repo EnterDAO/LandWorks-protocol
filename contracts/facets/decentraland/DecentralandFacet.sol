@@ -18,11 +18,14 @@ contract DecentralandFacet is IDecentralandFacet {
         address _operator
     ) external payable {
         require(_operator != address(0), "_operator must not be 0x0");
-        uint256 rentId = LibRent.rent(_assetId, _period);
 
+        (uint256 rentId, bool rentStartsNow) = LibRent.rent(_assetId, _period);
         LibDecentraland.setOperator(_assetId, rentId, _operator);
-
         emit RentDecentraland(_assetId, rentId, _operator);
+
+        if (rentStartsNow) {
+            updateState(_assetId, rentId);
+        }
     }
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.
@@ -30,7 +33,7 @@ contract DecentralandFacet is IDecentralandFacet {
     /// this function is executed to set the provided rent operator to the Estate/LAND scene operator.
     /// @param _assetId The target asset which will map to its corresponding Estate/LAND
     /// @param _rentId The target rent
-    function updateState(uint256 _assetId, uint256 _rentId) external {
+    function updateState(uint256 _assetId, uint256 _rentId) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(LibERC721.exists(_assetId), "_assetId not found");

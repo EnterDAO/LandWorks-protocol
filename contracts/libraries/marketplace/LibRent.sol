@@ -26,7 +26,7 @@ library LibRent {
     /// If no active rents are found, rents starts from the current block.
     function rent(uint256 _assetId, uint256 _period)
         internal
-        returns (uint256)
+        returns (uint256, bool)
     {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -40,11 +40,14 @@ library LibRent {
         require(_period >= asset.minPeriod, "_period less than minPeriod");
         require(_period <= asset.maxPeriod, "_period more than maxPeriod");
 
+        bool rentStartsNow = true;
         uint256 rentStartBlock = block.number;
         uint256 lastRentEndBlock = ms
         .rents[_assetId][asset.totalRents].endBlock;
+
         if (lastRentEndBlock > rentStartBlock) {
             rentStartBlock = lastRentEndBlock;
+            rentStartsNow = false;
         }
 
         uint256 rentEndBlock = rentStartBlock + _period;
@@ -74,6 +77,6 @@ library LibRent {
 
         emit Rent(_assetId, rentId, msg.sender, rentStartBlock, rentEndBlock);
 
-        return rentId;
+        return (rentId, rentStartsNow);
     }
 }

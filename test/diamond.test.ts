@@ -1958,6 +1958,9 @@ describe('LandWorks', function () {
                 // and:
                 const operator = await decentralandFacet.operatorFor(assetId, expectedRentId);
                 expect(operator).to.equal(nonOwner.address);
+                // and:
+                const landId = (await marketplaceFacet.assetAt(assetId)).metaverseAssetId;
+                expect(await landRegistry.updateOperator(landId)).to.equal(nonOwner.address);
             });
 
             it('should emit event with args', async () => {
@@ -1975,10 +1978,35 @@ describe('LandWorks', function () {
                     .to.emit(decentralandFacet, 'RentDecentraland')
                     .withArgs(assetId, rentId, nonOwner.address)
                     .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(assetId, rentId, nonOwner.address, startBlock, endBlock);
+                    .withArgs(assetId, rentId, nonOwner.address, startBlock, endBlock)
+                    .to.emit(decentralandFacet, 'UpdateState')
+                    .withArgs(assetId, rentId, nonOwner.address);
             });
 
-            // todo: all it should revert from LibRent.rent
+            it('should not update state when rent does not begin in execution block', async () => {
+                // given:
+                const secondRentId = 2;
+                await decentralandFacet
+                    .connect(nonOwner)
+                    .rentDecentraland(assetId, 2 * minPeriod, nonOwner.address, { value: value * 2 });
+
+                // when:
+                const tx = await decentralandFacet
+                    .connect(nonOwner)
+                    .rentDecentraland(assetId, minPeriod, artificialRegistry.address, { value });
+
+                // then:
+                const startBlock = await (await marketplaceFacet.rentAt(assetId, rentId)).endBlock;
+                const endBlock = startBlock.add(minPeriod);
+
+                await expect(tx)
+                    .to.emit(decentralandFacet, 'RentDecentraland')
+                    .withArgs(assetId, secondRentId, artificialRegistry.address)
+                    .to.emit(decentralandFacet, 'Rent')
+                    .withArgs(assetId, secondRentId, nonOwner.address, startBlock, endBlock)
+                    .to.not.emit(decentralandFacet, 'UpdateState')
+                    .withArgs(assetId, secondRentId, artificialRegistry.address);
+            });
 
             it('should revert when asset is not found', async () => {
                 // given:
@@ -2067,7 +2095,6 @@ describe('LandWorks', function () {
                 await decentralandFacet
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 2, nonOwner.address, { value: 2 * value });
-                expect(await landRegistry.updateOperator(landId)).to.equal(ethers.constants.AddressZero);
 
                 // when:
                 await decentralandFacet.updateState(assetId, rentId);
