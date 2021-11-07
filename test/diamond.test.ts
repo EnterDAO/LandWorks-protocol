@@ -255,6 +255,26 @@ describe('LandWorks', function () {
             const test1 = (await Diamond.asFacet(diamond, 'Test1Facet')) as Test1Facet;
             await expect(test1.test1Func1()).to.be.revertedWith('Diamond: Function does not exist');
         });
+
+        it('should support all declared interfaces', async () => {
+            const IERC165 = await ethers.getContractAt('IERC165', ethers.constants.AddressZero);
+            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IERC165))).to.be.true;
+
+            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(cutFacet))).to.be.true;
+
+            const IDiamondLoupe = await ethers.getContractAt('IDiamondLoupe', ethers.constants.AddressZero);
+            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IDiamondLoupe))).to.be.true;
+
+            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(ownership))).to.be.true;
+
+            // Calculating the interface id would require an ABI, consisting of all function selectors,
+            // **excluding** the inherited ones.
+            const IERC721InterfaceId = '0x80ac58cd';
+            expect(await loupeFacet.supportsInterface(IERC721InterfaceId)).to.be.true;
+
+            const IERC721Metadata = '0x5b5e139f';
+            expect(await loupeFacet.supportsInterface(IERC721Metadata)).to.be.true;
+        });
     });
 
     describe('Ownership Facet', async () => {

@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 import "./libraries/LibDiamond.sol";
 import "./libraries/LibOwnership.sol";
 import "./interfaces/IDiamondCut.sol";
 import "./interfaces/IDiamondLoupe.sol";
-import "./interfaces/IERC165.sol";
 import "./interfaces/IERC173.sol";
 
 contract LandWorks {
-
-    constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner) payable {
+    constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner)
+        payable
+    {
         require(_owner != address(0), "owner must not be 0x0");
 
         LibOwnership.setContractOwner(_owner);
@@ -21,6 +25,8 @@ contract LandWorks {
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721Metadata).interfaceId] = true;
     }
 
     // Find facet for function that is called and execute the
@@ -45,7 +51,7 @@ contract LandWorks {
                 revert(0, returndatasize())
             }
             default {
-                return (0, returndatasize())
+                return(0, returndatasize())
             }
         }
     }

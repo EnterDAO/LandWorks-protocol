@@ -1,5 +1,5 @@
-import {Contract} from "ethers";
-import {ethers} from "hardhat";
+import { BigNumber, Contract } from "ethers";
+import { ethers } from "hardhat";
 
 /**
  * Utility library for interacting with Diamonds
@@ -13,10 +13,26 @@ export namespace Diamond {
     };
 
     /**
+     * Computes the interface id for a given {@link Contract}
+     * Includes inherited functions
+     * @param contract the Contract
+     * @returns The Contract interface id
+     */
+    export function getInterfaceId(contract: Contract): string {
+        const selectors = getSelectorsFor(contract);
+
+        const result = selectors.reduce((result, value) => {
+            return result.xor(value);
+        }, BigNumber.from(0));
+
+        return ethers.utils.hexZeroPad(ethers.utils.hexValue(result), 4);
+    }
+
+    /**
      * Computes diamond selectors for a given {@link Contract}
      * @param contract the Contract to get selectors for
      */
-    export function getSelectorsFor (contract:Contract) {
+    export function getSelectorsFor(contract: Contract) {
         const signatures: string[] = Object.keys(contract.interface.functions);
 
         return signatures.reduce((acc: string[], val) => {
@@ -31,7 +47,7 @@ export namespace Diamond {
      * Computes all selectors for the provided contracts and returns them as {@link FacetCutAction} Add selectors
      * @param facets
      */
-    export function getAsAddCuts (facets: Array<Contract>) {
+    export function getAsAddCuts(facets: Array<Contract>) {
         const diamondCut = [];
 
         for (const facet of facets) {
@@ -49,8 +65,7 @@ export namespace Diamond {
      * @param diamond
      * @param facetName
      */
-    export async function asFacet (diamond:Contract, facetName:string):Promise<Contract> {
+    export async function asFacet(diamond: Contract, facetName: string): Promise<Contract> {
         return await ethers.getContractAt(facetName, diamond.address);
     }
-
 }
