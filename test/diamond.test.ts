@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { Contract } from 'ethers';
 import { Diamond } from '../utils/diamond';
-import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, FeeFacet, LandRegistry, MarketplaceFacet, OwnershipFacet, Test1Facet, Test2Facet } from '../typechain';
+import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, EstateRegistry, FeeFacet, LandRegistry, MarketplaceFacet, OwnershipFacet, Test1Facet, Test2Facet } from '../typechain';
 import { Deployer } from "../utils/deployer";
 import FacetCutAction = Diamond.FacetCutAction;
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -11,6 +11,7 @@ describe('LandWorks', function () {
     let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, fee: Contract, erc721: Contract, decentraland: Contract, diamond: Contract;
     let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
     let landRegistry: LandRegistry;
+    let estateRegistry: EstateRegistry;
     let owner: SignerWithAddress, nonOwner: SignerWithAddress, artificialRegistry: SignerWithAddress, administrativeOperator: SignerWithAddress;
     let snapshotId: any;
 
@@ -1180,12 +1181,10 @@ describe('LandWorks', function () {
                         expect(asset.totalRents).to.equal(1);
                         // and:
                         const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
-                        expect(protocolFees.paidAmount).to.equal(0);
-                        expect(protocolFees.accumulatedAmount).to.equal(expectedProtocolFee);
+                        expect(protocolFees).to.equal(expectedProtocolFee);
                         // and:
                         const assetRentFees = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                        expect(assetRentFees.paidAmount).to.equal(0);
-                        expect(assetRentFees.accumulatedAmount).to.equal(expectedRentFee);
+                        expect(assetRentFees).to.equal(expectedRentFee);
                         // and:
                         const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                         const afterBalance = await nonOwner.getBalance();
@@ -1237,12 +1236,10 @@ describe('LandWorks', function () {
                         expect(asset.totalRents).to.equal(2);
                         // and:
                         const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
-                        expect(protocolFees.paidAmount).to.equal(0);
-                        expect(protocolFees.accumulatedAmount).to.equal(expectedProtocolFee);
+                        expect(protocolFees).to.equal(expectedProtocolFee);
                         // and:
                         const assetRentFees = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                        expect(assetRentFees.paidAmount).to.equal(0);
-                        expect(assetRentFees.accumulatedAmount).to.equal(expectedRentFee);
+                        expect(assetRentFees).to.equal(expectedRentFee);
                     });
 
                     it('should revert when asset is not found', async () => {
@@ -1372,12 +1369,10 @@ describe('LandWorks', function () {
                             expect(asset.totalRents).to.equal(1);
                             // and:
                             const protocolFees = await feeFacet.protocolFeeFor(mockERC20Registry.address);
-                            expect(protocolFees.paidAmount).to.equal(0);
-                            expect(protocolFees.accumulatedAmount).to.equal(expectedProtocolFee);
+                            expect(protocolFees).to.equal(expectedProtocolFee);
                             // and:
                             const assetRentFees = await feeFacet.assetRentFeesFor(assetId, mockERC20Registry.address);
-                            expect(assetRentFees.paidAmount).to.equal(0);
-                            expect(assetRentFees.accumulatedAmount).to.equal(expectedRentFee);
+                            expect(assetRentFees).to.equal(expectedRentFee);
                             // and:
                             const afterBalance = await mockERC20Registry.balanceOf(nonOwner.address);
                             expect(afterBalance).to.equal(beforeBalance.sub(value));
@@ -1674,9 +1669,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedProtocolFee));
                     // and:
                     const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedProtocolFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedProtocolFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
@@ -1695,9 +1688,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
                     // and:
                     const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedProtocolFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedProtocolFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
@@ -1705,11 +1696,11 @@ describe('LandWorks', function () {
 
                 it('should emit event with args', async () => {
                     await expect(feeFacet.claimProtocolFee(ethers.constants.AddressZero))
-                        .to.emit(feeFacet, 'ClaimFee')
+                        .to.emit(feeFacet, 'ClaimProtocolFee')
                         .withArgs(ethers.constants.AddressZero, owner.address, expectedProtocolFee);
 
                     await expect(feeFacet.claimProtocolFee(mockERC20Registry.address))
-                        .to.emit(feeFacet, 'ClaimFee')
+                        .to.emit(feeFacet, 'ClaimProtocolFee')
                         .withArgs(mockERC20Registry.address, owner.address, expectedProtocolFee)
                         .to.emit(mockERC20Registry, 'Transfer')
                         .withArgs(feeFacet.address, owner.address, expectedProtocolFee);
@@ -1737,9 +1728,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
                     // and:
                     const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedProtocolFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedProtocolFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
@@ -1762,9 +1751,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
@@ -1789,9 +1776,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.be.equal(beforeBalance + expectedRentFee);
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, mockERC20Registry.address);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
@@ -1847,9 +1832,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
@@ -1872,9 +1855,7 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                    expect(afterClaim.paidAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.accumulatedAmount).to.be.equal(expectedRentFee);
-                    expect(afterClaim.paidAmount).to.be.equal(afterClaim.accumulatedAmount);
+                    expect(afterClaim).to.be.equal(0);
                     // and:
                     const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
@@ -1943,12 +1924,10 @@ describe('LandWorks', function () {
                 expect(asset.totalRents).to.equal(1);
                 // and:
                 const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
-                expect(protocolFees.paidAmount).to.equal(0);
-                expect(protocolFees.accumulatedAmount).to.equal(expectedProtocolFee);
+                expect(protocolFees).to.equal(expectedProtocolFee);
                 // and:
                 const assetRentFees = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                expect(assetRentFees.paidAmount).to.equal(0);
-                expect(assetRentFees.accumulatedAmount).to.equal(expectedRentFee);
+                expect(assetRentFees).to.equal(expectedRentFee);
                 // and:
                 const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                 const afterBalance = await nonOwner.getBalance();

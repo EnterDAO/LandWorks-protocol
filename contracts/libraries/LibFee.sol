@@ -12,20 +12,15 @@ library LibFee {
     event SetTokenPayment(address _token, bool _status);
     event SetFee(address _token, uint256 _fee);
 
-    struct Fee {
-        uint256 paidAmount;
-        uint256 accumulatedAmount;
-    }
-
     struct FeeStorage {
         // Supported tokens as a form of payment
         EnumerableSet.AddressSet tokenPayments;
         // Protocol fee percentages for tokens
         mapping(address => uint256) feePercentages;
         // Asset owners' rent fees
-        mapping(uint256 => mapping(address => Fee)) assetRentFees;
+        mapping(uint256 => mapping(address => uint256)) assetRentFees;
         // Protocol fees
-        mapping(address => Fee) protocolFees;
+        mapping(address => uint256) protocolFees;
         // Protocol fee precision
         uint256 feePrecision;
     }
@@ -49,29 +44,29 @@ library LibFee {
             fs.feePrecision;
 
         uint256 rentFee = _amount - protocolFee;
-        fs.assetRentFees[_assetId][_token].accumulatedAmount += rentFee;
-        fs.protocolFees[_token].accumulatedAmount += protocolFee;
+        fs.assetRentFees[_assetId][_token] += rentFee;
+        fs.protocolFees[_token] += protocolFee;
     }
 
     function claimRentFee(uint256 _assetId, address _token)
         internal
         returns (uint256)
     {
-        LibFee.Fee storage fees = feeStorage().assetRentFees[_assetId][_token];
+        LibFee.FeeStorage storage fs = feeStorage();
 
-        uint256 transferAmount = fees.accumulatedAmount - fees.paidAmount;
-        fees.paidAmount = fees.accumulatedAmount;
+        uint256 amount = fs.assetRentFees[_assetId][_token];
+        fs.assetRentFees[_assetId][_token] = 0;
 
-        return transferAmount;
+        return amount;
     }
 
     function claimProtocolFee(address _token) internal returns (uint256) {
-        LibFee.Fee storage fees = feeStorage().protocolFees[_token];
+        LibFee.FeeStorage storage fs = feeStorage();
 
-        uint256 transferAmount = fees.accumulatedAmount - fees.paidAmount;
-        fees.paidAmount = fees.accumulatedAmount;
+        uint256 amount = fs.protocolFees[_token];
+        fs.protocolFees[_token] = 0;
 
-        return transferAmount;
+        return amount;
     }
 
     function setFeePercentage(address _token, uint256 _feePercentage) internal {
@@ -112,14 +107,14 @@ library LibFee {
         return feeStorage().tokenPayments.at(_index);
     }
 
-    function protocolFeeFor(address _token) internal view returns (Fee memory) {
+    function protocolFeeFor(address _token) internal view returns (uint256) {
         return feeStorage().protocolFees[_token];
     }
 
     function assetRentFeesFor(uint256 _assetId, address _token)
         internal
         view
-        returns (Fee memory)
+        returns (uint256)
     {
         return feeStorage().assetRentFees[_assetId][_token];
     }

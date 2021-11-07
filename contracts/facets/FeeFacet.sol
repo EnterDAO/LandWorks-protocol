@@ -12,19 +12,19 @@ contract FeeFacet is IFeeFacet {
     /// @notice Claims protocol fees of a given payment token
     /// Provide 0x0 for ETH
     /// @param _token The target token
-    function claimProtocolFee(address _token) external {
+    function claimProtocolFee(address _token) public {
         LibOwnership.enforceIsContractOwner();
 
         uint256 protocolFee = LibFee.claimProtocolFee(_token);
 
         LibClaim.transfer(_token, msg.sender, protocolFee);
 
-        emit ClaimFee(_token, msg.sender, protocolFee);
+        emit ClaimProtocolFee(_token, msg.sender, protocolFee);
     }
 
     /// @notice Claims accrued rent fees for a given asset
     /// @param _assetId The target _assetId
-    function claimRentFee(uint256 _assetId) external {
+    function claimRentFee(uint256 _assetId) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
@@ -72,24 +72,20 @@ contract FeeFacet is IFeeFacet {
         LibFee.setFeePercentage(_token, _feePercentage);
     }
 
-    /// @notice Gets the accumulated and paid amount of fees for a payment token
+    /// @notice Gets the unclaimed amount of fees for a payment token
     /// @param _token The target token
-    function protocolFeeFor(address _token)
-        external
-        view
-        returns (LibFee.Fee memory)
-    {
+    function protocolFeeFor(address _token) external view returns (uint256) {
         return LibFee.protocolFeeFor(_token);
     }
 
-    /// @notice Gets the accumulated and paid amount of asset rent fees of a payment
+    /// @notice Gets the unclaimed amount of asset rent fees of a payment
     /// token for an asset
     /// @param _assetId The target asset
     /// @param _token The target token
     function assetRentFeesFor(uint256 _assetId, address _token)
         external
         view
-        returns (LibFee.Fee memory)
+        returns (uint256)
     {
         return LibFee.assetRentFeesFor(_assetId, _token);
     }

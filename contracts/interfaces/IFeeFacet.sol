@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../libraries/LibFee.sol";
-
 interface IFeeFacet {
-    event ClaimFee(address _token, address _recipient, uint256 _amount);
+    event ClaimProtocolFee(address _token, address _recipient, uint256 _amount);
     event ClaimRentFee(
         uint256 _assetId,
         address _token,
@@ -29,15 +27,12 @@ interface IFeeFacet {
         bool _status
     ) external;
 
-    function protocolFeeFor(address _token)
-        external
-        view
-        returns (LibFee.Fee memory);
+    function protocolFeeFor(address _token) external view returns (uint256);
 
     function assetRentFeesFor(uint256 _assetId, address _token)
         external
         view
-        returns (LibFee.Fee memory);
+        returns (uint256);
 
     function supportsTokenPayment(address _token) external view returns (bool);
 

@@ -81,7 +81,7 @@ contract DecentralandFacet is IDecentralandFacet {
         emit UpdateAdministrativeState(_assetId, operator);
     }
 
-    /// @notice Updates the operator for the given renf of an asset
+    /// @notice Updates the operator for the given rent of an asset
     /// @param _assetId The target asset
     /// @param _rentId The target rentId to the asset
     /// @param _newOperator The to-be-set new operator
