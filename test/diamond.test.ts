@@ -1761,6 +1761,7 @@ describe('LandWorks', function () {
                 });
 
                 it('should claim protocol fees', async () => {
+                    // given:
                     const beforeETHBalance = await owner.getBalance();
                     const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
@@ -1958,13 +1959,11 @@ describe('LandWorks', function () {
             });
 
             describe('claimMultipleRentFees', async () => {
-                let assetIds: number[];
-                let secondAssetId: number;
+                const secondAssetId: number = 1;
+                const secondMetaverseTokenId = 2;
+                const assetIds = [assetId, secondAssetId];
 
                 beforeEach(async () => {
-                    const secondMetaverseTokenId = 2;
-                    secondAssetId = 1;
-                    assetIds = [assetId, secondAssetId];
                     await mockERC721Registry.mint(owner.address, secondMetaverseTokenId);
 
                     // and:
@@ -2032,10 +2031,9 @@ describe('LandWorks', function () {
                 it('should revert when one of assets is not found', async () => {
                     // given:
                     const invalidAssetId = 2;
-                    assetIds.push(invalidAssetId);
                     const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
-                    await expect(feeFacet.claimMultipleRentFees(assetIds))
+                    await expect(feeFacet.claimMultipleRentFees([...assetIds, invalidAssetId]))
                         .to.be.revertedWith(expectedRevertMessage);
 
                     // then:
