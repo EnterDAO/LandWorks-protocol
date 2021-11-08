@@ -15,7 +15,11 @@ interface IFeeFacet {
 
     function claimRentFee(uint256 _assetId) external;
 
+    function claimMultipleRentFees(uint256[] calldata _assetIds) external;
+
     function claimProtocolFee(address _token) external;
+
+    function claimProtocolFees(address[] calldata _tokens) external;
 
     function setFee(address _token, uint256 _feePercentage) external;
 

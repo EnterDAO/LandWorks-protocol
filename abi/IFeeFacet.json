@@ -139,12 +139,38 @@
   {
     "inputs": [
       {
+        "internalType": "uint256[]",
+        "name": "_assetIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "claimMultipleRentFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_token",
         "type": "address"
       }
     ],
     "name": "claimProtocolFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "claimProtocolFees",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

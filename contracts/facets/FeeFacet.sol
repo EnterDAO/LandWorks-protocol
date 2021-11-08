@@ -22,7 +22,22 @@ contract FeeFacet is IFeeFacet {
         emit ClaimProtocolFee(_token, msg.sender, protocolFee);
     }
 
-    /// @notice Claims accrued rent fees for a given asset
+    /// @notice Claims protocol fees for a set of tokens
+    /// @param _tokens The array of tokens
+    function claimProtocolFees(address[] calldata _tokens) public {
+        LibOwnership.enforceIsContractOwner();
+
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            address token = _tokens[i];
+
+            uint256 protocolFee = LibFee.claimProtocolFee(token);
+            LibClaim.transfer(token, msg.sender, protocolFee);
+
+            emit ClaimProtocolFee(token, msg.sender, protocolFee);
+        }
+    }
+
+    /// @notice Claims unclaimed rent fees for a given asset
     /// @param _assetId The target _assetId
     function claimRentFee(uint256 _assetId) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
@@ -36,6 +51,26 @@ contract FeeFacet is IFeeFacet {
         uint256 amount = LibFee.claimRentFee(_assetId, paymentToken);
 
         LibClaim.transferRentFee(_assetId, paymentToken, msg.sender, amount);
+    }
+
+    /// @notice Claims unclaimed rent fees for a set of assets
+    /// @param _assetIds The array of asset ids
+    function claimMultipleRentFees(uint256[] calldata _assetIds) public {
+        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
+            .marketplaceStorage();
+
+        for (uint256 i = 0; i < _assetIds.length; i++) {
+            uint256 assetId = _assetIds[i];
+            require(
+                LibERC721.isApprovedOrOwner(msg.sender, assetId),
+                "caller must be approved or owner of asset"
+            );
+
+            address paymentToken = ms.assets[assetId].paymentToken;
+            uint256 amount = LibFee.claimRentFee(assetId, paymentToken);
+
+            LibClaim.transferRentFee(assetId, paymentToken, msg.sender, amount);
+        }
     }
 
     /// @notice Sets the protocol fee for token payments
