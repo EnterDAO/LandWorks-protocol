@@ -1089,9 +1089,8 @@ describe('LandWorks', function () {
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'ClaimRentFee')
                             .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0)
-                            // TODO: investigate
-                            // .to.emit(mockERC721Registry, 'Transfer')
-                            // .withArgs(marketplaceFacet.address, owner.address, assetId);
+                            .to.emit(mockERC721Registry, 'Transfer')
+                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
                             .to.emit(marketplaceFacet, 'Withdraw')
                             .withArgs(assetId, owner.address);
                     });
@@ -1143,9 +1142,8 @@ describe('LandWorks', function () {
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'ClaimRentFee')
                             .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerBlock * minPeriod)
-                            // TODO: investigate
-                            // .to.emit(mockERC721Registry, 'Transfer')
-                            // .withArgs(marketplaceFacet.address, owner.address, assetId);
+                            .to.emit(mockERC721Registry, 'Transfer')
+                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
                             .to.emit(marketplaceFacet, 'Withdraw')
                             .withArgs(assetId, owner.address);
 
@@ -1455,9 +1453,8 @@ describe('LandWorks', function () {
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'ClaimRentFee')
                             .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerBlock * period)
-                            // TODO: investigate
-                            // .to.emit(mockERC721Registry, 'Transfer')
-                            // .withArgs(marketplaceFacet.address, owner.address, assetId);
+                            .to.emit(mockERC721Registry, 'Transfer')
+                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
                             .to.emit(marketplaceFacet, 'Withdraw')
                             .withArgs(assetId, owner.address);
                     });
