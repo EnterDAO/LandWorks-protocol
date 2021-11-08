@@ -81,16 +81,6 @@ contract FeeFacet is IFeeFacet {
         LibFee.setFeePercentage(_token, _feePercentage);
     }
 
-    /// @notice Sets the protocol fee precision
-    /// Used to allow percentages with decimal franction
-    /// @param _feePrecision The fee precision
-    function setFeePrecision(uint256 _feePrecision) external {
-        LibOwnership.enforceIsContractOwner();
-        require(_feePrecision >= 10, "_feePrecision must not be single-digit");
-        LibFee.setFeePrecision(_feePrecision);
-        emit SetFeePrecision(msg.sender, _feePrecision);
-    }
-
     /// @notice Sets status of token payment (accepted or not) and its fee
     /// @param _token The target token
     /// @param _feePercentage The fee percentage, charged on every rent
@@ -148,7 +138,7 @@ contract FeeFacet is IFeeFacet {
     }
 
     /// @notice Gets the fee precision
-    function feePrecision() external view returns (uint256) {
-        return LibFee.feePrecision();
+    function feePrecision() external pure returns (uint256) {
+        return LibFee.FEE_PRECISION;
     }
 }

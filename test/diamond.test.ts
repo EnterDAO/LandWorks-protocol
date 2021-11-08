@@ -61,9 +61,6 @@ describe('LandWorks', function () {
 
         // Init ERC721
         await erc721Facet.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
-        // and:
-        await feeFacet.setFeePrecision(FEE_PRECISION);
-
 
         // Deploy Decentraland Registry
         const decentralandProxy = await Deployer.deployContract('LANDProxyMock');
@@ -1520,37 +1517,10 @@ describe('LandWorks', function () {
             mockERC20Registry = await Deployer.deployContract('ERC20Mock');
         });
 
-        describe('setFeePrecision', async () => {
-            const newFeePrecision = FEE_PRECISION + 1;
-
-            it('should set fee precision', async () => {
-                // when:
-                await feeFacet.setFeePrecision(newFeePrecision);
-
+        describe('feePrecision', async () => {
+            it('should get fee precision', async () => {
                 // then:
-                expect(await feeFacet.feePrecision()).to.equal(newFeePrecision);
-            });
-
-            it('should emit event with args', async () => {
-                await expect(feeFacet.setFeePrecision(newFeePrecision))
-                    .to.emit(feeFacet, 'SetFeePrecision')
-                    .withArgs(owner.address, newFeePrecision);
-            });
-
-            it('should revert when caller is not owner', async () => {
-                const expectedRevertMessage = 'Must be contract owner';
-
-                await expect(feeFacet.connect(nonOwner).setFeePrecision(FEE_PRECISION))
-                    .to.be.revertedWith(expectedRevertMessage);
-            });
-
-            it('should revert when precision is below 10', async () => {
-                const expectedRevertMessage = '_feePrecision must not be single-digit';
-
-                for (let i = 0; i < 10; i++) {
-                    await expect(feeFacet.setFeePrecision(i))
-                        .to.be.revertedWith(expectedRevertMessage);
-                }
+                expect(await feeFacet.feePrecision()).to.equal(FEE_PRECISION);
             });
         });
 

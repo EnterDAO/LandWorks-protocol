@@ -10,7 +10,6 @@ interface IFeeFacet {
         uint256 _amount
     );
     event SetFee(address _token, uint256 _fee);
-    event SetFeePrecision(address indexed _caller, uint256 _feePrecision);
     event SetTokenPayment(address _token, bool _status);
 
     function claimRentFee(uint256 _assetId) external;
@@ -22,8 +21,6 @@ interface IFeeFacet {
     function claimProtocolFees(address[] calldata _tokens) external;
 
     function setFee(address _token, uint256 _feePercentage) external;
-
-    function setFeePrecision(uint256 _feePrecision) external;
 
     function setTokenPayment(
         address _token,
@@ -46,5 +43,5 @@ interface IFeeFacet {
 
     function feePercentage(address _token) external view returns (uint256);
 
-    function feePrecision() external view returns (uint256);
+    function feePrecision() external pure returns (uint256);
 }

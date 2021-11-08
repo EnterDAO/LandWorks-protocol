@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 library LibFee {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    uint256 constant FEE_PRECISION = 100_000;
     bytes32 constant FEE_STORAGE_POSITION =
         keccak256("com.enterdao.landworks.fee");
 
@@ -21,8 +22,6 @@ library LibFee {
         mapping(uint256 => mapping(address => uint256)) assetRentFees;
         // Protocol fees
         mapping(address => uint256) protocolFees;
-        // Protocol fee precision
-        uint256 feePrecision;
     }
 
     function feeStorage() internal pure returns (FeeStorage storage fs) {
@@ -41,7 +40,7 @@ library LibFee {
         LibFee.FeeStorage storage fs = feeStorage();
 
         uint256 protocolFee = (_amount * fs.feePercentages[_token]) /
-            fs.feePrecision;
+            FEE_PRECISION;
 
         uint256 rentFee = _amount - protocolFee;
         fs.assetRentFees[_assetId][_token] += rentFee;
@@ -72,16 +71,12 @@ library LibFee {
     function setFeePercentage(address _token, uint256 _feePercentage) internal {
         LibFee.FeeStorage storage fs = feeStorage();
         require(
-            _feePercentage < fs.feePrecision,
+            _feePercentage < FEE_PRECISION,
             "_feePercentage exceeds or equal to feePrecision"
         );
         fs.feePercentages[_token] = _feePercentage;
 
         emit SetFee(_token, _feePercentage);
-    }
-
-    function setFeePrecision(uint256 _feePrecision) internal {
-        feeStorage().feePrecision = _feePrecision;
     }
 
     function setTokenPayment(address _token, bool _status) internal {
@@ -121,9 +116,5 @@ library LibFee {
 
     function feePercentage(address _token) internal view returns (uint256) {
         return feeStorage().feePercentages[_token];
-    }
-
-    function feePrecision() internal view returns (uint256) {
-        return feeStorage().feePrecision;
     }
 }
