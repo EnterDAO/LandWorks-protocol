@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import "../interfaces/IFeeFacet.sol";
 import "../libraries/LibERC721.sol";
-import "../libraries/LibClaim.sol";
+import "../libraries/LibTransfer.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibFee.sol";
@@ -17,7 +17,7 @@ contract FeeFacet is IFeeFacet {
 
         uint256 protocolFee = LibFee.claimProtocolFee(_token);
 
-        LibClaim.transfer(_token, msg.sender, protocolFee);
+        LibTransfer.safeTransfer(_token, msg.sender, protocolFee);
 
         emit ClaimProtocolFee(_token, msg.sender, protocolFee);
     }
@@ -31,7 +31,7 @@ contract FeeFacet is IFeeFacet {
             address token = _tokens[i];
 
             uint256 protocolFee = LibFee.claimProtocolFee(token);
-            LibClaim.transfer(token, msg.sender, protocolFee);
+            LibTransfer.safeTransfer(token, msg.sender, protocolFee);
 
             emit ClaimProtocolFee(token, msg.sender, protocolFee);
         }
@@ -50,7 +50,8 @@ contract FeeFacet is IFeeFacet {
         address paymentToken = ms.assets[_assetId].paymentToken;
         uint256 amount = LibFee.claimRentFee(_assetId, paymentToken);
 
-        LibClaim.transferRentFee(_assetId, paymentToken, msg.sender, amount);
+        LibTransfer.safeTransfer(paymentToken, msg.sender, amount);
+        emit ClaimRentFee(_assetId, paymentToken, msg.sender, amount);
     }
 
     /// @notice Claims unclaimed rent fees for a set of assets
@@ -69,7 +70,8 @@ contract FeeFacet is IFeeFacet {
             address paymentToken = ms.assets[assetId].paymentToken;
             uint256 amount = LibFee.claimRentFee(assetId, paymentToken);
 
-            LibClaim.transferRentFee(assetId, paymentToken, msg.sender, amount);
+            LibTransfer.safeTransfer(paymentToken, msg.sender, amount);
+            emit ClaimRentFee(assetId, paymentToken, msg.sender, amount);
         }
     }
 

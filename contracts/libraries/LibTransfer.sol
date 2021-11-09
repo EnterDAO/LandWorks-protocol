@@ -3,28 +3,12 @@ pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-library LibClaim {
+library LibTransfer {
     using SafeERC20 for IERC20;
 
-    event ClaimRentFee(
-        uint256 _assetId,
-        address _token,
-        address indexed _recipient,
-        uint256 _amount
-    );
-
-    function transferRentFee(
-        uint256 _assetId,
-        address _token,
-        address _recipient,
-        uint256 _amount
-    ) internal {
-        transfer(_token, _recipient, _amount);
-        emit ClaimRentFee(_assetId, _token, _recipient, _amount);
-    }
-
-    function transfer(
+    function safeTransfer(
         address _token,
         address _recipient,
         uint256 _amount
@@ -36,5 +20,23 @@ library LibClaim {
                 IERC20(_token).safeTransfer(_recipient, _amount);
             }
         }
+    }
+
+    function safeTransferFrom(
+        address _token,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        IERC20(_token).safeTransferFrom(_from, _to, _amount);
+    }
+
+    function erc721SafeTransferFrom(
+        address _token,
+        address _from,
+        address _to,
+        uint256 _tokenId
+    ) internal {
+        IERC721(_token).safeTransferFrom(_from, _to, _tokenId);
     }
 }

@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../LibERC721.sol";
 import "../LibMarketplace.sol";
 import "../LibFee.sol";
+import "../LibTransfer.sol";
 
 library LibRent {
     using SafeERC20 for IERC20;
@@ -60,7 +61,8 @@ library LibRent {
         if (asset.paymentToken == address(0)) {
             require(msg.value == rentPayment, "invalid msg.value");
         } else {
-            IERC20(asset.paymentToken).safeTransferFrom(
+            LibTransfer.safeTransferFrom(
+                asset.paymentToken,
                 msg.sender,
                 address(this),
                 rentPayment

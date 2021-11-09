@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibERC721.sol";
-import "../libraries/LibClaim.sol";
+import "../libraries/LibTransfer.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
@@ -54,7 +54,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
         enforceIsValidToken(_paymentToken);
 
-        IERC721(_metaverseRegistry).safeTransferFrom(
+        LibTransfer.erc721SafeTransferFrom(
+            _metaverseRegistry,
             msg.sender,
             address(this),
             _metaverseAssetId
@@ -138,12 +139,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
 
-        LibClaim.transferRentFee(
-            _assetId,
-            oldPaymentToken,
-            msg.sender,
-            rentFee
-        );
+        transferRentFee(_assetId, oldPaymentToken, msg.sender, rentFee);
 
         emit UpdateConditions(
             _assetId,
@@ -310,20 +306,26 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibERC721.burn(_assetId);
 
         uint256 rentFee = LibFee.claimRentFee(_assetId, asset.paymentToken);
-        LibClaim.transferRentFee(
-            _assetId,
-            asset.paymentToken,
-            msg.sender,
-            rentFee
-        );
+        transferRentFee(_assetId, asset.paymentToken, msg.sender, rentFee);
 
-        IERC721(asset.metaverseRegistry).safeTransferFrom(
+        LibTransfer.erc721SafeTransferFrom(
+            asset.metaverseRegistry,
             address(this),
             msg.sender,
             asset.metaverseAssetId
         );
 
         emit Withdraw(_assetId, msg.sender);
+    }
+
+    function transferRentFee(
+        uint256 _assetId,
+        address _token,
+        address _receiver,
+        uint256 _amount
+    ) internal {
+        LibTransfer.safeTransfer(_token, _receiver, _amount);
+        emit ClaimRentFee(_assetId, _token, _receiver, _amount);
     }
 
     function enforceIsValidToken(address _token) internal view {
