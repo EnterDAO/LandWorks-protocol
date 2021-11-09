@@ -2128,7 +2128,8 @@ describe('LandWorks', function () {
         const maxFutureBlock = 120;
         const pricePerBlock = 1337;
         const value = minPeriod * pricePerBlock;
-
+        const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
+        const expectedRentFee = value - expectedProtocolFee;
         const rentId = 1;
 
         beforeEach(async () => {
@@ -2159,8 +2160,6 @@ describe('LandWorks', function () {
         describe('rentDecentraland', async () => {
             it('should successfully rent decentraland', async () => {
                 // given:
-                const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
-                const expectedRentFee = value - expectedProtocolFee;
                 const beforeBalance = await nonOwner.getBalance();
                 const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                 const expectedRentId = 1;
@@ -2320,8 +2319,86 @@ describe('LandWorks', function () {
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
+            it('should revert when trying to set operator during rent and contract does not implement setUpdateOperator', async () => {
+                const mockERC721Registry = await Deployer.deployContract('ERC721Mock');
+                const secondAssetId = 1;
+                const metaverseTokenId = 50;
+                await mockERC721Registry.mint(owner.address, metaverseTokenId);
+                // and:
+                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                // and:
+                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                await marketplaceFacet
+                    .list(
+                        metaverseId,
+                        mockERC721Registry.address,
+                        metaverseTokenId,
+                        minPeriod,
+                        maxPeriod,
+                        maxFutureBlock,
+                        ethers.constants.AddressZero,
+                        pricePerBlock);
+
+                // when:
+                await expect(decentralandFacet
+                    .connect(nonOwner)
+                    .rentDecentraland(secondAssetId, minPeriod, nonOwner.address, { value }))
+                    .to.be.reverted;
+            });
+
             it('should rent using decentraland facet even if asset is not from a decentraland registry', async () => {
-                // TODO:
+                const beforeBalance = await nonOwner.getBalance();
+                const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const expectedRentId = 1;
+                const mockERC721Registry = await Deployer.deployContract('ERC721WithSetUpdateOperatorMock');
+                const secondAssetId = 1;
+                const metaverseTokenId = 50;
+                await mockERC721Registry.mint(owner.address, metaverseTokenId);
+                // and:
+                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                // and:
+                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                await marketplaceFacet
+                    .list(
+                        metaverseId,
+                        mockERC721Registry.address,
+                        metaverseTokenId,
+                        minPeriod,
+                        maxPeriod,
+                        maxFutureBlock,
+                        ethers.constants.AddressZero,
+                        pricePerBlock);
+
+                // when:
+                const tx = await decentralandFacet
+                    .connect(nonOwner)
+                    .rentDecentraland(secondAssetId, minPeriod, nonOwner.address, { value });
+                const receipt = await tx.wait();
+
+                // then:
+                const rent = await marketplaceFacet.rentAt(secondAssetId, rentId);
+                expect(rent.startBlock).to.equal(receipt.blockNumber);
+                expect(rent.endBlock).to.equal(rent.startBlock.add(minPeriod));
+                expect(rent.renter).to.equal(nonOwner.address);
+                // and:
+                const asset = await marketplaceFacet.assetAt(secondAssetId);
+                expect(asset.totalRents).to.equal(1);
+                // and:
+                const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                expect(protocolFees).to.equal(expectedProtocolFee);
+                // and:
+                const assetRentFees = await feeFacet.assetRentFeesFor(secondAssetId, ethers.constants.AddressZero);
+                expect(assetRentFees).to.equal(expectedRentFee);
+                // and:
+                const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                const afterBalance = await nonOwner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
+                // and:
+                const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
+                // and:
+                const operator = await decentralandFacet.operatorFor(secondAssetId, expectedRentId);
+                expect(operator).to.equal(nonOwner.address);
             });
         });
 
@@ -2391,10 +2468,6 @@ describe('LandWorks', function () {
                 await expect(decentralandFacet.updateState(assetId, rentId))
                     .to.be.revertedWith(expectedRevertMessage);
             });
-
-            it('should revert if registry does not support setUpdateOperator', async () => {
-                // TODO:
-            });
         });
 
         describe('updateAdministrativeState', async () => {
@@ -2451,7 +2524,29 @@ describe('LandWorks', function () {
             });
 
             it('should revert if registry does not support setUpdateOperator', async () => {
-                // TODO:
+                const mockERC721Registry = await Deployer.deployContract('ERC721Mock');
+                const secondAssetId = 1;
+                const metaverseTokenId = 50;
+                await mockERC721Registry.mint(owner.address, metaverseTokenId);
+                // and:
+                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                // and:
+                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                await marketplaceFacet
+                    .list(
+                        metaverseId,
+                        mockERC721Registry.address,
+                        metaverseTokenId,
+                        minPeriod,
+                        maxPeriod,
+                        maxFutureBlock,
+                        ethers.constants.AddressZero,
+                        pricePerBlock);
+
+                // when:
+                await expect(decentralandFacet
+                    .updateAdministrativeState(secondAssetId))
+                    .to.be.reverted;
             });
         });
 
