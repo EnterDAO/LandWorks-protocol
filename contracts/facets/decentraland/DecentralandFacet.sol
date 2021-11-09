@@ -29,7 +29,7 @@ contract DecentralandFacet is IDecentralandFacet {
     }
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.
-    /// When the rent becomes active (the current block.number is between the rent's start and end),
+    /// When the rent becomes active (the current block.timestamp is between the rent's start and end),
     /// this function is executed to set the provided rent operator to the Estate/LAND scene operator.
     /// @param _assetId The target asset which will map to its corresponding Estate/LAND
     /// @param _rentId The target rent
@@ -40,12 +40,12 @@ contract DecentralandFacet is IDecentralandFacet {
         LibMarketplace.Rent memory rent = ms.rents[_assetId][_rentId];
 
         require(
-            block.number >= rent.startBlock,
-            "block number less than rent start"
+            block.timestamp >= rent.start,
+            "block timestamp less than rent start"
         );
         require(
-            block.number < rent.endBlock,
-            "block number more than or equal to rent end"
+            block.timestamp < rent.end,
+            "block timestamp more than or equal to rent end"
         );
 
         LibMarketplace.Asset memory asset = ms.assets[_assetId];
@@ -70,7 +70,7 @@ contract DecentralandFacet is IDecentralandFacet {
         LibMarketplace.Asset memory asset = ms.assets[_assetId];
 
         require(
-            block.number > ms.rents[_assetId][asset.totalRents].endBlock,
+            block.timestamp > ms.rents[_assetId][asset.totalRents].end,
             "_assetId has an active rent"
         );
 

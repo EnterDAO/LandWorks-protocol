@@ -23,13 +23,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_startBlock",
+        "name": "_start",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_endBlock",
+        "name": "_end",
         "type": "uint256"
       }
     ],

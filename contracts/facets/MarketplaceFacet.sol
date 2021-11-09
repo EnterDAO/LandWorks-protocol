@@ -20,22 +20,22 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _metaverseId The id of the metaverse
     /// @param _metaverseRegistry The registry of the metaverse
     /// @param _metaverseAssetId The id from the metaverse registry
-    /// @param _minPeriod The minimum number of blocks the land can be rented
-    /// @param _maxPeriod The maximum number of blocks the land can be rented
-    /// @param _maxFutureBlock The block delta after which the protocol will not allow
+    /// @param _minPeriod The minimum number of time (in seconds) the land can be rented
+    /// @param _maxPeriod The maximum number of time (in seconds) the land can be rented
+    /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the land to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0 for ETH
-    /// @param _pricePerBlock The price for rental per block
+    /// @param _pricePerSecond The price for rental per second
     function list(
         uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
-        uint256 _maxFutureBlock,
+        uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerBlock
+        uint256 _pricePerSecond
     ) external {
         require(
             _metaverseRegistry != address(0),
@@ -45,8 +45,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
         require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
         require(
-            _maxPeriod <= _maxFutureBlock,
-            "_maxPeriod more than _maxFutureBlock"
+            _maxPeriod <= _maxFutureTime,
+            "_maxPeriod more than _maxFutureTime"
         );
         require(
             LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
@@ -73,8 +73,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             paymentToken: _paymentToken,
             minPeriod: _minPeriod,
             maxPeriod: _maxPeriod,
-            maxFutureBlock: _maxFutureBlock,
-            pricePerBlock: _pricePerBlock,
+            maxFutureTime: _maxFutureTime,
+            pricePerSecond: _pricePerSecond,
             status: LibMarketplace.AssetStatus.Listed,
             totalRents: 0
         });
@@ -86,9 +86,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _metaverseAssetId,
             _minPeriod,
             _maxPeriod,
-            _maxFutureBlock,
+            _maxFutureTime,
             _paymentToken,
-            _pricePerBlock
+            _pricePerSecond
         );
     }
 
@@ -98,20 +98,20 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// Does not affect previous and queued rents
     /// If any of the old conditions do not want to be modified, the old ones must be provided
     /// @param _assetId The target asset
-    /// @param _minPeriod The minimum number of blocks the land can be rented
-    /// @param _maxPeriod The maximum number of blocks the land can be rented
-    /// @param _maxFutureBlock The block delta after which the protocol will not allow
+    /// @param _minPeriod The minimum number in seconds the land can be rented
+    /// @param _maxPeriod The maximum number in seconds the land can be rented
+    /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the land to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0 for ETH
-    /// @param _pricePerBlock The price for rental per block
+    /// @param _pricePerSecond The price for rental per second
     function updateConditions(
         uint256 _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
-        uint256 _maxFutureBlock,
+        uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerBlock
+        uint256 _pricePerSecond
     ) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -123,8 +123,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
         require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
         require(
-            _maxPeriod <= _maxFutureBlock,
-            "_maxPeriod more than _maxFutureBlock"
+            _maxPeriod <= _maxFutureTime,
+            "_maxPeriod more than _maxFutureTime"
         );
         enforceIsValidToken(_paymentToken);
 
@@ -134,8 +134,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         asset.paymentToken = _paymentToken;
         asset.minPeriod = _minPeriod;
         asset.maxPeriod = _maxPeriod;
-        asset.maxFutureBlock = _maxFutureBlock;
-        asset.pricePerBlock = _pricePerBlock;
+        asset.maxFutureTime = _maxFutureTime;
+        asset.pricePerSecond = _pricePerSecond;
 
         uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
 
@@ -145,9 +145,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _assetId,
             _minPeriod,
             _maxPeriod,
-            _maxFutureBlock,
+            _maxFutureTime,
             _paymentToken,
-            _pricePerBlock
+            _pricePerSecond
         );
     }
 
@@ -170,7 +170,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         emit Delist(_assetId, msg.sender);
 
-        if (block.number >= ms.rents[_assetId][asset.totalRents].endBlock) {
+        if (block.timestamp >= ms.rents[_assetId][asset.totalRents].end) {
             withdraw(_assetId, asset);
         }
     }
@@ -191,7 +191,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_assetId not delisted"
         );
         require(
-            block.number >= ms.rents[_assetId][asset.totalRents].endBlock,
+            block.timestamp >= ms.rents[_assetId][asset.totalRents].end,
             "_assetId has an active rent"
         );
 
@@ -199,8 +199,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     }
 
     /// @notice Rents asset land for a given period
-    /// Charges user for the rent upfront. Rent starts from the last rented block
-    /// or from the current block of the transaction.
+    /// Charges user for the rent upfront. Rent starts from the last rented timestamp
+    /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target period the rent will be active
     function rent(uint256 _assetId, uint256 _period) external payable {

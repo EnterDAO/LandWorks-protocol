@@ -21,16 +21,16 @@ library LibMarketplace {
         address paymentToken;
         uint256 minPeriod;
         uint256 maxPeriod;
-        uint256 maxFutureBlock;
-        uint256 pricePerBlock;
+        uint256 maxFutureTime;
+        uint256 pricePerSecond;
         uint256 totalRents;
         AssetStatus status;
     }
 
     struct Rent {
         address renter;
-        uint256 startBlock;
-        uint256 endBlock;
+        uint256 start;
+        uint256 end;
     }
 
     struct MetaverseRegistry {
@@ -127,8 +127,8 @@ library LibMarketplace {
     function addRent(
         uint256 _assetId,
         address _renter,
-        uint256 _startBlock,
-        uint256 _endBlock
+        uint256 _start,
+        uint256 _end
     ) internal returns (uint256) {
         LibMarketplace.MarketplaceStorage storage ms = marketplaceStorage();
         uint256 newRentId = ms.assets[_assetId].totalRents + 1;
@@ -136,8 +136,8 @@ library LibMarketplace {
         ms.assets[_assetId].totalRents = newRentId;
         ms.rents[_assetId][newRentId] = LibMarketplace.Rent({
             renter: _renter,
-            startBlock: _startBlock,
-            endBlock: _endBlock
+            start: _start,
+            end: _end
         });
 
         return newRentId;

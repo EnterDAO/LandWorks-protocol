@@ -91,7 +91,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_maxFutureBlock",
+        "name": "_maxFutureTime",
         "type": "uint256"
       },
       {
@@ -103,7 +103,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_pricePerBlock",
+        "name": "_pricePerSecond",
         "type": "uint256"
       }
     ],
@@ -134,13 +134,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_startBlock",
+        "name": "_start",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_endBlock",
+        "name": "_end",
         "type": "uint256"
       }
     ],
@@ -215,7 +215,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_maxFutureBlock",
+        "name": "_maxFutureTime",
         "type": "uint256"
       },
       {
@@ -227,7 +227,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_pricePerBlock",
+        "name": "_pricePerSecond",
         "type": "uint256"
       }
     ],
@@ -297,12 +297,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "maxFutureBlock",
+            "name": "maxFutureTime",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "pricePerBlock",
+            "name": "pricePerSecond",
             "type": "uint256"
           },
           {
@@ -366,7 +366,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_maxFutureBlock",
+        "name": "_maxFutureTime",
         "type": "uint256"
       },
       {
@@ -376,7 +376,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_pricePerBlock",
+        "name": "_pricePerSecond",
         "type": "uint256"
       }
     ],
@@ -470,12 +470,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "startBlock",
+            "name": "start",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "endBlock",
+            "name": "end",
             "type": "uint256"
           }
         ],
@@ -590,7 +590,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_maxFutureBlock",
+        "name": "_maxFutureTime",
         "type": "uint256"
       },
       {
@@ -600,7 +600,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_pricePerBlock",
+        "name": "_pricePerSecond",
         "type": "uint256"
       }
     ],

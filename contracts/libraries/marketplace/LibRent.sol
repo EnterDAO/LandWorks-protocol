@@ -17,14 +17,14 @@ library LibRent {
         uint256 indexed _assetId,
         uint256 _rentId,
         address indexed _renter,
-        uint256 _startBlock,
-        uint256 _endBlock
+        uint256 _start,
+        uint256 _end
     );
 
-    /// @dev Rents asset for a given period
+    /// @dev Rents asset for a given period (in seconds)
     /// Rent is added to the queue of pending rents.
-    /// Rent start will begin from the last rented block.
-    /// If no active rents are found, rents starts from the current block.
+    /// Rent start will begin from the last rented timestamp.
+    /// If no active rents are found, rents starts from the current timestamp.
     function rent(uint256 _assetId, uint256 _period)
         internal
         returns (uint256, bool)
@@ -42,22 +42,21 @@ library LibRent {
         require(_period <= asset.maxPeriod, "_period more than maxPeriod");
 
         bool rentStartsNow = true;
-        uint256 rentStartBlock = block.number;
-        uint256 lastRentEndBlock = ms
-        .rents[_assetId][asset.totalRents].endBlock;
+        uint256 rentStart = block.timestamp;
+        uint256 lastRentEnd = ms.rents[_assetId][asset.totalRents].end;
 
-        if (lastRentEndBlock > rentStartBlock) {
-            rentStartBlock = lastRentEndBlock;
+        if (lastRentEnd > rentStart) {
+            rentStart = lastRentEnd;
             rentStartsNow = false;
         }
 
-        uint256 rentEndBlock = rentStartBlock + _period;
+        uint256 rentEnd = rentStart + _period;
         require(
-            block.number + asset.maxFutureBlock >= rentEndBlock,
-            "rent more than current maxFutureBlock"
+            block.timestamp + asset.maxFutureTime >= rentEnd,
+            "rent more than current maxFutureTime"
         );
 
-        uint256 rentPayment = _period * asset.pricePerBlock;
+        uint256 rentPayment = _period * asset.pricePerSecond;
         if (asset.paymentToken == address(0)) {
             require(msg.value == rentPayment, "invalid msg.value");
         } else {
@@ -73,11 +72,11 @@ library LibRent {
         uint256 rentId = LibMarketplace.addRent(
             _assetId,
             msg.sender,
-            rentStartBlock,
-            rentEndBlock
+            rentStart,
+            rentEnd
         );
 
-        emit Rent(_assetId, rentId, msg.sender, rentStartBlock, rentEndBlock);
+        emit Rent(_assetId, rentId, msg.sender, rentStart, rentEnd);
 
         return (rentId, rentStartsNow);
     }

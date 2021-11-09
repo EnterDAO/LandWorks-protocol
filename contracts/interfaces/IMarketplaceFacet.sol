@@ -11,24 +11,24 @@ interface IMarketplaceFacet {
         uint256 _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
-        uint256 _maxFutureBlock,
+        uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerBlock
+        uint256 _pricePerSecond
     );
     event UpdateConditions(
         uint256 _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
-        uint256 _maxFutureBlock,
+        uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerBlock
+        uint256 _pricePerSecond
     );
     event Rent(
         uint256 indexed _assetId,
         uint256 _rentId,
         address indexed _renter,
-        uint256 _startBlock,
-        uint256 _endBlock
+        uint256 _start,
+        uint256 _end
     );
     event Delist(uint256 _assetId, address indexed _caller);
     event Withdraw(uint256 _assetId, address indexed _caller);
@@ -47,18 +47,18 @@ interface IMarketplaceFacet {
         uint256 _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
-        uint256 _maxFutureBlock,
+        uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerBlock
+        uint256 _pricePerSecond
     ) external;
 
     function updateConditions(
         uint256 _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
-        uint256 _maxFutureBlock,
+        uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerBlock
+        uint256 _pricePerSecond
     ) external;
 
     function delist(uint256 _assetId) external;
