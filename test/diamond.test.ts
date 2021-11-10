@@ -69,6 +69,12 @@ describe('LandWorks', function () {
         await decentralandProxy.upgrade(decentralandLandRegistry.address, owner.address);
 
         landRegistry = (await ethers.getContractAt('LANDRegistryMock', decentralandProxy.address)) as LandRegistry;
+
+        estateRegistry = (await Deployer.deployContract('EstateRegistryMock')) as EstateRegistry;
+
+        await landRegistry.setEstateRegistry(estateRegistry.address);
+
+        await estateRegistry['initialize(string,string,address)']("ESTATE", "EST", landRegistry.address);
     });
 
     beforeEach(async function () {
@@ -85,7 +91,7 @@ describe('LandWorks', function () {
                 'LandWorks',
                 [],
                 ethers.constants.AddressZero
-            )).to.be.revertedWith("owner must not be 0x0")
+            )).to.be.revertedWith("owner must not be 0x0");
         });
 
         it('should be deployed', async function () {
@@ -2642,6 +2648,93 @@ describe('LandWorks', function () {
                     .connect(nonOwner)
                     .updateAdministrativeOperator(administrativeOperator.address))
                     .to.be.revertedWith(expectedRevertMessage);
+            });
+        });
+
+        describe.only('using EstateRegistry', async () => {
+            const estateId = 1;
+            beforeEach(async () => {
+                // given:
+                await marketplaceFacet.setRegistry(metaverseId, estateRegistry.address, true);
+                await feeFacet.setFee(ethers.constants.AddressZero, FEE_PERCENTAGE);
+                // Creates an estate, constisting of 5 LAND parcels
+                const parcels = 5;
+
+                const coordsX = [];
+                const coordsY = [];
+                for (let x = 1, y = x; x <= parcels; x++) {
+                    await landRegistry.assignNewParcel(x, y, owner.address);
+                    coordsX.push(x);
+                    coordsY.push(y);
+                }
+
+                await landRegistry.createEstate(coordsX, coordsY, owner.address);
+
+                await estateRegistry.approve(marketplaceFacet.address, estateId);
+
+                await marketplaceFacet
+                    .list(
+                        metaverseId,
+                        estateRegistry.address,
+                        estateId,
+                        minPeriod,
+                        maxPeriod,
+                        maxFutureTime,
+                        ethers.constants.AddressZero,
+                        pricePerSecond);
+            });
+
+            it('should rent estate', async () => {
+                const estateAssetId = 1;
+                // given:
+                const beforeBalance = await nonOwner.getBalance();
+                const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const expectedRentId = 1;
+
+                // when:
+                const tx = await decentralandFacet
+                    .connect(nonOwner)
+                    .rentDecentraland(estateAssetId, minPeriod, nonOwner.address, { value });
+                const receipt = await tx.wait();
+                const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+
+                // then:
+                const rent = await marketplaceFacet.rentAt(estateAssetId, rentId);
+                expect(rent.start).to.equal(timestamp);
+                expect(rent.end).to.equal(rent.start.add(minPeriod));
+                expect(rent.renter).to.equal(nonOwner.address);
+                // and:
+                const asset = await marketplaceFacet.assetAt(estateAssetId);
+                expect(asset.totalRents).to.equal(1);
+                // and:
+                const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                expect(protocolFees).to.equal(expectedProtocolFee);
+                // and:
+                const assetRentFees = await feeFacet.assetRentFeesFor(estateAssetId, ethers.constants.AddressZero);
+                expect(assetRentFees).to.equal(expectedRentFee);
+                // and:
+                const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                const afterBalance = await nonOwner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
+                // and:
+                const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
+                // and:
+                const operator = await decentralandFacet.operatorFor(estateAssetId, expectedRentId);
+                expect(operator).to.equal(nonOwner.address);
+                // and:
+                const estateId = (await marketplaceFacet.assetAt(estateAssetId)).metaverseAssetId;
+                expect(await estateRegistry.updateOperator(estateId)).to.equal(nonOwner.address);
+                // and:
+                const start = timestamp;
+                const end = start + minPeriod;
+                await expect(tx)
+                    .to.emit(decentralandFacet, 'RentDecentraland')
+                    .withArgs(estateAssetId, rentId, nonOwner.address)
+                    .to.emit(decentralandFacet, 'Rent')
+                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end)
+                    .to.emit(decentralandFacet, 'UpdateState')
+                    .withArgs(estateAssetId, rentId, nonOwner.address);
             });
         });
     });
