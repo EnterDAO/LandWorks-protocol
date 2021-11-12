@@ -93,7 +93,7 @@ contract DecentralandFacet is IDecentralandFacet {
         uint256 _rentId,
         address _newOperator
     ) external {
-        require(_newOperator != address(0), "operator must not be 0x0");
+        require(_newOperator != address(0), "_newOperator must not be 0x0");
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(LibERC721.exists(_assetId), "_assetId not found");
@@ -114,7 +114,7 @@ contract DecentralandFacet is IDecentralandFacet {
     {
         require(
             _administrativeOperator != address(0),
-            "operator must not be 0x0"
+            "_administrativeOperator must not be 0x0"
         );
         LibOwnership.enforceIsContractOwner();
 

@@ -2254,6 +2254,16 @@ describe('LandWorks', function () {
                     .withArgs(assetId, secondRentId, artificialRegistry.address);
             });
 
+            it('should revert when operator is 0x0', async () => {
+                // given:
+                const expectedRevertMessage = '_operator must not be 0x0';
+
+                // when:
+                await expect(decentralandFacet
+                    .rentDecentraland(assetId, minPeriod, ethers.constants.AddressZero))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
             it('should revert when asset is not found', async () => {
                 // given:
                 const invalidNftId = 123;
@@ -2589,7 +2599,7 @@ describe('LandWorks', function () {
             });
 
             it('should revert when operator is 0x0', async () => {
-                const expectedRevertMessage = 'operator must not be 0x0';
+                const expectedRevertMessage = '_newOperator must not be 0x0';
                 // when:
                 await expect(decentralandFacet
                     .connect(nonOwner)
@@ -2634,7 +2644,7 @@ describe('LandWorks', function () {
             });
 
             it('should revert when new administrative operator is 0x0', async () => {
-                const expectedRevertMessage = 'operator must not be 0x0';
+                const expectedRevertMessage = '_administrativeOperator must not be 0x0';
                 // when:
                 await expect(decentralandFacet
                     .updateAdministrativeOperator(ethers.constants.AddressZero))
