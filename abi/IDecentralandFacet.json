@@ -31,6 +31,12 @@
         "internalType": "uint256",
         "name": "_end",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_fee",
+        "type": "uint256"
       }
     ],
     "name": "Rent",

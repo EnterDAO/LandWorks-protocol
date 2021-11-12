@@ -1231,7 +1231,7 @@ describe('LandWorks', function () {
                         // then:
                         await expect(tx)
                             .to.emit(marketplaceFacet, 'Rent')
-                            .withArgs(assetId, expectedRentId, nonOwner.address, start, end);
+                            .withArgs(assetId, expectedRentId, nonOwner.address, start, end, value);
                     });
 
                     it('should calculate new rent from latest and accrue fees', async () => {
@@ -1253,7 +1253,7 @@ describe('LandWorks', function () {
                         // then:
                         await expect(tx)
                             .to.emit(marketplaceFacet, 'Rent')
-                            .withArgs(assetId, expectedRentId, nonOwner.address, expectedStart, expectedEnd);
+                            .withArgs(assetId, expectedRentId, nonOwner.address, expectedStart, expectedEnd, value);
                         // and:
                         const asset = await marketplaceFacet.assetAt(assetId);
                         expect(asset.totalRents).to.equal(2);
@@ -1379,7 +1379,7 @@ describe('LandWorks', function () {
                             const end = start + period;
                             expect(tx)
                                 .to.emit(marketplaceFacet, 'Rent')
-                                .withArgs(assetId, expectedRentId, nonOwner.address, start, end)
+                                .withArgs(assetId, expectedRentId, nonOwner.address, start, end, value)
                                 .to.emit(mockERC20Registry, 'Transfer')
                                 .withArgs(nonOwner.address, marketplaceFacet.address, value);
                             // and:
@@ -2224,7 +2224,7 @@ describe('LandWorks', function () {
                     .to.emit(decentralandFacet, 'RentDecentraland')
                     .withArgs(assetId, rentId, nonOwner.address)
                     .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(assetId, rentId, nonOwner.address, start, end)
+                    .withArgs(assetId, rentId, nonOwner.address, start, end, value)
                     .to.emit(decentralandFacet, 'UpdateState')
                     .withArgs(assetId, rentId, nonOwner.address);
             });
@@ -2249,7 +2249,7 @@ describe('LandWorks', function () {
                     .to.emit(decentralandFacet, 'RentDecentraland')
                     .withArgs(assetId, secondRentId, artificialRegistry.address)
                     .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(assetId, secondRentId, nonOwner.address, start, end)
+                    .withArgs(assetId, secondRentId, nonOwner.address, start, end, value)
                     .to.not.emit(decentralandFacet, 'UpdateState')
                     .withArgs(assetId, secondRentId, artificialRegistry.address);
             });
@@ -2651,7 +2651,7 @@ describe('LandWorks', function () {
             });
         });
 
-        describe.only('using EstateRegistry', async () => {
+        describe('using EstateRegistry', async () => {
             const estateId = 1;
             beforeEach(async () => {
                 // given:
@@ -2732,7 +2732,7 @@ describe('LandWorks', function () {
                     .to.emit(decentralandFacet, 'RentDecentraland')
                     .withArgs(estateAssetId, rentId, nonOwner.address)
                     .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end)
+                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end, value)
                     .to.emit(decentralandFacet, 'UpdateState')
                     .withArgs(estateAssetId, rentId, nonOwner.address);
             });

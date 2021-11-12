@@ -7,7 +7,8 @@ interface IDecentralandFacet {
         uint256 _rentId,
         address indexed _renter,
         uint256 _start,
-        uint256 _end
+        uint256 _end,
+        uint256 _fee
     );
     event RentDecentraland(
         uint256 indexed _assetId,

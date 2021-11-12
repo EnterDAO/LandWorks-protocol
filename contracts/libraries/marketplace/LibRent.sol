@@ -18,7 +18,8 @@ library LibRent {
         uint256 _rentId,
         address indexed _renter,
         uint256 _start,
-        uint256 _end
+        uint256 _end,
+        uint256 _fee
     );
 
     /// @dev Rents asset for a given period (in seconds)
@@ -76,7 +77,14 @@ library LibRent {
             rentEnd
         );
 
-        emit Rent(_assetId, rentId, msg.sender, rentStart, rentEnd);
+        emit Rent(
+            _assetId,
+            rentId,
+            msg.sender,
+            rentStart,
+            rentEnd,
+            rentPayment
+        );
 
         return (rentId, rentStartsNow);
     }
