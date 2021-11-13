@@ -9,7 +9,7 @@ import "../../libraries/marketplace/LibDecentraland.sol";
 
 contract DecentralandFacet is IDecentralandFacet {
     /// @notice Rents Decentraland Estate/LAND.
-    /// @param _assetId The target asset asset
+    /// @param _assetId The target asset
     /// @param _period The target period of the rental
     /// @param _operator The target operator, which will be set as operator once the rent is active
     function rentDecentraland(
@@ -86,7 +86,7 @@ contract DecentralandFacet is IDecentralandFacet {
 
     /// @notice Updates the operator for the given rent of an asset
     /// @param _assetId The target asset
-    /// @param _rentId The target rentId to the asset
+    /// @param _rentId The target rent for the asset
     /// @param _newOperator The to-be-set new operator
     function updateOperator(
         uint256 _assetId,

@@ -43,9 +43,9 @@ library LibMarketplace {
     struct MarketplaceStorage {
         // Supported metaverse registries
         mapping(uint256 => MetaverseRegistry) metaverseRegistries;
-        // Assets
+        // Assets by ID
         mapping(uint256 => Asset) assets;
-        // Rents
+        // Rents by asset ID
         mapping(uint256 => mapping(uint256 => Rent)) rents;
     }
 

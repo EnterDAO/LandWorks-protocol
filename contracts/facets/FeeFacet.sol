@@ -38,7 +38,7 @@ contract FeeFacet is IFeeFacet {
     }
 
     /// @notice Claims unclaimed rent fees for a given asset
-    /// @param _assetId The target _assetId
+    /// @param _assetId The target asset
     function claimRentFee(uint256 _assetId) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -55,7 +55,7 @@ contract FeeFacet is IFeeFacet {
     }
 
     /// @notice Claims unclaimed rent fees for a set of assets
-    /// @param _assetIds The array of asset ids
+    /// @param _assetIds The array of assets
     function claimMultipleRentFees(uint256[] calldata _assetIds) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();

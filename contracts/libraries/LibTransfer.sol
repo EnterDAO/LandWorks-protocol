@@ -5,9 +5,19 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+/// @title LibTransfer
+/// @notice Contains helper methods for interacting with ETH,
+/// ERC-20 and ERC-721 transfers. Serves as a wrapper for all
+/// transfers.
 library LibTransfer {
     using SafeERC20 for IERC20;
 
+    /// @notice Transfers tokens from contract to a recipient
+    /// @dev If amount is 0, transfer is not done
+    /// If token is 0x0, an ETH transfer is done
+    /// @param _token The target token
+    /// @param _recipient The recipient of the transfer
+    /// @param _amount The amount of the transfer
     function safeTransfer(
         address _token,
         address _recipient,

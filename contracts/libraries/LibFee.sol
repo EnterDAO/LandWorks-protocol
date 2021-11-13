@@ -18,9 +18,9 @@ library LibFee {
         EnumerableSet.AddressSet tokenPayments;
         // Protocol fee percentages for tokens
         mapping(address => uint256) feePercentages;
-        // Asset owners' rent fees
+        // Assets' rent fees
         mapping(uint256 => mapping(address => uint256)) assetRentFees;
-        // Protocol fees
+        // Protocol fees for tokens
         mapping(address => uint256) protocolFees;
     }
 

@@ -3,7 +3,7 @@ import { EtherscanConfig } from '@nomiclabs/hardhat-etherscan/dist/src/types';
 
 export const networks: NetworksUserConfig = {
     hardhat: {
-        allowUnlimitedContractSize: true // For Decentraland LAND Registry
+        allowUnlimitedContractSize: true // For Decentraland LAND/Estate Registry
     },
     coverage: {
         url: 'http://localhost:8555',

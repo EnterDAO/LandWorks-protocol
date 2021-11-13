@@ -12,6 +12,10 @@ import "../libraries/LibERC721.sol";
 contract ERC721Facet is IERC721Facet {
     using Strings for uint256;
 
+    /// @notice Initialises the ERC721's name, symbol and base URI.
+    /// @param _name The target name
+    /// @param _symbol The target symbol
+    /// @param _baseURI The target base URI
     function initERC721(
         string memory _name,
         string memory _symbol,

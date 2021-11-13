@@ -28,7 +28,7 @@ library LibERC721 {
         mapping(uint256 => address) tokenApprovals;
         // Mapping from owner to operator approvals
         mapping(address => mapping(address => bool)) operatorApprovals;
-        // Total minted nfts
+        // Total minted tokens
         Counters.Counter total;
     }
 

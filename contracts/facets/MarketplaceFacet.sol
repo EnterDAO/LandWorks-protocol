@@ -14,18 +14,18 @@ import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibRent.sol";
 
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
-    /// @notice Provides land of the given metaverse registry
-    /// Transfers and locks the provided metaverse land to the contract
-    /// and mints an asset, representing the locked land.
+    /// @notice Provides asset of the given metaverse registry for rental.
+    /// Transfers and locks the provided metaverse asset to the contract.
+    /// and mints an asset, representing the locked asset.
     /// @param _metaverseId The id of the metaverse
     /// @param _metaverseRegistry The registry of the metaverse
     /// @param _metaverseAssetId The id from the metaverse registry
-    /// @param _minPeriod The minimum number of time (in seconds) the land can be rented
-    /// @param _maxPeriod The maximum number of time (in seconds) the land can be rented
+    /// @param _minPeriod The minimum number of time (in seconds) the asset can be rented
+    /// @param _maxPeriod The maximum number of time (in seconds) the asset can be rented
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
-    /// the land to be rented at an any given moment.
+    /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH
+    /// Provide 0x0 for ETH.
     /// @param _pricePerSecond The price for rental per second
     function list(
         uint256 _metaverseId,
@@ -92,16 +92,16 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
     }
 
-    /// @notice Updates the lending conditions for a given asset
-    /// Pays out the current unclaimed rent fees to the caller.
-    /// Updated conditions apply the next time the land is rented.
-    /// Does not affect previous and queued rents
-    /// If any of the old conditions do not want to be modified, the old ones must be provided
+    /// @notice Updates the lending conditions for a given asset.
+    /// Pays out the unclaimed rent fees to the caller.
+    /// Updated conditions apply the next time the asset is rented.
+    /// Does not affect previous and queued rents.
+    /// If any of the old conditions do not want to be modified, the old ones must be provided.
     /// @param _assetId The target asset
-    /// @param _minPeriod The minimum number in seconds the land can be rented
-    /// @param _maxPeriod The maximum number in seconds the land can be rented
+    /// @param _minPeriod The minimum number in seconds the asset can be rented
+    /// @param _maxPeriod The maximum number in seconds the asset can be rented
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
-    /// the land to be rented at an any given moment.
+    /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0 for ETH
     /// @param _pricePerSecond The price for rental per second
@@ -151,10 +151,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
     }
 
-    /// @notice Removes the land represented by the asset from the marketplace
-    /// Pays out the current unclaimed rent fees to the caller.
+    /// @notice Delists the asset from the marketplace.
     /// If there are no active rents:
-    /// Burns the asset and transfers the land represented by the asset to the caller
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the caller.
+    /// Pays out the current unclaimed rent fees to the caller.
     /// @param _assetId The target asset
     function delist(uint256 _assetId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
@@ -175,8 +175,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         }
     }
 
-    /// @notice Withdraws the already delisted from marketplace asset
-    /// Burns the asset and transfers the land represented by the asset to the caller
+    /// @notice Withdraws the already delisted from marketplace asset.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the caller.
+    /// Pays out the current unclaimed rent fees to the caller.
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) external {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
@@ -198,16 +199,16 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         withdraw(_assetId, asset);
     }
 
-    /// @notice Rents asset land for a given period
+    /// @notice Rents an asset for a given period.
     /// Charges user for the rent upfront. Rent starts from the last rented timestamp
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
-    /// @param _period The target period the rent will be active
+    /// @param _period The target rental period (in seconds)
     function rent(uint256 _assetId, uint256 _period) external payable {
         LibRent.rent(_assetId, _period);
     }
 
-    /// @notice Sets name to Metaverse
+    /// @notice Sets name for a given Metaverse.
     /// @param _metaverseId The target metaverse
     /// @param _name Name of the metaverse
     function setMetaverseName(uint256 _metaverseId, string memory _name)
@@ -219,7 +220,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit SetMetaverseName(_metaverseId, _name);
     }
 
-    /// @notice Sets Metaverse registry to a metaverse
+    /// @notice Sets Metaverse registry to a Metaverse
     /// @param _metaverseId The target metaverse
     /// @param _registry The registry to be set
     /// @param _status Whether the registry will be added/removed
@@ -236,7 +237,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit SetRegistry(_metaverseId, _registry, _status);
     }
 
-    /// @notice Gets the name of the metaverse
+    /// @notice Gets the name of the Metaverse
     /// @param _metaverseId The target metaverse
     function metaverseName(uint256 _metaverseId)
         external
@@ -299,25 +300,36 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         return LibMarketplace.rentAt(_assetId, _rentId);
     }
 
-    function withdraw(uint256 _assetId, LibMarketplace.Asset memory asset)
+    /// @notice Burns the asset and transfers the original metaverse asset,
+    /// represented by the asset to the caller.
+    /// Pays out the current unclaimed rent fees to the caller.
+    /// @param _assetId The target asset
+    /// @param _asset The preloaded asset information
+    function withdraw(uint256 _assetId, LibMarketplace.Asset memory _asset)
         internal
     {
         delete LibMarketplace.marketplaceStorage().assets[_assetId];
         LibERC721.burn(_assetId);
 
-        uint256 rentFee = LibFee.claimRentFee(_assetId, asset.paymentToken);
-        transferRentFee(_assetId, asset.paymentToken, msg.sender, rentFee);
+        uint256 rentFee = LibFee.claimRentFee(_assetId, _asset.paymentToken);
+        transferRentFee(_assetId, _asset.paymentToken, msg.sender, rentFee);
 
         LibTransfer.erc721SafeTransferFrom(
-            asset.metaverseRegistry,
+            _asset.metaverseRegistry,
             address(this),
             msg.sender,
-            asset.metaverseAssetId
+            _asset.metaverseAssetId
         );
 
         emit Withdraw(_assetId, msg.sender);
     }
 
+    /// @notice Transfers rent fee to a receiver
+    /// @dev Emits and event for the given asset
+    /// @param _assetId The target asset
+    /// @param _token The target token
+    /// @param _receiver The target receiver
+    /// @param _amount The amount to be transferred
     function transferRentFee(
         uint256 _assetId,
         address _token,
@@ -328,6 +340,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit ClaimRentFee(_assetId, _token, _receiver, _amount);
     }
 
+    /// @dev Checks whether provided token is 0x0 (represents ETH) or supported by the platform.
+    /// @param _token The target token
     function enforceIsValidToken(address _token) internal view {
         require(
             _token == address(0) || LibFee.supportsTokenPayment(_token),
