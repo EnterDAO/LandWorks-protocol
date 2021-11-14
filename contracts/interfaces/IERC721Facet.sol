@@ -82,7 +82,7 @@ interface IERC721Facet {
      *
      * - The caller must be the owner of the contract.
      */
-    function setBaseURI(string memory _baseURI) external;
+    function setBaseURI(string calldata _baseURI) external;
 
     /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients

@@ -94,7 +94,7 @@ contract ERC721Facet is IERC721Facet {
      *
      * - The caller must be the owner of the contract.
      */
-    function setBaseURI(string memory _baseURI) public {
+    function setBaseURI(string calldata _baseURI) public {
         LibOwnership.enforceIsContractOwner();
 
         LibERC721.erc721Storage().baseURI = _baseURI;
