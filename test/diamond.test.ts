@@ -1723,13 +1723,6 @@ describe('LandWorks', function () {
                         .withArgs(feeFacet.address, owner.address, expectedProtocolFee);
                 });
 
-                it('should revert when caller is not owner', async () => {
-                    const expectedRevertMessage = 'Must be contract owner';
-                    // when:
-                    await expect(feeFacet.connect(nonOwner).claimProtocolFee(ethers.constants.AddressZero))
-                        .to.be.revertedWith(expectedRevertMessage);
-                });
-
                 it('should claim fee even if payment token is removed', async () => {
                     // given:
                     await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
@@ -1805,13 +1798,6 @@ describe('LandWorks', function () {
                         .withArgs(mockERC20Registry.address, owner.address, expectedProtocolFee)
                         .to.emit(mockERC20Registry, 'Transfer')
                         .withArgs(feeFacet.address, owner.address, expectedProtocolFee);
-                });
-
-                it('should revert when caller is not owner', async () => {
-                    const expectedRevertMessage = 'Must be contract owner';
-                    // when:
-                    await expect(feeFacet.connect(nonOwner).claimProtocolFees(tokens))
-                        .to.be.revertedWith(expectedRevertMessage);
                 });
 
                 it('should claim fees even if payment token is removed', async () => {

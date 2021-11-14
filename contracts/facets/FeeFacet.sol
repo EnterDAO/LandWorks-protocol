@@ -13,27 +13,18 @@ contract FeeFacet is IFeeFacet {
     /// Provide 0x0 for ETH
     /// @param _token The target token
     function claimProtocolFee(address _token) public {
-        LibOwnership.enforceIsContractOwner();
-
+        address owner = LibOwnership.contractOwner();
         uint256 protocolFee = LibFee.claimProtocolFee(_token);
+        LibTransfer.safeTransfer(_token, owner, protocolFee);
 
-        LibTransfer.safeTransfer(_token, msg.sender, protocolFee);
-
-        emit ClaimProtocolFee(_token, msg.sender, protocolFee);
+        emit ClaimProtocolFee(_token, owner, protocolFee);
     }
 
     /// @notice Claims protocol fees for a set of tokens
     /// @param _tokens The array of tokens
     function claimProtocolFees(address[] calldata _tokens) public {
-        LibOwnership.enforceIsContractOwner();
-
         for (uint256 i = 0; i < _tokens.length; i++) {
-            address token = _tokens[i];
-
-            uint256 protocolFee = LibFee.claimProtocolFee(token);
-            LibTransfer.safeTransfer(token, msg.sender, protocolFee);
-
-            emit ClaimProtocolFee(token, msg.sender, protocolFee);
+            claimProtocolFee(_tokens[i]);
         }
     }
 

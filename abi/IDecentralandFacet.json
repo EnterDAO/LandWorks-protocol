@@ -249,7 +249,7 @@
       },
       {
         "internalType": "address",
-        "name": "_operator",
+        "name": "_newOperator",
         "type": "address"
       }
     ],
