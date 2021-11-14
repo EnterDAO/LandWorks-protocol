@@ -12,20 +12,20 @@ interface IFeeFacet {
     event SetFee(address _token, uint256 _fee);
     event SetTokenPayment(address _token, bool _status);
 
-    /// @notice Claims unclaimed rent fees for a given asset
+    /// @notice Claims unclaimed rent fees for a given asset to asset owner
     /// @param _assetId The target asset
     function claimRentFee(uint256 _assetId) external;
 
-    /// @notice Claims unclaimed rent fees for a set of assets
+    /// @notice Claims unclaimed rent fees for a set of assets to assets' owners
     /// @param _assetIds The array of assets
     function claimMultipleRentFees(uint256[] calldata _assetIds) external;
 
-    /// @notice Claims protocol fees of a given payment token
+    /// @notice Claims protocol fees of a given payment token to contract owner
     /// Provide 0x0 for ETH
     /// @param _token The target token
     function claimProtocolFee(address _token) external;
 
-    /// @notice Claims protocol fees for a set of tokens
+    /// @notice Claims protocol fees for a set of tokens to contract owner
     /// @param _tokens The array of tokens
     function claimProtocolFees(address[] calldata _tokens) external;
 

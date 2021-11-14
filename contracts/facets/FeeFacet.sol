@@ -9,7 +9,7 @@ import "../libraries/LibOwnership.sol";
 import "../libraries/LibFee.sol";
 
 contract FeeFacet is IFeeFacet {
-    /// @notice Claims protocol fees of a given payment token
+    /// @notice Claims protocol fees of a given payment token to contract owner
     /// Provide 0x0 for ETH
     /// @param _token The target token
     function claimProtocolFee(address _token) public {
@@ -20,7 +20,7 @@ contract FeeFacet is IFeeFacet {
         emit ClaimProtocolFee(_token, owner, protocolFee);
     }
 
-    /// @notice Claims protocol fees for a set of tokens
+    /// @notice Claims protocol fees for a set of tokens to contract owner
     /// @param _tokens The array of tokens
     function claimProtocolFees(address[] calldata _tokens) public {
         for (uint256 i = 0; i < _tokens.length; i++) {
@@ -28,41 +28,25 @@ contract FeeFacet is IFeeFacet {
         }
     }
 
-    /// @notice Claims unclaimed rent fees for a given asset
+    /// @notice Claims unclaimed rent fees for a given asset to asset owner
     /// @param _assetId The target asset
     function claimRentFee(uint256 _assetId) public {
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
-        require(
-            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
-            "caller must be approved or owner of asset"
-        );
-
-        address paymentToken = ms.assets[_assetId].paymentToken;
+        address owner = LibERC721.ownerOf(_assetId);
+        address paymentToken = LibMarketplace
+            .marketplaceStorage()
+            .assets[_assetId]
+            .paymentToken;
         uint256 amount = LibFee.claimRentFee(_assetId, paymentToken);
 
-        LibTransfer.safeTransfer(paymentToken, msg.sender, amount);
-        emit ClaimRentFee(_assetId, paymentToken, msg.sender, amount);
+        LibTransfer.safeTransfer(paymentToken, owner, amount);
+        emit ClaimRentFee(_assetId, paymentToken, owner, amount);
     }
 
-    /// @notice Claims unclaimed rent fees for a set of assets
+    /// @notice Claims unclaimed rent fees for a set of assets to assets' owners
     /// @param _assetIds The array of assets
     function claimMultipleRentFees(uint256[] calldata _assetIds) public {
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
-
         for (uint256 i = 0; i < _assetIds.length; i++) {
-            uint256 assetId = _assetIds[i];
-            require(
-                LibERC721.isApprovedOrOwner(msg.sender, assetId),
-                "caller must be approved or owner of asset"
-            );
-
-            address paymentToken = ms.assets[assetId].paymentToken;
-            uint256 amount = LibFee.claimRentFee(assetId, paymentToken);
-
-            LibTransfer.safeTransfer(paymentToken, msg.sender, amount);
-            emit ClaimRentFee(assetId, paymentToken, msg.sender, amount);
+            claimRentFee(_assetIds[i]);
         }
     }
 

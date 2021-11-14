@@ -763,7 +763,7 @@ describe('LandWorks', function () {
                             mockERC20Registry.address,
                             pricePerSecond + 1)
                         .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, nonOwner.address, 0);
+                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0);
 
                     // then:
                     expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
@@ -804,7 +804,7 @@ describe('LandWorks', function () {
                             mockERC20Registry.address,
                             pricePerSecond + 2)
                         .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, nonOwner.address, 0);
+                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0);
 
                     // then:
                     expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
@@ -971,11 +971,11 @@ describe('LandWorks', function () {
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
                 });
 
-                it('should also claim rent fee on update when caller is not owner, but approved for the asset', async () => {
+                it('should also claim rent fee to owner on update when caller is not owner, but approved for the asset', async () => {
                     // given:
                     await erc721Facet.approve(nonOwner.address, assetId);
                     await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
-                    const beforeBalance = await nonOwner.getBalance();
+                    const beforeBalance = await owner.getBalance();
 
                     // when:
                     const tx = await marketplaceFacet
@@ -987,7 +987,6 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1);
-                    const receipt = await tx.wait();
 
                     // then:
                     await expect(tx)
@@ -1000,19 +999,18 @@ describe('LandWorks', function () {
                             mockERC20Registry.address,
                             pricePerSecond + 1)
                         .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, nonOwner.address, pricePerSecond);
+                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond);
 
                     // and:
-                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
-                    const afterBalance = await nonOwner.getBalance();
-                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
+                    const afterBalance = await owner.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
                 });
 
-                it('should also claim rent fee on update when caller is not owner, but operator for the asset', async () => {
+                it('should also claim rent fee to owner on update when caller is not owner, but operator for the asset', async () => {
                     // given:
                     await erc721Facet.setApprovalForAll(nonOwner.address, true);
                     await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
-                    const beforeBalance = await nonOwner.getBalance();
+                    const beforeBalance = await owner.getBalance();
 
                     // when:
                     const tx = await marketplaceFacet
@@ -1024,7 +1022,6 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1);
-                    const receipt = await tx.wait();
 
                     // then:
                     await expect(tx)
@@ -1037,12 +1034,11 @@ describe('LandWorks', function () {
                             mockERC20Registry.address,
                             pricePerSecond + 1)
                         .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, nonOwner.address, pricePerSecond);
+                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond);
 
                     // and:
-                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
-                    const afterBalance = await nonOwner.getBalance();
-                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
+                    const afterBalance = await owner.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
                 });
             });
 
@@ -1887,36 +1883,27 @@ describe('LandWorks', function () {
                         .withArgs(feeFacet.address, owner.address, expectedRentFee);
                 });
 
-                it('should revert when caller is not approved', async () => {
-                    const expectedRevertMessage = 'caller must be approved or owner of asset';
-                    // when:
-                    await expect(feeFacet.connect(nonOwner).claimRentFee(assetId))
-                        .to.be.revertedWith(expectedRevertMessage);
-                });
-
                 it('should revert when asset is nonexistent', async () => {
                     const invalidAssetId = 2;
-                    const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
+                    const expectedRevertMessage = 'ERC721: owner query for nonexistent token';
                     // when:
                     await expect(feeFacet.connect(nonOwner).claimRentFee(invalidAssetId))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
-                it('should successfully claim when caller is approved', async () => {
+                it('should successfully claim rent fees to owner when caller is approved', async () => {
                     // given:
                     await erc721Facet.approve(nonOwner.address, assetId);
                     // and:
-                    const beforeBalance = await nonOwner.getBalance();
+                    const beforeBalance = await owner.getBalance();
                     const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
 
                     // when:
-                    const tx = await feeFacet.connect(nonOwner).claimRentFee(assetId);
-                    const receipt = await tx.wait();
+                    await feeFacet.connect(nonOwner).claimRentFee(assetId);
 
                     // then:
-                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
-                    const afterBalance = await nonOwner.getBalance();
-                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
+                    const afterBalance = await owner.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(expectedRentFee));
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
                     expect(afterClaim).to.be.equal(0);
@@ -1925,21 +1912,19 @@ describe('LandWorks', function () {
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
-                it('should successfully claim when caller is operator', async () => {
+                it('should successfully claim rent fees to owner when caller is operator', async () => {
                     // given:
                     await erc721Facet.setApprovalForAll(nonOwner.address, true);
                     // and:
-                    const beforeBalance = await nonOwner.getBalance();
+                    const beforeBalance = await owner.getBalance();
                     const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
 
                     // when:
-                    const tx = await feeFacet.connect(nonOwner).claimRentFee(assetId);
-                    const receipt = await tx.wait();
+                    await feeFacet.connect(nonOwner).claimRentFee(assetId);
 
                     // then:
-                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
-                    const afterBalance = await nonOwner.getBalance();
-                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
+                    const afterBalance = await owner.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(expectedRentFee));
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
                     expect(afterClaim).to.be.equal(0);
@@ -2022,7 +2007,7 @@ describe('LandWorks', function () {
                 it('should revert when one of assets is not found', async () => {
                     // given:
                     const invalidAssetId = 2;
-                    const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
+                    const expectedRevertMessage = 'ERC721: owner query for nonexistent token';
                     // when:
                     await expect(feeFacet.claimMultipleRentFees([...assetIds, invalidAssetId]))
                         .to.be.revertedWith(expectedRevertMessage);
@@ -2032,32 +2017,23 @@ describe('LandWorks', function () {
                     expect(afterTokenBalance).to.be.equal(0);
                 });
 
-                it('should revert when caller is not approved for one of the assets', async () => {
-                    const expectedRevertMessage = 'caller must be approved or owner of asset';
-                    // when:
-                    await expect(feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds))
-                        .to.be.revertedWith(expectedRevertMessage);
-                });
-
-                it('should successfully claim rent fees when caller is approved', async () => {
+                it('should successfully claim rent fees to owner when caller is approved', async () => {
                     // given:
                     await erc721Facet.approve(nonOwner.address, assetId);
                     await erc721Facet.approve(nonOwner.address, secondAssetId);
                     // and:
-                    const beforeETHBalance = await nonOwner.getBalance();
+                    const beforeETHBalance = await owner.getBalance();
                     const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     // and:
-                    const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(nonOwner.address));
+                    const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
                     const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
 
                     // when:
-                    const tx = await feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds);
-                    const receipt = await tx.wait();
+                    await feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds);
 
                     // then:
-                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
-                    const afterETHBalance = await nonOwner.getBalance();
-                    expect(afterETHBalance).to.equal(beforeETHBalance.sub(txFee).add(expectedRentFee));
+                    const afterETHBalance = await owner.getBalance();
+                    expect(afterETHBalance).to.equal(beforeETHBalance.add(expectedRentFee));
                     // and:
                     const afterETHClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
                     expect(afterETHClaim).to.be.equal(0);
@@ -2066,7 +2042,7 @@ describe('LandWorks', function () {
                     expect(afterETHMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedRentFee));
 
                     // and:
-                    const afterTokenBalance = await mockERC20Registry.balanceOf(nonOwner.address);
+                    const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedRentFee);
                     // and:
                     const afterTokenClaim = await feeFacet.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
@@ -2076,24 +2052,22 @@ describe('LandWorks', function () {
                     expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedRentFee));
                 });
 
-                it('should successfully claim rent fees when caller is operator', async () => {
+                it('should successfully claim rent fees to owner when caller is operator', async () => {
                     // given:
                     await erc721Facet.setApprovalForAll(nonOwner.address, true);
                     // and:
-                    const beforeETHBalance = await nonOwner.getBalance();
+                    const beforeETHBalance = await owner.getBalance();
                     const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     // and:
-                    const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(nonOwner.address));
+                    const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
                     const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
 
                     // when:
-                    const tx = await feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds);
-                    const receipt = await tx.wait();
+                    await feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds);
 
                     // then:
-                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
-                    const afterETHBalance = await nonOwner.getBalance();
-                    expect(afterETHBalance).to.equal(beforeETHBalance.sub(txFee).add(expectedRentFee));
+                    const afterETHBalance = await owner.getBalance();
+                    expect(afterETHBalance).to.equal(beforeETHBalance.add(expectedRentFee));
                     // and:
                     const afterETHClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
                     expect(afterETHClaim).to.be.equal(0);
@@ -2102,7 +2076,7 @@ describe('LandWorks', function () {
                     expect(afterETHMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedRentFee));
 
                     // and:
-                    const afterTokenBalance = await mockERC20Registry.balanceOf(nonOwner.address);
+                    const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedRentFee);
                     // and:
                     const afterTokenClaim = await feeFacet.assetRentFeesFor(secondAssetId, mockERC20Registry.address);

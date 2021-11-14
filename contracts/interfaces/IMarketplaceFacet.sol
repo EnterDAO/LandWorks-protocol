@@ -90,14 +90,14 @@ interface IMarketplaceFacet {
 
     /// @notice Delists the asset from the marketplace.
     /// If there are no active rents:
-    /// Burns the asset and transfers the original metaverse asset represented by the asset to the caller.
-    /// Pays out the current unclaimed rent fees to the caller.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
+    /// Pays out the current unclaimed rent fees to the asset owner.
     /// @param _assetId The target asset
     function delist(uint256 _assetId) external;
 
     /// @notice Withdraws the already delisted from marketplace asset.
-    /// Burns the asset and transfers the original metaverse asset represented by the asset to the caller.
-    /// Pays out the current unclaimed rent fees to the caller.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
+    /// Pays out the current unclaimed rent fees to the asset owner.
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) external;
 
