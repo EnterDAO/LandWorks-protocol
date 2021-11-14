@@ -10,11 +10,6 @@ interface IDecentralandFacet {
         uint256 _end,
         uint256 _fee
     );
-    event RentDecentraland(
-        uint256 indexed _assetId,
-        uint256 _rentId,
-        address _operator
-    );
     event UpdateState(uint256 _assetId, uint256 _rentId, address _operator);
     event UpdateAdministrativeState(
         uint256 _assetId,
@@ -35,7 +30,7 @@ interface IDecentralandFacet {
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.
     /// When the rent becomes active (the current block.timestamp is between the rent's start and end),
-    /// this function is executed to set the provided rent operator to the Estate/LAND scene operator.
+    /// this function should be executed to set the provided rent operator to the Estate/LAND scene operator.
     /// @param _assetId The target asset which will map to its corresponding Estate/LAND
     /// @param _rentId The target rent
     function updateState(uint256 _assetId, uint256 _rentId) external;

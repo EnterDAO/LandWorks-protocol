@@ -2207,7 +2207,7 @@ describe('LandWorks', function () {
                 const end = start + minPeriod;
 
                 await expect(tx)
-                    .to.emit(decentralandFacet, 'RentDecentraland')
+                    .to.emit(decentralandFacet, 'UpdateOperator')
                     .withArgs(assetId, rentId, nonOwner.address)
                     .to.emit(decentralandFacet, 'Rent')
                     .withArgs(assetId, rentId, nonOwner.address, start, end, value)
@@ -2232,7 +2232,7 @@ describe('LandWorks', function () {
                 const end = start.add(minPeriod);
 
                 await expect(tx)
-                    .to.emit(decentralandFacet, 'RentDecentraland')
+                    .to.emit(decentralandFacet, 'UpdateOperator')
                     .withArgs(assetId, secondRentId, artificialRegistry.address)
                     .to.emit(decentralandFacet, 'Rent')
                     .withArgs(assetId, secondRentId, nonOwner.address, start, end, value)
@@ -2725,7 +2725,7 @@ describe('LandWorks', function () {
                 const start = timestamp;
                 const end = start + minPeriod;
                 await expect(tx)
-                    .to.emit(decentralandFacet, 'RentDecentraland')
+                    .to.emit(decentralandFacet, 'UpdateOperator')
                     .withArgs(estateAssetId, rentId, nonOwner.address)
                     .to.emit(decentralandFacet, 'Rent')
                     .withArgs(estateAssetId, rentId, nonOwner.address, start, end, value)

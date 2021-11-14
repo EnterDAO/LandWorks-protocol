@@ -21,7 +21,7 @@ contract DecentralandFacet is IDecentralandFacet {
 
         (uint256 rentId, bool rentStartsNow) = LibRent.rent(_assetId, _period);
         LibDecentraland.setOperator(_assetId, rentId, _operator);
-        emit RentDecentraland(_assetId, rentId, _operator);
+        emit UpdateOperator(_assetId, rentId, _operator);
 
         if (rentStartsNow) {
             updateState(_assetId, rentId);
@@ -30,7 +30,7 @@ contract DecentralandFacet is IDecentralandFacet {
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.
     /// When the rent becomes active (the current block.timestamp is between the rent's start and end),
-    /// this function is executed to set the provided rent operator to the Estate/LAND scene operator.
+    /// this function should be executed to set the provided rent operator to the Estate/LAND scene operator.
     /// @param _assetId The target asset which will map to its corresponding Estate/LAND
     /// @param _rentId The target rent
     function updateState(uint256 _assetId, uint256 _rentId) public {

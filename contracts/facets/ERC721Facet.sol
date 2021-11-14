@@ -98,7 +98,7 @@ contract ERC721Facet is IERC721Facet {
         LibOwnership.enforceIsContractOwner();
 
         LibERC721.erc721Storage().baseURI = _baseURI;
-        emit LibERC721.SetBaseURI(_baseURI);
+        emit SetBaseURI(_baseURI);
     }
 
     /**
