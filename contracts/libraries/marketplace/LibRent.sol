@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../LibERC721.sol";
-import "../LibMarketplace.sol";
 import "../LibFee.sol";
 import "../LibTransfer.sol";
+import "../marketplace/LibMarketplace.sol";
 
 library LibRent {
     using SafeERC20 for IERC20;

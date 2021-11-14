@@ -4,9 +4,9 @@ pragma solidity ^0.8.9;
 import "../interfaces/IFeeFacet.sol";
 import "../libraries/LibERC721.sol";
 import "../libraries/LibTransfer.sol";
-import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibFee.sol";
+import "../libraries/marketplace/LibMarketplace.sol";
 
 contract FeeFacet is IFeeFacet {
     /// @notice Claims protocol fees of a given payment token to contract owner

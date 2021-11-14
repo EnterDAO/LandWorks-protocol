@@ -9,8 +9,8 @@ import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibERC721.sol";
 import "../libraries/LibTransfer.sol";
 import "../libraries/LibFee.sol";
-import "../libraries/LibMarketplace.sol";
 import "../libraries/LibOwnership.sol";
+import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibRent.sol";
 
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
