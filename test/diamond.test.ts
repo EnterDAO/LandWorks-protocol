@@ -1883,9 +1883,17 @@ describe('LandWorks', function () {
                         .withArgs(feeFacet.address, owner.address, expectedRentFee);
                 });
 
+                it('should revert when caller is not approved', async () => {
+                    const expectedRevertMessage = 'caller must be approved or owner of asset';
+
+                    // then:
+                    await expect(feeFacet.connect(nonOwner).claimRentFee(assetId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
                 it('should revert when asset is nonexistent', async () => {
                     const invalidAssetId = 2;
-                    const expectedRevertMessage = 'ERC721: owner query for nonexistent token';
+                    const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
                     await expect(feeFacet.connect(nonOwner).claimRentFee(invalidAssetId))
                         .to.be.revertedWith(expectedRevertMessage);
@@ -2007,7 +2015,7 @@ describe('LandWorks', function () {
                 it('should revert when one of assets is not found', async () => {
                     // given:
                     const invalidAssetId = 2;
-                    const expectedRevertMessage = 'ERC721: owner query for nonexistent token';
+                    const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
                     await expect(feeFacet.claimMultipleRentFees([...assetIds, invalidAssetId]))
                         .to.be.revertedWith(expectedRevertMessage);
@@ -2015,6 +2023,14 @@ describe('LandWorks', function () {
                     // then:
                     const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(0);
+                });
+
+                it('should revert when caller is not approved', async () => {
+                    const expectedRevertMessage = 'caller must be approved or owner of asset';
+
+                    // then:
+                    await expect(feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds))
+                        .to.be.revertedWith(expectedRevertMessage);
                 });
 
                 it('should successfully claim rent fees to owner when caller is approved', async () => {
