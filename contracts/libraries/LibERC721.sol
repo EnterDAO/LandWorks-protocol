@@ -133,7 +133,7 @@ library LibERC721 {
     /**
      * @dev See {IERC721-getApproved}.
      */
-    function getApproved(uint256 tokenId) public view returns (address) {
+    function getApproved(uint256 tokenId) internal view returns (address) {
         require(
             exists(tokenId),
             "ERC721: approved query for nonexistent token"
@@ -146,7 +146,7 @@ library LibERC721 {
      * @dev See {IERC721-isApprovedForAll}.
      */
     function isApprovedForAll(address owner, address operator)
-        public
+        internal
         view
         returns (bool)
     {

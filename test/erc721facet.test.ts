@@ -48,12 +48,7 @@ describe('ERC721Facet', function () {
         fee = await Deployer.deployContract('FeeFacet');
         decentraland = await Deployer.deployContract('DecentralandFacet');
 
-        const libERC721 = await Deployer.deployContract('LibERC721');
-        erc721 = await Deployer.deployContract('ERC721Facet', {
-            libraries: {
-                LibERC721: libERC721.address
-            }
-        });
+        erc721 = await Deployer.deployContract('ERC721Facet');
 
         diamond = await Deployer.deployDiamond(
             'LandWorks',
