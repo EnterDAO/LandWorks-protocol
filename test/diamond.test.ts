@@ -1162,6 +1162,101 @@ describe('LandWorks', function () {
                     });
                 });
 
+                describe('withdraw', async () => {
+                    const period = 2;
+
+                    beforeEach(async () => {
+                        // given:
+                        await marketplaceFacet.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
+                    });
+
+                    it('should withdraw successfully', async () => {
+                        // given:
+                        await marketplaceFacet.delist(assetId);
+
+                        // when:
+                        await marketplaceFacet.withdraw(assetId);
+
+                        // then:
+                        expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(owner.address);
+                        await expect(erc721Facet.ownerOf(assetId))
+                            .to.be.revertedWith('ERC721: owner query for nonexistent token');
+                        // and:
+                        const asset = await marketplaceFacet.assetAt(assetId);
+                        expect(asset.metaverseId).to.equal(0);
+                        expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
+                        expect(asset.metaverseAssetId).to.equal(0);
+                        expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                        expect(asset.minPeriod).to.equal(0);
+                        expect(asset.maxPeriod).to.equal(0);
+                        expect(asset.maxFutureTime).to.equal(0);
+                        expect(asset.pricePerSecond).equal(0);
+                        expect(asset.status).to.equal(0);
+                        expect(asset.totalRents).to.equal(0);
+                    });
+
+                    it('should emit events with args', async () => {
+                        // given:
+                        await marketplaceFacet.delist(assetId);
+
+                        // when:
+                        await expect(marketplaceFacet
+                            .withdraw(assetId))
+                            .to.emit(erc721Facet, 'Transfer')
+                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                            .to.emit(marketplaceFacet, 'ClaimRentFee')
+                            .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond * period)
+                            .to.emit(mockERC721Registry, 'Transfer')
+                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
+                            .to.emit(marketplaceFacet, 'Withdraw')
+                            .withArgs(assetId, owner.address);
+                    });
+
+                    it('should revert when asset does not exist', async () => {
+                        // given:
+                        const invalidAssetId = 4;
+                        const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
+
+                        // when:
+                        await expect(marketplaceFacet
+                            .withdraw(invalidAssetId))
+                            .to.be.revertedWith(expectedRevertMessage);
+                    });
+
+                    it('should revert when caller is not approved', async () => {
+                        // given:
+                        const expectedRevertMessage = 'caller must be approved or owner of _assetId';
+
+                        // when:
+                        await expect(marketplaceFacet
+                            .connect(nonOwner)
+                            .withdraw(assetId))
+                            .to.be.revertedWith(expectedRevertMessage);
+                    });
+
+                    it('should revert when asset is not delisted', async () => {
+                        // given:
+                        const expectedRevertMessage = '_assetId not delisted';
+
+                        // when:
+                        await expect(marketplaceFacet
+                            .withdraw(assetId))
+                            .to.be.revertedWith(expectedRevertMessage);
+                    });
+
+                    it('should revert when an active rent exists', async () => {
+                        // given:
+                        await marketplaceFacet.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
+                        await marketplaceFacet.delist(assetId);
+                        const expectedRevertMessage = '_assetId has an active rent';
+
+                        // when:
+                        await expect(marketplaceFacet
+                            .withdraw(assetId))
+                            .to.be.revertedWith(expectedRevertMessage);
+                    });
+                });
+
                 describe('rent', async () => {
                     const period = minPeriod;
                     const value = pricePerSecond * period;
@@ -1182,7 +1277,7 @@ describe('LandWorks', function () {
                             .connect(nonOwner)
                             .rent(assetId, period, { value });
                         const receipt = await tx.wait();
-                        const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                        const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                         // then:
                         const rent = await marketplaceFacet.rentAt(assetId, expectedRentId);
@@ -1215,7 +1310,7 @@ describe('LandWorks', function () {
                             .connect(nonOwner)
                             .rent(assetId, period, { value });
                         const receipt = await tx.wait();
-                        const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                        const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
                         const start = timestamp;
                         const end = start + period;
 
@@ -1363,7 +1458,7 @@ describe('LandWorks', function () {
                                 .connect(nonOwner)
                                 .rent(assetId, period);
                             const receipt = await tx.wait();
-                            const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                            const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                             // then:
                             const start = timestamp;
@@ -1405,101 +1500,6 @@ describe('LandWorks', function () {
                                 .rent(assetId, period))
                                 .to.be.revertedWith(expectedRevertMessage);
                         });
-                    });
-                });
-
-                describe('withdraw', async () => {
-                    const period = 2;
-
-                    beforeEach(async () => {
-                        // given:
-                        await marketplaceFacet.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
-                    });
-
-                    it('should withdraw successfully', async () => {
-                        // given:
-                        await marketplaceFacet.delist(assetId);
-
-                        // when:
-                        await marketplaceFacet.withdraw(assetId);
-
-                        // then:
-                        expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(owner.address);
-                        await expect(erc721Facet.ownerOf(assetId))
-                            .to.be.revertedWith('ERC721: owner query for nonexistent token');
-                        // and:
-                        const asset = await marketplaceFacet.assetAt(assetId);
-                        expect(asset.metaverseId).to.equal(0);
-                        expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
-                        expect(asset.metaverseAssetId).to.equal(0);
-                        expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
-                        expect(asset.minPeriod).to.equal(0);
-                        expect(asset.maxPeriod).to.equal(0);
-                        expect(asset.maxFutureTime).to.equal(0);
-                        expect(asset.pricePerSecond).equal(0);
-                        expect(asset.status).to.equal(0);
-                        expect(asset.totalRents).to.equal(0);
-                    });
-
-                    it('should emit events with args', async () => {
-                        // given:
-                        await marketplaceFacet.delist(assetId);
-
-                        // when:
-                        await expect(marketplaceFacet
-                            .withdraw(assetId))
-                            .to.emit(erc721Facet, 'Transfer')
-                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(marketplaceFacet, 'ClaimRentFee')
-                            .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond * period)
-                            .to.emit(mockERC721Registry, 'Transfer')
-                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
-                            .to.emit(marketplaceFacet, 'Withdraw')
-                            .withArgs(assetId, owner.address);
-                    });
-
-                    it('should revert when asset does not exist', async () => {
-                        // given:
-                        const invalidAssetId = 4;
-                        const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
-
-                        // when:
-                        await expect(marketplaceFacet
-                            .withdraw(invalidAssetId))
-                            .to.be.revertedWith(expectedRevertMessage);
-                    });
-
-                    it('should revert when caller is not approved', async () => {
-                        // given:
-                        const expectedRevertMessage = 'caller must be approved or owner of _assetId';
-
-                        // when:
-                        await expect(marketplaceFacet
-                            .connect(nonOwner)
-                            .withdraw(assetId))
-                            .to.be.revertedWith(expectedRevertMessage);
-                    });
-
-                    it('should revert when asset is not delisted', async () => {
-                        // given:
-                        const expectedRevertMessage = '_assetId not delisted';
-
-                        // when:
-                        await expect(marketplaceFacet
-                            .withdraw(assetId))
-                            .to.be.revertedWith(expectedRevertMessage);
-                    });
-
-                    it('should revert when an active rent exists', async () => {
-                        // given:
-                        await marketplaceFacet.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
-                        await marketplaceFacet.delist(assetId);
-                        const expectedRevertMessage = '_assetId has an active rent';
-
-                        // when:
-                        await expect(marketplaceFacet
-                            .withdraw(assetId))
-                            .to.be.revertedWith(expectedRevertMessage);
                     });
                 });
             });
@@ -1605,6 +1605,30 @@ describe('LandWorks', function () {
             });
         });
 
+        describe('setFee', async () => {
+            it('should set fee', async () => {
+                // when:
+                await feeFacet.setFee(mockERC20Registry.address, FEE_PERCENTAGE);
+
+                // then:
+                expect(await feeFacet.feePercentage(mockERC20Registry.address)).to.equal(FEE_PERCENTAGE);
+            });
+
+            it('should emit event with args', async () => {
+                await expect(feeFacet.setFee(mockERC20Registry.address, FEE_PERCENTAGE))
+                    .to.emit(feeFacet, 'SetFee')
+                    .withArgs(mockERC20Registry.address, FEE_PERCENTAGE);
+            });
+
+            it('should revert caller is not owner', async () => {
+                const expectedRevertMessage = 'Must be contract owner';
+
+                // when:
+                await expect(feeFacet.connect(nonOwner).setFee(mockERC20Registry.address, FEE_PERCENTAGE))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+        });
+
         describe('claim', async () => {
             let mockERC721Registry: Contract;
             let mockERC20Registry: Contract;
@@ -1683,6 +1707,25 @@ describe('LandWorks', function () {
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
+                it('should claim ETH protocol fee with approved nonOwner', async () => {
+                    // given:
+                    const beforeBalance = await owner.getBalance();
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+
+                    // when:
+                    await feeFacet.connect(nonOwner).claimProtocolFee(ethers.constants.AddressZero);
+
+                    // then:
+                    const afterBalance = await owner.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(expectedProtocolFee));
+                    // and:
+                    const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                    expect(afterClaim).to.be.equal(0);
+                    // and:
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
+                });
+
                 it('should claim token protocol fee', async () => {
                     // given:
                     const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
@@ -1690,6 +1733,25 @@ describe('LandWorks', function () {
 
                     // when:
                     await feeFacet.claimProtocolFee(mockERC20Registry.address);
+
+                    // then:
+                    const afterBalance = await mockERC20Registry.balanceOf(owner.address);
+                    expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
+                    // and:
+                    const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    expect(afterClaim).to.be.equal(0);
+                    // and:
+                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
+                });
+
+                it('should claim token protocol fee with nonOwner', async () => {
+                    // given:
+                    const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
+                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+
+                    // when:
+                    await feeFacet.connect(nonOwner).claimProtocolFee(mockERC20Registry.address);
 
                     // then:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
@@ -1764,6 +1826,36 @@ describe('LandWorks', function () {
                     const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeETHBalance.sub(txFee).add(expectedProtocolFee));
+                    // and:
+                    const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                    expect(afterClaim).to.be.equal(0);
+                    // and:
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedProtocolFee));
+                    // and:
+                    const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
+                    expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedProtocolFee);
+                    // and:
+                    const afterTokenClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    expect(afterTokenClaim).to.be.equal(0);
+                    // and:
+                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedProtocolFee));
+                });
+
+                it('should claim protocol fees with nonOwner', async () => {
+                    // given:
+                    const beforeETHBalance = await owner.getBalance();
+                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
+                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+
+                    // when:
+                    await feeFacet.connect(nonOwner).claimProtocolFees(tokens);
+
+                    // then:
+                    const afterBalance = await owner.getBalance();
+                    expect(afterBalance).to.equal(beforeETHBalance.add(expectedProtocolFee));
                     // and:
                     const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
                     expect(afterClaim).to.be.equal(0);
@@ -2148,7 +2240,7 @@ describe('LandWorks', function () {
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
-                const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
                 const rent = await marketplaceFacet.rentAt(assetId, rentId);
@@ -2185,7 +2277,7 @@ describe('LandWorks', function () {
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
-                const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
                 const start = timestamp;
@@ -2365,7 +2457,7 @@ describe('LandWorks', function () {
                     .connect(nonOwner)
                     .rentDecentraland(secondAssetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
-                const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
                 const rent = await marketplaceFacet.rentAt(secondAssetId, rentId);
@@ -2638,7 +2730,7 @@ describe('LandWorks', function () {
                 // given:
                 await marketplaceFacet.setRegistry(metaverseId, estateRegistry.address, true);
                 await feeFacet.setFee(ethers.constants.AddressZero, FEE_PERCENTAGE);
-                // Creates an estate, constisting of 5 LAND parcels
+                // Creates an estate, consisting of 5 LAND parcels
                 const parcels = 5;
 
                 const coordsX = [];
@@ -2677,7 +2769,7 @@ describe('LandWorks', function () {
                     .connect(nonOwner)
                     .rentDecentraland(estateAssetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
-                const timestamp = await (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
                 const rent = await marketplaceFacet.rentAt(estateAssetId, rentId);
