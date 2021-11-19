@@ -1,4 +1,4 @@
-import {task} from 'hardhat/config';
+import { task } from 'hardhat/config';
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-abi-exporter';
@@ -15,7 +15,23 @@ task('deploy', 'Deploys the LandWorks Diamond with all of its facets')
 
 module.exports = {
     solidity: {
-        version: '0.8.9',
+        compilers: [
+            {
+                version: "0.8.9"
+            },
+            {
+                version: "0.4.24" // LAND Mock
+            },
+            {
+                version: "0.4.23" // LAND Mock
+            },
+            {
+                version: "0.4.22" // LAND Mock
+            },
+            {
+                version: "0.4.18" // LAND Mock
+            }
+        ],
         settings: {
             optimizer: {
                 enabled: true,
@@ -27,7 +43,7 @@ module.exports = {
     networks: config.networks,
     etherscan: config.etherscan,
     abiExporter: {
-        only: ['LandWorks', 'DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet'],
+        only: ['LandWorks', 'DiamondCutFacet', 'DiamondLoupeFacet', 'OwnershipFacet', 'IFeeFacet', 'IMarketplaceFacet', 'IDecentralandFacet', 'ERC721Facet'],
         except: ['.*Mock$'],
         clear: true,
         flat: true,

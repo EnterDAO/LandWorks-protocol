@@ -7,7 +7,7 @@
 
 </div>
 
-LandWorks is a protocol, developed by [EnterDao](https://enterdao.xy`). Detailed information and description can be found in the [Whitepaper](./Whitepaper.md).
+LandWorks is a protocol, developed by [EnterDao](https://enterdao.xyz). Detailed information and description can be found in the [Whitepaper](./Whitepaper.md).
 
 ## Development
 
