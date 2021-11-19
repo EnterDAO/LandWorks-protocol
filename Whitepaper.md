@@ -8,7 +8,7 @@ As stated in the EnterDAO whitepaper, the Metaverse is a booming economy enabled
 
 Metaverse land is an extremely potent new advertising and event space, that could be used for different purposes such as games, product launches/drops, parties and all kinds of virtual events, etc. Yet, Metaverse land is prohibitively expensive and lacks a shared economy model.
 
-LandWorks is here to changes that!
+LandWorks is here to change that!
 
 ## The Protocol
 
@@ -18,7 +18,7 @@ The protocol enables period-based renting of land in the metaverses. The protoco
 
 ## Governance
 
-The protocol will be governed by a DAO. Governance operations such as changing the rent protocol fee, upgrading the protocol contracts, adding support for new Metaverses or simply introducing new features in the protocol, will be executed and applied by the EnterDAO after a governance poll passes.
+The protocol will be governed by EnterDAO. Governance operations such as changing the rent protocol fee, upgrading the protocol contracts, adding support for new Metaverses or simply introducing new features in the protocol, will be executed and applied by the EnterDAO after a governance poll passes.
 
 ## Stakeholders
 
@@ -34,7 +34,7 @@ The protocol will be governed by a DAO. Governance operations such as changing t
 
 ## Value Propositions
 
-- **Capital efficiency for Metaverse land** - Depositing your land with the LaaS protocol enables land lenders to earn income from its usage.
+- **Capital efficiency for Metaverse land** - Depositing your land with LandWorks protocol enables land lenders to earn income from its usage.
 - **Accessibility** - Rent land that will otherwise be unavailable. Not just any land, but the best land.
 - **Affordability** - Rent land that will otherwise be prohibitively expensive.
 - **Shared economy for land** - Renters can safely pool together and rent land running co-events.
@@ -44,11 +44,11 @@ The protocol will be governed by a DAO. Governance operations such as changing t
 
 ## LandWorks in the EnterDAO Ecosystem
 
-EnterDAO and LandWorks are intertwined and interact with each other in various ways. These ways will be changing over time but initially, they will be:
+EnterDAO and LandWorks are intertwined and interact with each other in various ways. The relationship will be changing over time but initially, it will be:
 
 - $ENTR token holders will be able to govern the future of LandWorks
 - LandWorks commission fees go directly into the EnterDAO treasury
-- LandWorks lenders will be able to participate in $ENTR yield farming by staking and locking their `eNFT`. Read more about `eNFT`s below.
+- LandWorks lenders will be able to participate in $ENTR yield farming by staking and locking their `LandWorksNft`. Read more about `LandWorksNft`s below.
 
 # Technical Design
 
@@ -63,10 +63,10 @@ The following stakeholders are present in the protocol:
 - `ruler` - `renters` are referred to `rulers` if
 
 ```json
-startingBlockNumber <= currentBlockNumber < endingBlockBumber
+startTimestamp <= currentTimestamp < endTimestamp
 ```
 
-where `startingBlockNumber` & `endingBlockNumber` are the blocks for which the renter paid to rent the land.
+where `startTimestamp` & `endTimestamp` are the start and end timestamps during which the renter paid to rent the land and `currentTimestamp` is the current `block.timestamp` during which the call is being made.
 
 - `service providers` - Scene creators offering design services, renting and running scenes for their clients.
 - `eNFT` - NFT token, specific to a metaverse representing the ownership of NFT lent.
@@ -75,52 +75,63 @@ where `startingBlockNumber` & `endingBlockNumber` are the blocks for which the r
 
 ### Providing Land
 
-Users who own Мetaverse land will be able to `add` their land into the LandWorks protocol by executing an `add` transaction. Once executed, the land NFT will be transferred and locked into the LandWorks contracts. The protocol will mint `eNFT` (representing the deposited land) to the sender in exchange for that.
+Users who own Мetaverse land will be able to `add` their land into the LandWorks protocol by executing an `add` transaction. Once executed, the land NFT will be transferred and locked into the LandWorks contracts. The protocol will mint `LandWorksNFT` (representing the deposited land) to the sender in exchange for that.
 
 The owner of the land will specify the following properties as part of the `add` transaction:
 
-- `minPeriod` - the minimum number of blocks the land can be rented
-- `maxPeriod` - the maximum number of blocks the land can be rented
-- `maxFutureBlock` - the block delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureBlock=100_000`, the land will be rented at most 15 days in the future (100_000 * 13sec = ~15days).
-- `pricePerBlock` - the price of the rent charged per block
+- `minPeriod` - the minimum number of seconds the land can be rented
+- `maxPeriod` - the maximum number of seconds the land can be rented
+- `maxFutureTimestamp` - the timestamp delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureTimestamp=100_000`, the land will be rented at most 100_000 seconds in the future.
+- `pricePerSecond` - the price of the rent charged per second
 
 Lenders will be able to control the assets that they will be getting paid in. They will be able to choose from a whitelisted set of `ERC20` tokens or `ETH` as a form of payment. The list of supported tokens will be governed by the EnterDAO.
 
+**Note:** In the case of Decentraland, `lenders` will be able to deposit not only `parcels` but `estates` as well.
+
 ### Removing Provided Land
 
-Users that own `eNFT`s will be able to `remove` the land represented by the `eNFT` from the marketplace. Once executed, the transaction will:
+Users that own `LandWorkNft`s will be able to `remove` the land represented by the `LandWorksNft` from the marketplace. Once executed, the transaction will:
 
-- Transfer and burn the `eNFT`
-- Payout the accumulated rent to the `eNFT` owner
-- Transfer the original land `NFT` to the `eNFT` owner
+- Transfer and burn the `LandWorksNft`
+- Payout the accumulated rent to the `LandWorksNft` owner
+- Transfer the original land `NFT` to the `LandWorksNft` owner
 
-**Note (1):** It is important to note that the protocol does not track which address provided the land. The address that added the land can be different from the address that removes the land from the protocol. The `eNFT` represents the right to remove the land and claim the rent fees.
+**Note (1):** It is important to note that the protocol does not track which address provided the land. The address that added the land can be different from the address that removes the land from the protocol. The `LandWorksNft` represents the right to remove the land and claim the rent fees.
 
-**Note (2):** The land can be removed from the protocol only if it does not have a `ruler`. If the land has a `ruler`, triggering the remove land method "takes the land off the market" and enters it in a state of "for withdrawal". Scheduled rents will be honoured, but no new rents will be accepted. This will secure the owner from a "DDoS" attack - an attack where an owner of particularly interesting land can never withdraw their land from the protocol as it constantly gets booked.
+**Note (2):** The land can be removed from the protocol only if it does not have a `ruler`. If the land has a `ruler`, triggering the remove land method "takes the land off the market" (`delisted` status) and enters it in a state of "for withdrawal". Scheduled rents will be honoured, but no new rents will be accepted. This will secure the owner from a "DDoS" attack - an attack where an owner of particularly interesting land can never withdraw their land from the protocol as it constantly gets booked.
 
-**Note (3):** In the future, ****lenders will be able to define custom algorithms for rent prices such as proportional decrease for `pricePerBlock` with the increase of the `period` of renting.
+**Note (3):** In the future, ****lenders will be able to define custom algorithms for rent prices such as proportional decrease for `pricePerSecond` with the increase of the `period` of renting. 
 
-### Transfer Provided Land (`eNFT`)
+### Transfer Provided Land (`LandWorksNft`)
 
-Lenders will receive `eNFT` that represents the ownership of a given land deposited in the protocol. `eNFT`s can be transferred/bought/sold or even used as collateral in other protocols. This provides additional flexibility to lenders and opens the LandWorks protocol to be used by or be integrated into other protocols.
+Lenders will receive `LandWorksNft` that represents the ownership of a given land (either being parcel or estate) deposited in the protocol. `LandWorksNft`'s can be transferred/bought/sold or even used as collateral in other protocols. This provides additional flexibility to lenders and opens the LandWorks protocol to be used by or be integrated into other protocols.
 
 ### Renting Land
 
-Users that want to rent land will be able to do it by executing `rent` transaction. The renter will specify:
+Users that want to rent land will be able to do it by executing `rent` transactions. The renter will specify:
 
-- `eNFT` - The ID of the Land that he wants to rent
-- `period` - number of blocks for which the land will be rented
+- `LandWorksNft` - The ID of the Land that he wants to rent
+- `period` - number of seconds for which the land will be rented
 - Other metaverse specific arguments such as `operator` address (in the case of Decentraland). The `operator` address will be set as a default operator of the LAND.
 
 The following requirements must be met for the user to rent the land:
 
-- `period` must be higher than `minPeriod` and lower than `maxPeriod` and `maxFutureBlock`
+- `period` must be higher than `minPeriod` and lower than `maxPeriod` and `maxFutureSecond`
 
-If the requirements are met, the protocol will charge the user for the rent upfront and accredit it to the `eNFT` as unclaimed rent. The renter will be added to the queue of renters (if there are any).
+If the requirements are met, the protocol will charge the user for the rent upfront and accredit it to the `LandWorksNft` as unclaimed rent. The renter will be added to the queue of renters (if there are any).
 
-The land is always rented starting from the last rented block **(if the land has a `ruler`)** or at the current block of the `rent` transaction **(if the land does not have a `ruler`)**.
+The land is always rented starting from the last rented block's timestamp **(if the land has a `ruler`)** or at the current block's timestamp of the `rent` transaction **(if the land does not have a `ruler`)**.
 
-**Note:** Renters do not have the ability to specify the `startBlock` at which they will rent the land. Although this may seem to limit renters, it protects lenders from DDoS rent attacks. If renters have the ability to rent at a certain block `X`, they might execute `rent` transactions that rent for a `minPeriod` number of blocks every `minPeriod` block. This will greatly impact the ability of lenders to utilise their land. As a side effect, this design will introduce a FOMO for renters since they will not be able to "reserve" the land at a specific time in the future, rather they will be "queuing up" to rent the land whenever it is available.
+**Note (1):** Renters do not have the ability to specify the `startTimestamp` at which they will rent the land. Although this may seem to limit renters, it protects lenders from DDoS rent attacks. If renters have the ability to rent at a certain timestamp `X`, they might execute `rent` transactions that rent for a `minPeriod` number of seconds every `minPeriod` seconds. This will greatly impact the ability of lenders to utilise their land. As a side effect, this design will introduce a FOMO for renters since they will not be able to "reserve" the land at a specific time in the future, rather they will be "queuing up" to rent the land whenever it is available.
+
+**Note (2):** In the case of Decentraland, `renters` will be able to rent not only `parcels` but `estates` as well.
+
+### Pooling Properties
+
+The protocol supports the pooling of land/estate. `Renters` will be able to rent land/estate from multiple `lenders` and if they are adjacent to each other, they will be able to deploy scenes to all of them as if they were one property rented from a single `lender`. 
+For the `lenders`, there won't be any difference, whether the `renter` is renting other properties and pooling them with other properties adjacent to theirs.
+
+The feature boosts the network effect of the protocol. The more properties there are available, the bigger the chance of being able to pool properties together, thus providing a better service for `renters`.
 
 ### Land Status Update
 
@@ -128,19 +139,19 @@ Since renters will be queueing when they execute `rent` transactions, there is n
 
 **Decentraland**
 
-There will be a `updateState(eNFT, ruler)` transaction that will update the `ruler` of the LAND to the one specified as an argument if it is indeed the `renter` that must be the new `ruler`. Anyone can execute the transaction. The transaction will change the `operator` of the LAND to the one specified by the `ruler`. Doing so, the protocol will authorise the `ruler` to install scenes. He will not be able to transfer or sell the rented land. The only permission given to him is the permission to install scenes.
+There will be a `updateState(LandWorksNft, ruler)` transaction that will update the `ruler` of the LAND/Estate to the one specified as an argument if it is indeed the `renter` that must be the new `ruler`. Anyone can execute the transaction. The transaction will change the `operator` of the LAND/Estate to the one specified by the `ruler`. Doing so, the protocol will authorise the `ruler` to install scenes. He will not be able to transfer or sell the rented land. The only permission given to him is the permission to install scenes.
 
 **Note (1):** The `ruler` will be able to update the default `operator` address that he provided as part of the `rent` transaction. He will be able to do so by executing `updateOperator` transaction.
 
-**Note (2):** Since anyone can execute `updateState`, the operation will update the `operator` of the LAND only if the new `ruler` is different from the current `ruler`. This is mandatory to mitigate attacks in which external users are executing the `updateState` transaction to reset the `operator` to the default `operator` provided by the `renter` as part of the `rent` transaction (the `ruler` have updated the `operator` using `updateOperator` transaction)
+**Note (2):** Since anyone can execute `updateState`, the operation will update the `operator` of the LAND/Estate only if the new `ruler` is different from the current `ruler`. This is mandatory to mitigate attacks in which external users are executing the `updateState` transaction to reset the `operator` to the default `operator` provided by the `renter` as part of the `rent` transaction (the `ruler` have updated the `operator` using `updateOperator` transaction)
 
-If the renter queue is empty and no one is renting the LAND, LandWorks's off-chain jobs will trigger the `updateState` transaction providing `0x0` as `ruler`. If indeed no `renter` must be updated to a `ruler`, the current `operator` of the LAND will be changed to the  LandWorks EOA administrator address. The scene of the LAND will be updated to a default one that advertises the  LandWorks protocol, the DAO, and the land lender.
+If the renter queue is empty and no one is renting the LAND/Estate, LandWorks's off-chain jobs will trigger the `updateState` transaction providing `0x0` as `ruler`. If indeed no `renter` must be updated to a `ruler`, the current `operator` of the LAND/Estate will be changed to the  LandWorks EOA administrator address. The scene of the LAND/Estate will be updated to a default one that advertises the  LandWorks protocol, the DAO, and the land lender.
 
-Renters will have an incentive to execute the `updateState` transaction once they become `rulers` to get permission to use the rented LAND and install scenes.
+Renters will have an incentive to execute the `updateState` transaction once they become `rulers` to get permission to use the rented LAND/Estate and install scenes.
 
 The incentive for Lenders and the Protocol to execute the transaction comes from the fact that they will:
 
-1) be able to advertise both the LAND as well as the protocol to future renters/lenders
+1) be able to advertise both the LAND/Estate as well as the protocol to future renters/lenders
 
 2) not be providing "free land usage" to the previous `ruler`
 
@@ -150,27 +161,27 @@ Depending on the metaverse the user rents land in, the process for installing sc
 
 **Decentraland**
 
-The development of scenes and experiences will be the same for users directly owning the land or renting it through the protocol. By default, the protocol will be marking the `ruler` as `operator` of the LAND (more on that [here]()), thus enabling him to be able to install scenes.
+The development of scenes and experiences will be the same for users directly owning the land or renting it through the protocol. By default, the protocol will be marking the `ruler` as `operator` of the LAND/Estate (more on that [here]()), thus enabling him to be able to install scenes.
 
 For in-depth information on how scenes are designed and built, you can refer to Decentraland's [documentation](https://docs.decentraland.org/).
 
 ### Claiming Accrued Rent
 
-Owners of `eNFT` are eligible to execute `claim` transaction that will pay out the accrued rent to the owner of the `eNFT`. The rent will be available for claiming immediately after the property is rented. Since both lenders and renters cannot revert the renting of land, it is safe for the protocol to allow for lenders to claim their rents even though the rent period is not over. That would mean that the capital coming from rent will be available to lenders even before the `renter` has even become a `ruler` of the land. If there is a big queue for popular land, lenders may end up getting paid several months before the actual `renter` becomes the `ruler`. This mechanism will incentivise more landowners to provide their land to the protocol.
+Owners (or approved addresses/operators) of `LandWorksNft` are eligible to execute `claim` transactions that will pay out the accrued rent to the owner of the `LandWorksNft`. The rent will be available for claiming immediately after the property is rented. Since both lenders and renters cannot revert the renting of land, it is safe for the protocol to allow for lenders to claim their rents even though the rent period is not over. That would mean that the capital coming from rent will be available to lenders even before the `renter` has even become a `ruler` of the land. If there is a big queue for popular land, lenders may end up getting paid several months before the actual `renter` becomes the `ruler`. This mechanism will incentivise more landowners to provide their land to the protocol.
 
 ### Updating lending conditions
 
-Lenders (`eNFT` owners) will be able to update their lending conditions by executing `updateConditions` transaction. They will be able to update the parameters on the Land they provide in the protocol. Those parameters are the same as the one specified on `add` transactions:
+Lenders (`LandWorksNft` owners) will be able to update their lending conditions by executing `updateConditions` transactions. They will be able to update the parameters on the land they provided in the protocol. Those parameters are the same as the one specified on `add` transactions:
 
-- `minPeriod` - the minimum number of blocks the land can be rented
-- `maxPeriod` - the maximum number of blocks the land can be rented
-- `maxFutureBlock` - the block delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureBlock=100_000`, the land will be rented at most 15 days in the future (100_000 * 13sec = ~15days). This is needed in order to enable the lender to balance between land usage optimisation and their own perceived rate of land price increase. It is advised for them to set it to the minimum period they feel that the land will noticeably appreciate therefore the rent should be increased.
-- `pricePerBlock` - the price of the rent charged per block
+- `minPeriod` - the minimum number of seconds the land can be rented
+- `maxPeriod` - the maximum number of seconds the land can be rented
+- `maxFutureSecond` - the block delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureSecond=100_000`, the land will be rented at most 100_000 seconds in the future. This is needed in order to enable the lender to balance between land usage optimisation and their own perceived rate of the land price increase. It is advised for them to set it to the minimum period they feel that the land will noticeably appreciate therefore the rent should be increased.
+- `pricePerSecond` - the price of the rent charged per block
 - `tokenAddress` - the token in which rent will be charged (if different from ETH)
 
 **Note (1):**
 
-The protocol will payout the current unclaimed rent to the `eNFT` owner as a part of the `updateConditions` transaction.
+The protocol will payout the current unclaimed rent to the `LandWorksNft` owner as a part of the `updateConditions` transaction. 
 
 **Note (2):**
 The new lending conditions will be applied the next time the land is rented and will not affect the current `renters` in the queue and `rulers`.
@@ -212,13 +223,13 @@ The following diagram provides an overview of the contracts of the Protocol and 
 
 ![Contracts-Decentraland](./assets/contracts-decentraland.png)
 
-All of the 3 functions (`rent`, `udpateState` and `updateOperator`) in the Decentraland faucet are specific to the Decentraland metaverse. Base internal methods will be introduced in the `core` faucets to have a reusable code base upon `metaverse` integrations are building on. Utilising this pattern provides a good encapsulation of the logic for the different metaverses.
+All of the 3 functions (`rent`, `updateState` and `updateOperator`) in the Decentraland faucet are specific to the Decentraland metaverse. Base internal methods will be introduced in the `core` faucets to have a reusable code base upon `metaverse` integrations are built on. Utilising this pattern provides a good encapsulation of the logic for the different metaverses.
 
-In the context of Decentraland, the protocol will be minting `eLAND` NFTs for LAND providers.
+In the context of Decentraland, the protocol will be minting `LandWorksNft`s for LAND/Estate providers.
 
 ## Fees
 
-There will be a default `protocol fee` of `3%` every time a `renter` pays rent to the landowner. The fee will be a revenue stream for the DAO and DAO token holders will have the ability to vote on changing the protocol fee.
+There will be a default `protocol fee` of `3%` (charged from the lender) every time a `renter` pays rent to the landowner. The fee will be a revenue stream for the DAO and DAO token holders will have the ability to vote on changing the protocol fee.
 
 One common problem for DAOs is the diversification of the DAO Treasury. Since lenders will be able to define various payment options, the protocol fee will be comprised of various assets that will act as a diversification mechanism for the DAO's treasury.
 
@@ -229,7 +240,6 @@ Security is a top priority and it is critical for the protocol. Based on our exp
 - Smart Contract Development Framework - [Hardhat](https://hardhat.org/) will be used for the development and testing of the contracts. It is an established and well-known framework for solidity and smart contract developers, thus it will be easier for external developers to do peer reviews. The DAO will not prioritise obfuscation of code.
 - Unit Tests - All smart contracts will have 100% code coverage as well as cover as many use-cases and edge-cases possible.
 - Static Analyzers - [slither](https://github.com/crytic/slither) will be used to execute static analysis tests against the smart contracts for well known SWC issues.
-- Smart Contract Fuzzer - [echidna](https://github.com/crytic/echidna) will be used to execute fuzz tests against the smart contracts
 - Upgradeability - The [Diamond](https://eips.ethereum.org/EIPS/eip-2535) upgradeability pattern will be used. Only the DAO will be able to execute upgrades on the smart contracts after the governance vote passes. Upgradeability will be used to mitigate and resolve vulnerabilities found in the contracts.
 - Security Audits - the protocol will be audited by a reputable audit company
 - Bounties - The DAO will incentivise white hat hackers by providing bounties for reporting vulnerabilities.
