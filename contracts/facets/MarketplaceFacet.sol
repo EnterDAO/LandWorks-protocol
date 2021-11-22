@@ -116,8 +116,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
-            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
-            "caller must be approved or owner of _assetId"
+            LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
+                LibERC721.isConsumerOf(msg.sender, _assetId),
+            "caller must be consumer, approved or owner of _assetId"
         );
         require(_minPeriod != 0, "_minPeriod must not be 0");
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
@@ -139,12 +140,11 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
 
-        transferRentFee(
-            _assetId,
-            oldPaymentToken,
-            LibERC721.ownerOf(_assetId),
-            rentFee
-        );
+        address receiver = LibERC721.consumerOf(_assetId);
+        if (msg.sender != receiver) {
+            receiver = LibERC721.ownerOf(_assetId);
+        }
+        transferRentFee(_assetId, oldPaymentToken, receiver, rentFee);
 
         emit UpdateConditions(
             _assetId,
