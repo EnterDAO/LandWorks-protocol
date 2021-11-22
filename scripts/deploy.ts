@@ -1,7 +1,7 @@
 import hardhat from 'hardhat';
 import { ethers } from 'hardhat';
-import {Deployer} from "../utils/deployer";
-import {Diamond} from "../utils/diamond";
+import { Deployer } from "../utils/deployer";
+import { Diamond } from "../utils/diamond";
 
 async function deploy() {
     await hardhat.run('compile');
@@ -23,10 +23,26 @@ async function deploy() {
     const ownershipFacet = await Deployer.deployContract('OwnershipFacet');
     console.log(`OwnershipFacet deployed to: ${ownershipFacet.address}`);
 
+    console.log('Deploying FeeFacet...');
+    const feeFacet = await Deployer.deployContract('FeeFacet');
+    console.log(`FeeFacet deployed to: ${feeFacet.address}`);
+
+    console.log('Deploying ERC-721Facet...');
+    const erc721Facet = await Deployer.deployContract('ERC721Facet');
+    console.log(`ERC-721Facet deployed to: ${erc721Facet.address}`);
+
+    console.log('Deploying MarketplaceFacet...');
+    const marketplaceFacet = await Deployer.deployContract('MarketplaceFacet');
+    console.log(`MarketplaceFacet deployed to: ${marketplaceFacet.address}`);
+
+    console.log('Deploying DecentralandFacet...');
+    const decentralandFacet = await Deployer.deployContract('DecentralandFacet');
+    console.log(`DecentralandFacet deployed to: ${decentralandFacet.address}`);
+
     console.log('Deploying LandWorks (Diamond)...');
     const diamond = await Deployer.deployDiamond(
         'LandWorks',
-        [cutFacet, loupeFacet, ownershipFacet],
+        [cutFacet, loupeFacet, ownershipFacet, feeFacet, erc721Facet, marketplaceFacet, decentralandFacet],
         deployerAddress,
     );
     console.log(`LandWorks (Diamond) deployed at: ${diamond.address}`);
@@ -52,11 +68,35 @@ async function deploy() {
         constructorArguments: []
     });
 
+    console.log('Verifying FeeFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: feeFacet.address,
+        constructorArguments: []
+    });
+
+    console.log('Verifying ERC-721Facet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: erc721Facet.address,
+        constructorArguments: []
+    });
+
+    console.log('Verifying MarketplaceFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: marketplaceFacet.address,
+        constructorArguments: []
+    });
+
+    console.log('Verifying DecentralandFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: decentralandFacet.address,
+        constructorArguments: []
+    });
+
     console.log('Verifying LandWorks (Diamond) on Etherscan...');
     await hardhat.run('verify:verify', {
         address: diamond.address,
         constructorArguments: [
-            Diamond.getAsAddCuts([cutFacet, loupeFacet, ownershipFacet]),
+            Diamond.getAsAddCuts([cutFacet, loupeFacet, ownershipFacet, feeFacet, erc721Facet, marketplaceFacet, decentralandFacet]),
             deployerAddress
         ]
     });
@@ -65,6 +105,10 @@ async function deploy() {
     console.log('DiamondCutFacet address: ', cutFacet.address);
     console.log('DiamondLoupeFacet address: ', loupeFacet.address);
     console.log('OwnershipFacet address: ', ownershipFacet.address);
+    console.log('FeeFacet address: ', feeFacet.address);
+    console.log('ERC-721Facet address: ', erc721Facet.address);
+    console.log('MarketplaceFacet address: ', marketplaceFacet.address);
+    console.log('DecentralandFacet address: ', decentralandFacet.address);
     console.log('LandWorks (Diamond) address: ', diamond.address);
 }
 
