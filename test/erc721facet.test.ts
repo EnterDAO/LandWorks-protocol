@@ -9,7 +9,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 describe('ERC721Facet', function () {
     let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, fee: Contract, erc721: Contract, decentraland: Contract, diamond: Contract;
     let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
-    let owner: SignerWithAddress, newOwner, approved: SignerWithAddress, anotherApproved: SignerWithAddress, operator: SignerWithAddress, other: SignerWithAddress;
+    let owner: SignerWithAddress, newOwner, approved: SignerWithAddress, anotherApproved: SignerWithAddress, operator: SignerWithAddress, consumer: SignerWithAddress, other: SignerWithAddress;
     let snapshotId: any;
     let mockERC721Registry: Contract;
 
@@ -39,7 +39,8 @@ describe('ERC721Facet', function () {
         approved = signers[2];
         anotherApproved = signers[3];
         operator = signers[4];
-        other = signers[5];
+        consumer = signers[5];
+        other = signers[6];
 
         cut = await Deployer.deployContract('DiamondCutFacet');
         loupe = await Deployer.deployContract('DiamondLoupeFacet');
@@ -980,6 +981,82 @@ describe('ERC721Facet', function () {
 
             // when:
             await expect(erc721Facet.tokenURI(invalidTokenID))
+                .to.be.revertedWith(expectedRevertMessage);
+        });
+    });
+
+    describe('consumers', async () => {
+        it('should successfully change consumer', async () => {
+            // when:
+            await erc721Facet.changeConsumer(consumer.address, tokenID);
+            // then:
+            expect(await erc721Facet.consumerOf(tokenID)).to.equal(consumer.address);
+        });
+
+        it('should emit event with args', async () => {
+            // when:
+            const tx = await erc721Facet.changeConsumer(consumer.address, tokenID);
+
+            // then:
+            await expect(tx)
+                .to.emit(erc721Facet, 'ConsumerChanged')
+                .withArgs(owner.address, consumer.address, tokenID);
+        });
+
+        it('should successfully change consumer when caller is approved', async () => {
+            // given:
+            await erc721Facet.approve(approved.address, tokenID);
+            // when:
+            const tx = await erc721Facet.connect(approved).changeConsumer(consumer.address, tokenID);
+
+            // then:
+            await expect(tx)
+                .to.emit(erc721Facet, 'ConsumerChanged')
+                .withArgs(owner.address, consumer.address, tokenID);
+            // and:
+            expect(await erc721Facet.consumerOf(tokenID)).to.equal(consumer.address);
+        });
+
+        it('should successfully change consumer when caller is operator', async () => {
+            // given:
+            await erc721Facet.setApprovalForAll(operator.address, true);
+            // when:
+            const tx = await erc721Facet.connect(operator).changeConsumer(consumer.address, tokenID);
+
+            // then:
+            await expect(tx)
+                .to.emit(erc721Facet, 'ConsumerChanged')
+                .withArgs(owner.address, consumer.address, tokenID);
+            // and:
+            expect(await erc721Facet.consumerOf(tokenID)).to.equal(consumer.address);
+        });
+
+        it('should revert when caller is not owner, not approved', async () => {
+            const expectedRevertMessage = 'ERC721Consumer: change consumer caller is not owner nor approved';
+            await expect(erc721Facet.connect(other).changeConsumer(consumer.address, tokenID))
+                .to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should revert when caller is approved for the token', async () => {
+            // given:
+            await erc721Facet.changeConsumer(consumer.address, tokenID);
+            // then:
+            const expectedRevertMessage = 'ERC721Consumer: change consumer caller is not owner nor approved';
+            await expect(erc721Facet.connect(consumer).changeConsumer(consumer.address, tokenID))
+                .to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should revert when tokenID is nonexistent', async () => {
+            const invalidTokenID = 2;
+            const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
+            await expect(erc721Facet.changeConsumer(consumer.address, invalidTokenID))
+                .to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should revert when calling consumerOf with nonexistent tokenID', async () => {
+            const invalidTokenID = 2;
+            const expectedRevertMessage = 'ERC721Consumer: consumer query for nonexistent token';
+            await expect(erc721Facet.consumerOf(invalidTokenID))
                 .to.be.revertedWith(expectedRevertMessage);
         });
     });

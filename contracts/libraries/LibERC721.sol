@@ -28,6 +28,8 @@ library LibERC721 {
         mapping(uint256 => address) tokenApprovals;
         // Mapping from owner to operator approvals
         mapping(address => mapping(address => bool)) operatorApprovals;
+        // Mapping from tokenID to consumer
+        mapping(address => mapping(uint256 => address)) tokenConsumers;
         // Total minted tokens
         Counters.Counter total;
     }
@@ -57,6 +59,15 @@ library LibERC721 {
         address indexed owner,
         address indexed operator,
         bool approved
+    );
+
+    /**
+     * @dev Emitted when owner or approved enables `consumer` to consume the `tokenId` token.
+     */
+    event ConsumerChanged(
+        address indexed owner,
+        address indexed consumer,
+        uint256 indexed tokenId
     );
 
     /**
@@ -299,6 +310,47 @@ library LibERC721 {
     function approve(address to, uint256 tokenId) internal {
         erc721Storage().tokenApprovals[tokenId] = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
+    }
+
+    /**
+     * @dev See {IERC721Consumer-changeConsumer}
+     */
+    function changeConsumer(address consumer, uint256 tokenId) internal {
+        ERC721Storage storage erc721 = erc721Storage();
+        address owner = ownerOf(tokenId);
+        erc721.tokenConsumers[owner][tokenId] = consumer;
+
+        emit ConsumerChanged(owner, consumer, tokenId);
+    }
+
+    /**
+     * @dev See {IERC721Consumer-consumerOf}.
+     */
+    function consumerOf(uint256 tokenId) internal view returns (address) {
+        require(
+            exists(tokenId),
+            "ERC721Consumer: consumer query for nonexistent token"
+        );
+        address owner = ownerOf(tokenId);
+
+        return erc721Storage().tokenConsumers[owner][tokenId];
+    }
+
+    /**
+     * @dev Returns whether `spender` is allowed to consume `tokenId`.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function isConsumerOf(address spender, uint256 tokenId)
+        internal
+        view
+        returns (bool)
+    {
+        ERC721Storage storage erc721 = erc721Storage();
+        address owner = ownerOf(tokenId);
+        return spender == erc721.tokenConsumers[owner][tokenId];
     }
 
     /**
