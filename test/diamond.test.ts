@@ -12,7 +12,7 @@ describe('LandWorks', function () {
     let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
     let landRegistry: LandRegistry;
     let estateRegistry: EstateRegistry;
-    let owner: SignerWithAddress, nonOwner: SignerWithAddress, artificialRegistry: SignerWithAddress, administrativeOperator: SignerWithAddress;
+    let owner: SignerWithAddress, nonOwner: SignerWithAddress, artificialRegistry: SignerWithAddress, administrativeOperator: SignerWithAddress, consumer: SignerWithAddress;
     let snapshotId: any;
 
     const ERC721_SYMBOL = 'LW';
@@ -30,6 +30,7 @@ describe('LandWorks', function () {
         nonOwner = signers[1];
         artificialRegistry = signers[2];
         administrativeOperator = signers[3]; // DecentralandFacet administrative operator
+        consumer = signers[4];
 
         cut = await Deployer.deployContract('DiamondCutFacet');
         loupe = await Deployer.deployContract('DiamondLoupeFacet');
@@ -272,6 +273,9 @@ describe('LandWorks', function () {
 
             const IERC721Metadata = '0x5b5e139f';
             expect(await loupeFacet.supportsInterface(IERC721Metadata)).to.be.true;
+
+            const IERC721Consumable = await ethers.getContractAt('IERC721Consumable', ethers.constants.AddressZero);
+            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IERC721Consumable))).to.be.true;
         });
     });
 
@@ -817,6 +821,47 @@ describe('LandWorks', function () {
                     expect(asset.totalRents).to.equal(0);
                 });
 
+                it('should successfully update conditions when caller is consumer', async () => {
+                    // given:
+                    await erc721Facet.changeConsumer(consumer.address, assetId);
+
+                    // when:
+                    await expect(marketplaceFacet
+                        .connect(consumer)
+                        .updateConditions(
+                            assetId,
+                            minPeriod + 2,
+                            maxPeriod + 2,
+                            maxFutureTime + 2,
+                            mockERC20Registry.address,
+                            pricePerSecond + 2))
+                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .withArgs(
+                            assetId,
+                            minPeriod + 2,
+                            maxPeriod + 2,
+                            maxFutureTime + 2,
+                            mockERC20Registry.address,
+                            pricePerSecond + 2)
+                        .to.emit(marketplaceFacet, 'ClaimRentFee')
+                        .withArgs(assetId, ethers.constants.AddressZero, consumer.address, 0);
+
+                    // then:
+                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    // and:
+                    const asset = await marketplaceFacet.assetAt(assetId);
+                    expect(asset.metaverseId).to.equal(metaverseId);
+                    expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
+                    expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
+                    expect(asset.paymentToken).to.equal(mockERC20Registry.address);
+                    expect(asset.minPeriod).to.equal(minPeriod + 2);
+                    expect(asset.maxPeriod).to.equal(maxPeriod + 2);
+                    expect(asset.maxFutureTime).to.equal(maxFutureTime + 2);
+                    expect(asset.pricePerSecond).equal(pricePerSecond + 2);
+                    expect(asset.status).to.equal(0); // Listed
+                    expect(asset.totalRents).to.equal(0);
+                });
+
                 it('should revert when asset does not exist', async () => {
                     // given:
                     const invalidNftId = ethers.constants.MaxUint256;
@@ -836,7 +881,7 @@ describe('LandWorks', function () {
 
                 it('should revert when caller is not approved', async () => {
                     // given:
-                    const expectedRevertMessage = 'caller must be approved or owner of _assetId';
+                    const expectedRevertMessage = 'caller must be consumer, approved or owner of _assetId';
 
                     // when:
                     await expect(marketplaceFacet
@@ -1971,7 +2016,7 @@ describe('LandWorks', function () {
                 });
 
                 it('should revert when caller is not approved', async () => {
-                    const expectedRevertMessage = 'caller must be approved or owner of asset';
+                    const expectedRevertMessage = 'caller must be consumer, approved or owner of asset';
 
                     // then:
                     await expect(feeFacet.connect(nonOwner).claimRentFee(assetId))
@@ -2020,6 +2065,32 @@ describe('LandWorks', function () {
                     // then:
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.add(expectedRentFee));
+                    // and:
+                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    expect(afterClaim).to.be.equal(0);
+                    // and:
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
+                });
+
+                it('should successfully claim rent fees to consumer when caller is consumer', async () => {
+                    // given:
+                    await erc721Facet.changeConsumer(consumer.address, assetId);
+                    // and:
+                    const beforeOwnerBalance = await owner.getBalance();
+                    const beforeConsumerBalance = await consumer.getBalance();
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+
+                    // when:
+                    const tx = await feeFacet.connect(consumer).claimRentFee(assetId);
+                    const receipt = await tx.wait();
+
+                    // then:
+                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                    const afterOwnerBalance = await owner.getBalance();
+                    expect(afterOwnerBalance).to.equal(beforeOwnerBalance);
+                    const afterConsumerBalance = await consumer.getBalance();
+                    expect(afterConsumerBalance).to.equal(beforeConsumerBalance.sub(txFee).add(expectedRentFee));
                     // and:
                     const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
                     expect(afterClaim).to.be.equal(0);
@@ -2113,7 +2184,7 @@ describe('LandWorks', function () {
                 });
 
                 it('should revert when caller is not approved', async () => {
-                    const expectedRevertMessage = 'caller must be approved or owner of asset';
+                    const expectedRevertMessage = 'caller must be consumer, approved or owner of asset';
 
                     // then:
                     await expect(feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds))

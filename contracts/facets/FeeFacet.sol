@@ -32,19 +32,24 @@ contract FeeFacet is IFeeFacet {
     /// @param _assetId The target asset
     function claimRentFee(uint256 _assetId) public {
         require(
-            LibERC721.isApprovedOrOwner(msg.sender, _assetId),
-            "caller must be approved or owner of asset"
+            LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
+                LibERC721.isConsumerOf(msg.sender, _assetId),
+            "caller must be consumer, approved or owner of asset"
         );
 
-        address owner = LibERC721.ownerOf(_assetId);
+        address receiver = LibERC721.consumerOf(_assetId);
+        if (msg.sender != receiver) {
+            receiver = LibERC721.ownerOf(_assetId);
+        }
+
         address paymentToken = LibMarketplace
             .marketplaceStorage()
             .assets[_assetId]
             .paymentToken;
         uint256 amount = LibFee.claimRentFee(_assetId, paymentToken);
 
-        LibTransfer.safeTransfer(paymentToken, owner, amount);
-        emit ClaimRentFee(_assetId, paymentToken, owner, amount);
+        LibTransfer.safeTransfer(paymentToken, receiver, amount);
+        emit ClaimRentFee(_assetId, paymentToken, receiver, amount);
     }
 
     /// @notice Claims unclaimed rent fees for a set of assets to assets' owners
