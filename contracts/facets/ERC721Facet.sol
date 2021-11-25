@@ -6,11 +6,11 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../interfaces/IERC721Facet.sol";
-import "../interfaces/IERC721Consumer.sol";
+import "../interfaces/IERC721Consumable.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibERC721.sol";
 
-contract ERC721Facet is IERC721Facet, IERC721Consumer {
+contract ERC721Facet is IERC721Facet, IERC721Consumable {
     using Strings for uint256;
 
     /// @notice Initialises the ERC721's name, symbol and base URI.
@@ -192,19 +192,20 @@ contract ERC721Facet is IERC721Facet, IERC721Consumer {
     }
 
     /**
-     * @dev See {IERC721Consumer-changeConsumer}
+     * @dev See {IERC721Consumable-changeConsumer}
      */
-    function changeConsumer(address newConsumer, uint256 tokenId) public {
+    function changeConsumer(address consumer, uint256 tokenId) public {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, tokenId),
             "ERC721Consumer: change consumer caller is not owner nor approved"
         );
 
-        LibERC721.changeConsumer(newConsumer, tokenId);
+        LibERC721.changeConsumer(consumer, tokenId);
+        emit ConsumerChanged(ownerOf(tokenId), consumer, tokenId);
     }
 
     /**
-     * @dev See {IERC721Consumer-consumerOf}
+     * @dev See {IERC721Consumable-consumerOf}
      */
     function consumerOf(uint256 tokenId) public view returns (address) {
         return LibERC721.consumerOf(tokenId);

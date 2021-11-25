@@ -173,6 +173,8 @@ describe('ERC721Facet', function () {
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
@@ -193,6 +195,8 @@ describe('ERC721Facet', function () {
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
@@ -212,6 +216,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.ownerOf(tokenID)).to.equal(other.address);
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
@@ -235,6 +241,8 @@ describe('ERC721Facet', function () {
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
@@ -253,6 +261,30 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.ownerOf(tokenID)).to.equal(owner.address);
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+            });
+
+            it('should clear consumer when transferred', async () => {
+                // given:
+                await erc721Facet.changeConsumer(consumer.address, tokenID);
+
+                // when:
+                const tx = await erc721Facet.transferFrom(owner.address, owner.address, tokenID);
+
+                await expect(tx)
+                    .to.emit(erc721Facet, 'Transfer')
+                    .withArgs(owner.address, owner.address, tokenID)
+                    .to.emit(erc721Facet, 'Approval')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID);
+                // and:
+                expect(await erc721Facet.ownerOf(tokenID)).to.equal(owner.address);
+                // and:
+                expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
             });
@@ -379,6 +411,29 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.ownerOf(tokenID)).to.equal(owner.address);
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+            });
+
+
+            it('should clear consumer when safeTransferFrom', async () => {
+                // given:
+                await erc721Facet.changeConsumer(consumer.address, tokenID);
+
+                // when:
+                const tx = await erc721Facet['safeTransferFrom(address,address,uint256)'](owner.address, owner.address, tokenID);
+
+                await expect(tx)
+                    .to.emit(erc721Facet, 'Transfer')
+                    .withArgs(owner.address, owner.address, tokenID)
+                    .to.emit(erc721Facet, 'Approval')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID);
+                // and:
+                expect(await erc721Facet.ownerOf(tokenID)).to.equal(owner.address);
+                // and:
+                expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
             });
@@ -645,6 +700,28 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.ownerOf(tokenID)).to.equal(owner.address);
                 // and:
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+            });
+
+            it('should clear consumer when safeTransferFrom', async () => {
+                // given:
+                await erc721Facet.changeConsumer(consumer.address, tokenID);
+
+                // when:
+                const tx = await erc721Facet['safeTransferFrom(address,address,uint256,bytes)'](owner.address, owner.address, tokenID, data);
+
+                await expect(tx)
+                    .to.emit(erc721Facet, 'Transfer')
+                    .withArgs(owner.address, owner.address, tokenID)
+                    .to.emit(erc721Facet, 'Approval')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID);
+                // and:
+                expect(await erc721Facet.ownerOf(tokenID)).to.equal(owner.address);
+                // and:
+                expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
+                // and:
+                expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
             });

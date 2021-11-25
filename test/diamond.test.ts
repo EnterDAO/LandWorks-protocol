@@ -274,8 +274,8 @@ describe('LandWorks', function () {
             const IERC721Metadata = '0x5b5e139f';
             expect(await loupeFacet.supportsInterface(IERC721Metadata)).to.be.true;
 
-            const IERC721Consumer = await ethers.getContractAt('IERC721Consumer', ethers.constants.AddressZero);
-            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IERC721Consumer))).to.be.true;
+            const IERC721Consumable = await ethers.getContractAt('IERC721Consumable', ethers.constants.AddressZero);
+            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IERC721Consumable))).to.be.true;
         });
     });
 

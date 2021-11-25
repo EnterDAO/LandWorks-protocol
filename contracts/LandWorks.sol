@@ -10,7 +10,7 @@ import "./libraries/LibOwnership.sol";
 import "./interfaces/IDiamondCut.sol";
 import "./interfaces/IDiamondLoupe.sol";
 import "./interfaces/IERC173.sol";
-import "./interfaces/IERC721Consumer.sol";
+import "./interfaces/IERC721Consumable.sol";
 
 contract LandWorks {
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner)
@@ -28,7 +28,7 @@ contract LandWorks {
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721).interfaceId] = true;
         ds.supportedInterfaces[type(IERC721Metadata).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC721Consumer).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721Consumable).interfaceId] = true;
     }
 
     // Find facet for function that is called and execute the

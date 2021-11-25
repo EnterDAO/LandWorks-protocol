@@ -166,7 +166,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "newConsumer",
+        "name": "consumer",
         "type": "address"
       },
       {

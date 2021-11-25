@@ -29,7 +29,7 @@ library LibERC721 {
         // Mapping from owner to operator approvals
         mapping(address => mapping(address => bool)) operatorApprovals;
         // Mapping from tokenID to consumer
-        mapping(address => mapping(uint256 => address)) tokenConsumers;
+        mapping(uint256 => address) tokenConsumers;
         // Total minted tokens
         Counters.Counter total;
     }
@@ -236,6 +236,8 @@ library LibERC721 {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!exists(tokenId), "ERC721: token already minted");
 
+        beforeTokenTransfer(address(0), to, tokenId);
+
         ERC721Storage storage erc721 = erc721Storage();
 
         erc721.balances[to] += 1;
@@ -256,6 +258,8 @@ library LibERC721 {
      */
     function burn(uint256 tokenId) internal {
         address owner = ownerOf(tokenId);
+
+        beforeTokenTransfer(owner, address(0), tokenId);
 
         // Clear approvals
         approve(address(0), tokenId);
@@ -290,6 +294,8 @@ library LibERC721 {
         );
         require(to != address(0), "ERC721: transfer to the zero address");
 
+        beforeTokenTransfer(from, to, tokenId);
+
         // Clear approvals from the previous owner
         approve(address(0), tokenId);
 
@@ -313,27 +319,23 @@ library LibERC721 {
     }
 
     /**
-     * @dev See {IERC721Consumer-changeConsumer}
+     * @dev See {IERC721Consumable-changeConsumer}
      */
     function changeConsumer(address consumer, uint256 tokenId) internal {
         ERC721Storage storage erc721 = erc721Storage();
-        address owner = ownerOf(tokenId);
-        erc721.tokenConsumers[owner][tokenId] = consumer;
-
-        emit ConsumerChanged(owner, consumer, tokenId);
+        erc721.tokenConsumers[tokenId] = consumer;
     }
 
     /**
-     * @dev See {IERC721Consumer-consumerOf}.
+     * @dev See {IERC721Consumable-consumerOf}.
      */
     function consumerOf(uint256 tokenId) internal view returns (address) {
         require(
             exists(tokenId),
             "ERC721Consumer: consumer query for nonexistent token"
         );
-        address owner = ownerOf(tokenId);
 
-        return erc721Storage().tokenConsumers[owner][tokenId];
+        return erc721Storage().tokenConsumers[tokenId];
     }
 
     /**
@@ -349,8 +351,29 @@ library LibERC721 {
         returns (bool)
     {
         ERC721Storage storage erc721 = erc721Storage();
-        address owner = ownerOf(tokenId);
-        return spender == erc721.tokenConsumers[owner][tokenId];
+        return spender == erc721.tokenConsumers[tokenId];
+    }
+
+    /**
+     * @dev Hook that is called before any token transfer. This includes minting
+     * and burning.
+     *
+     * Calling conditions:
+     *
+     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
+     * transferred to `to`.
+     * - When `from` is zero, `tokenId` will be minted for `to`.
+     * - When `to` is zero, ``from``'s `tokenId` will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal {
+        changeConsumer(address(0), tokenId);
     }
 
     /**
