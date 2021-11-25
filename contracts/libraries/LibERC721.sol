@@ -62,7 +62,7 @@ library LibERC721 {
     );
 
     /**
-     * @dev Emitted when owner or approved enables `consumer` to consume the `tokenId` token.
+     * @dev See {IERC721Consumable-ConsumerChanged}
      */
     event ConsumerChanged(
         address indexed owner,
