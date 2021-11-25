@@ -350,8 +350,7 @@ library LibERC721 {
         view
         returns (bool)
     {
-        ERC721Storage storage erc721 = erc721Storage();
-        return spender == erc721.tokenConsumers[tokenId];
+        return spender == consumerOf(tokenId);
     }
 
     /**
