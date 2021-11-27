@@ -319,7 +319,7 @@ library LibERC721 {
     }
 
     /**
-     * @dev Changes consumer to `consumer` to consume `tokenId`
+     * @dev Changes the consumer of `tokenId` to `consumer`.
      *
      * Emits a {ConsumerChanged} event.
      */
