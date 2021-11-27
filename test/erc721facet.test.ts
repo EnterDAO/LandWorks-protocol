@@ -164,6 +164,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -186,6 +188,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -208,6 +212,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -232,6 +238,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -253,6 +261,8 @@ describe('ERC721Facet', function () {
                 const tx = await erc721Facet.transferFrom(owner.address, owner.address, tokenID);
 
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, owner.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -275,6 +285,8 @@ describe('ERC721Facet', function () {
                 const tx = await erc721Facet.transferFrom(owner.address, owner.address, tokenID);
 
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, owner.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -322,6 +334,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -342,6 +356,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -362,6 +378,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -384,6 +402,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -475,6 +495,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')
@@ -519,6 +541,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')
@@ -543,6 +567,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')
@@ -611,6 +637,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -631,6 +659,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -651,6 +681,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -673,6 +705,8 @@ describe('ERC721Facet', function () {
 
                 // then:
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, other.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -692,6 +726,8 @@ describe('ERC721Facet', function () {
                 const tx = await erc721Facet['safeTransferFrom(address,address,uint256,bytes)'](owner.address, owner.address, tokenID, data);
 
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, owner.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -712,6 +748,8 @@ describe('ERC721Facet', function () {
                 const tx = await erc721Facet['safeTransferFrom(address,address,uint256,bytes)'](owner.address, owner.address, tokenID, data);
 
                 await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                     .to.emit(erc721Facet, 'Transfer')
                     .withArgs(owner.address, owner.address, tokenID)
                     .to.emit(erc721Facet, 'Approval')
@@ -763,6 +801,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')
@@ -785,6 +825,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')
@@ -807,6 +849,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')
@@ -831,6 +875,8 @@ describe('ERC721Facet', function () {
 
                     // then:
                     await expect(tx)
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
                         .to.emit(erc721Facet, 'Transfer')
                         .withArgs(owner.address, contractReceiver.address, tokenID)
                         .to.emit(erc721Facet, 'Approval')

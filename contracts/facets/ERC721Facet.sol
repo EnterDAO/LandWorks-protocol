@@ -200,8 +200,7 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable {
             "ERC721Consumer: change consumer caller is not owner nor approved"
         );
 
-        LibERC721.changeConsumer(consumer, tokenId);
-        emit ConsumerChanged(ownerOf(tokenId), consumer, tokenId);
+        LibERC721.changeConsumer(ownerOf(tokenId), consumer, tokenId);
     }
 
     /**
