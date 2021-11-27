@@ -319,11 +319,19 @@ library LibERC721 {
     }
 
     /**
-     * @dev See {IERC721Consumable-changeConsumer}
+     * @dev Changes consumer to `consumer` to consume `tokenId`
+     *
+     * Emits a {ConsumerChanged} event.
      */
-    function changeConsumer(address consumer, uint256 tokenId) internal {
+    function changeConsumer(
+        address owner,
+        address consumer,
+        uint256 tokenId
+    ) internal {
         ERC721Storage storage erc721 = erc721Storage();
         erc721.tokenConsumers[tokenId] = consumer;
+
+        emit ConsumerChanged(owner, consumer, tokenId);
     }
 
     /**
@@ -372,7 +380,7 @@ library LibERC721 {
         address to,
         uint256 tokenId
     ) internal {
-        changeConsumer(address(0), tokenId);
+        changeConsumer(from, address(0), tokenId);
     }
 
     /**

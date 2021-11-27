@@ -466,6 +466,10 @@ describe('LandWorks', function () {
                             maxFutureTime,
                             ethers.constants.AddressZero,
                             pricePerSecond))
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(ethers.constants.AddressZero, ethers.constants.AddressZero, assetId)
+                        .to.emit(erc721Facet, 'Transfer')
+                        .withArgs(ethers.constants.AddressZero, owner.address, assetId)
                         .to.emit(marketplaceFacet, 'List')
                         .withArgs(assetId, metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ethers.constants.AddressZero, pricePerSecond);
                 });
@@ -487,6 +491,10 @@ describe('LandWorks', function () {
                             maxFutureTime,
                             mockERC20Registry.address,
                             pricePerSecond))
+                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .withArgs(ethers.constants.AddressZero, ethers.constants.AddressZero, assetId)
+                        .to.emit(erc721Facet, 'Transfer')
+                        .withArgs(ethers.constants.AddressZero, owner.address, assetId)
                         .to.emit(marketplaceFacet, 'List')
                         .withArgs(0, metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, mockERC20Registry.address, pricePerSecond);
 
@@ -1125,6 +1133,8 @@ describe('LandWorks', function () {
                         // when:
                         await expect(marketplaceFacet
                             .delist(assetId))
+                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'Delist')
                             .withArgs(assetId, owner.address)
                             .to.emit(erc721Facet, 'Transfer')
@@ -1144,6 +1154,8 @@ describe('LandWorks', function () {
                         // when:
                         await expect(marketplaceFacet
                             .delist(assetId))
+                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'Delist')
                             .withArgs(assetId, owner.address)
                             .to.not.emit(erc721Facet, 'Transfer')
@@ -1178,6 +1190,8 @@ describe('LandWorks', function () {
 
                         // then:
                         await expect(tx)
+                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'Delist')
                             .withArgs(assetId, owner.address)
                             .to.emit(erc721Facet, 'Transfer')
@@ -1247,6 +1261,8 @@ describe('LandWorks', function () {
                         // when:
                         await expect(marketplaceFacet
                             .withdraw(assetId))
+                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(erc721Facet, 'Transfer')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'ClaimRentFee')
