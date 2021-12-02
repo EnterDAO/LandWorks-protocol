@@ -1154,10 +1154,9 @@ describe('LandWorks', function () {
                         // when:
                         await expect(marketplaceFacet
                             .delist(assetId))
-                            .to.emit(erc721Facet, 'ConsumerChanged')
-                            .withArgs(owner.address, ethers.constants.AddressZero, assetId)
                             .to.emit(marketplaceFacet, 'Delist')
                             .withArgs(assetId, owner.address)
+                            .to.not.emit(erc721Facet, 'ConsumerChanged')
                             .to.not.emit(erc721Facet, 'Transfer')
                             .to.not.emit(marketplaceFacet, 'ClaimRentFee')
                             .to.not.emit(marketplaceFacet, 'Withdraw');
