@@ -8,6 +8,7 @@ interface IDecentralandFacet {
         address indexed _renter,
         uint256 _start,
         uint256 _end,
+        address _paymentToken,
         uint256 _fee
     );
     event UpdateState(uint256 _assetId, uint256 _rentId, address _operator);

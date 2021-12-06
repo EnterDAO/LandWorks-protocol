@@ -19,6 +19,7 @@ library LibRent {
         address indexed _renter,
         uint256 _start,
         uint256 _end,
+        address _paymentToken,
         uint256 _fee
     );
 
@@ -83,6 +84,7 @@ library LibRent {
             msg.sender,
             rentStart,
             rentEnd,
+            asset.paymentToken,
             rentPayment
         );
 

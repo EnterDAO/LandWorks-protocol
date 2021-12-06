@@ -29,6 +29,7 @@ interface IMarketplaceFacet {
         address indexed _renter,
         uint256 _start,
         uint256 _end,
+        address _paymentToken,
         uint256 _fee
     );
     event Delist(uint256 _assetId, address indexed _caller);
