@@ -34,6 +34,12 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "_paymentToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "_fee",
         "type": "uint256"
