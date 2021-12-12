@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-interface IDecentralandFacet {
-    event Rent(
-        uint256 indexed _assetId,
-        uint256 _rentId,
-        address indexed _renter,
-        uint256 _start,
-        uint256 _end,
-        address indexed _paymentToken,
-        uint256 _fee
-    );
+import "../IRentClaimable.sol";
+import "../IRentable.sol";
+
+interface IDecentralandFacet is IRentable {
     event UpdateState(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
     event UpdateAdministrativeState(
         uint256 indexed _assetId,

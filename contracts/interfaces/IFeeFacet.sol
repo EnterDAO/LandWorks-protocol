@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-interface IFeeFacet {
+import "./IRentClaimable.sol";
+
+interface IFeeFacet is IRentClaimable {
+
     event ClaimProtocolFee(address indexed _token, address indexed _recipient, uint256 _amount);
-    event ClaimRentFee(
-        uint256 indexed _assetId,
-        address indexed _token,
-        address indexed _recipient,
-        uint256 _amount
-    );
     event SetFee(address indexed _token, uint256 _fee);
     event SetTokenPayment(address indexed _token, bool _status);
 

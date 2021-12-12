@@ -55,12 +55,11 @@ async function deploy() {
     console.log(`LandWorks (Diamond) deployed at: ${diamond.address}`);
 
     console.log(`Initialising LandWorks NFT...`);
-    const erc721FacetInstance = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
-    await erc721FacetInstance.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
+    const landWorks = await ethers.getContractAt("ILandWorks", diamond.address);
+    await landWorks.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
 
     console.log(`Enabling ETH as Payment Type...`);
-    const feeFacetInstance = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
-    await feeFacetInstance.setTokenPayment(ADDRESS_ONE, FEE_PERCENTAGE, true);
+    await landWorks.setTokenPayment(ADDRESS_ONE, FEE_PERCENTAGE, true);
 
     /**
      * Verify Contracts

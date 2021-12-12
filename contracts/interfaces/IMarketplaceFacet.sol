@@ -2,8 +2,10 @@
 pragma solidity 0.8.10;
 
 import "../libraries/marketplace/LibMarketplace.sol";
+import "./IRentClaimable.sol";
+import "./IRentable.sol";
 
-interface IMarketplaceFacet {
+interface IMarketplaceFacet is IRentable, IRentClaimable {
     event List(
         uint256 _assetId,
         uint256 _metaverseId,
@@ -23,23 +25,8 @@ interface IMarketplaceFacet {
         address indexed _paymentToken,
         uint256 _pricePerSecond
     );
-    event Rent(
-        uint256 indexed _assetId,
-        uint256 _rentId,
-        address indexed _renter,
-        uint256 _start,
-        uint256 _end,
-        address indexed _paymentToken,
-        uint256 _fee
-    );
     event Delist(uint256 indexed _assetId, address indexed _caller);
     event Withdraw(uint256 indexed _assetId, address indexed _caller);
-    event ClaimRentFee(
-        uint256 indexed _assetId,
-        address indexed _token,
-        address indexed _recipient,
-        uint256 _amount
-    );
     event SetMetaverseName(uint256 indexed _metaverseId, string _name);
     event SetRegistry(uint256 indexed _metaverseId, address _registry, bool _status);
 
