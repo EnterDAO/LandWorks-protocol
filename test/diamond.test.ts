@@ -1104,6 +1104,77 @@ describe('LandWorks', function () {
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
                 });
+
+                it('should also claim rent fee to consumer on update when there is consumer set', async () => {
+                    // given:
+                    await erc721Facet.changeConsumer(consumer.address, assetId);
+                    await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    const beforeBalance = await consumer.getBalance();
+
+                    // when:
+                    const tx = await marketplaceFacet
+                        .updateConditions(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1);
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .withArgs(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1)
+                        .to.emit(marketplaceFacet, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, consumer.address, pricePerSecond);
+
+                    // and:
+                    const afterBalance = await consumer.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+                });
+
+                it('should allow consumer to update conditions', async () => {
+                    // given:
+                    await erc721Facet.changeConsumer(consumer.address, assetId);
+                    await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    const beforeBalance = await consumer.getBalance();
+
+                    // when:
+                    const tx = await marketplaceFacet
+                        .connect(consumer)
+                        .updateConditions(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1);
+                    const receipt = await tx.wait();
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .withArgs(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1)
+                        .to.emit(marketplaceFacet, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, consumer.address, pricePerSecond);
+
+                    // and:
+                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                    const afterBalance = await consumer.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
+                });
             });
 
             describe('', async () => {
@@ -2062,7 +2133,7 @@ describe('LandWorks', function () {
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
-                it('should successfully claim rent fees to owner when caller is approved', async () => {
+                it('should successfully claim rent fees to owner when caller is approved and there is no consumer', async () => {
                     // given:
                     await erc721Facet.approve(nonOwner.address, assetId);
                     // and:
@@ -2083,7 +2154,7 @@ describe('LandWorks', function () {
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
-                it('should successfully claim rent fees to owner when caller is operator', async () => {
+                it('should successfully claim rent fees to owner when caller is operator and there is no consumer', async () => {
                     // given:
                     await erc721Facet.setApprovalForAll(nonOwner.address, true);
                     // and:
@@ -2104,7 +2175,33 @@ describe('LandWorks', function () {
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
-                it('should successfully claim rent fees to consumer when caller is consumer', async () => {
+                it('should successfully claim rent fees to consumer if there is consumer', async () => {
+                    // given:
+                    await erc721Facet.changeConsumer(consumer.address, assetId);
+                    // and:
+                    const beforeOwnerBalance = await owner.getBalance();
+                    const beforeConsumerBalance = await consumer.getBalance();
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+
+                    // when:
+                    const tx = await feeFacet.claimRentFee(assetId);
+                    const receipt = await tx.wait();
+
+                    // then:
+                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                    const afterOwnerBalance = await owner.getBalance();
+                    expect(afterOwnerBalance).to.equal(beforeOwnerBalance.sub(txFee));
+                    const afterConsumerBalance = await consumer.getBalance();
+                    expect(afterConsumerBalance).to.equal(beforeConsumerBalance.add(expectedRentFee));
+                    // and:
+                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(afterClaim).to.be.equal(0);
+                    // and:
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
+                });
+
+                it('should successfully claim rent fees when caller is consumer', async () => {
                     // given:
                     await erc721Facet.changeConsumer(consumer.address, assetId);
                     // and:
@@ -2128,7 +2225,7 @@ describe('LandWorks', function () {
                     // and:
                     const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
-                });
+                })
             });
 
             describe('claimMultipleRentFees', async () => {

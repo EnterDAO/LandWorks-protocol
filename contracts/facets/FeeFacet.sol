@@ -38,7 +38,7 @@ contract FeeFacet is IFeeFacet {
         );
 
         address receiver = LibERC721.consumerOf(_assetId);
-        if (msg.sender != receiver) {
+        if (receiver == address(0)) {
             receiver = LibERC721.ownerOf(_assetId);
         }
 

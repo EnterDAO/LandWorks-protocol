@@ -141,9 +141,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
 
         address receiver = LibERC721.consumerOf(_assetId);
-        if (msg.sender != receiver) {
+        if (receiver == address(0)) {
             receiver = LibERC721.ownerOf(_assetId);
         }
+
         transferRentFee(_assetId, oldPaymentToken, receiver, rentFee);
 
         emit UpdateConditions(
