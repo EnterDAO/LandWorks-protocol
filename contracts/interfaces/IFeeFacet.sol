@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.10;
 
 interface IFeeFacet {
     event ClaimProtocolFee(address _token, address _recipient, uint256 _amount);
