@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
+/******************************************************************************\
+* Co-Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamond Standard: https://eips.ethereum.org/EIPS/eip-2535
+*
+* Implementation of a diamond.
+/******************************************************************************/
+
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
