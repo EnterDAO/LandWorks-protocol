@@ -2,15 +2,15 @@
 pragma solidity 0.8.10;
 
 interface IFeeFacet {
-    event ClaimProtocolFee(address _token, address _recipient, uint256 _amount);
+    event ClaimProtocolFee(address indexed _token, address indexed _recipient, uint256 _amount);
     event ClaimRentFee(
-        uint256 _assetId,
-        address _token,
+        uint256 indexed _assetId,
+        address indexed _token,
         address indexed _recipient,
         uint256 _amount
     );
-    event SetFee(address _token, uint256 _fee);
-    event SetTokenPayment(address _token, bool _status);
+    event SetFee(address indexed _token, uint256 _fee);
+    event SetTokenPayment(address indexed _token, bool _status);
 
     /// @notice Claims unclaimed rent fees for a given asset to asset owner
     /// @param _assetId The target asset

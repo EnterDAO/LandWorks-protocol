@@ -10,8 +10,8 @@ library LibFee {
     bytes32 constant FEE_STORAGE_POSITION =
         keccak256("com.enterdao.landworks.fee");
 
-    event SetTokenPayment(address _token, bool _status);
-    event SetFee(address _token, uint256 _fee);
+    event SetTokenPayment(address indexed _token, bool _status);
+    event SetFee(address indexed _token, uint256 _fee);
 
     struct FeeStorage {
         // Supported tokens as a form of payment

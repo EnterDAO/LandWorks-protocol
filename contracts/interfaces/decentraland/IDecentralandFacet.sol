@@ -8,15 +8,15 @@ interface IDecentralandFacet {
         address indexed _renter,
         uint256 _start,
         uint256 _end,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _fee
     );
-    event UpdateState(uint256 _assetId, uint256 _rentId, address _operator);
+    event UpdateState(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
     event UpdateAdministrativeState(
-        uint256 _assetId,
+        uint256 indexed _assetId,
         address indexed _operator
     );
-    event UpdateOperator(uint256 _assetId, uint256 _rentId, address _operator);
+    event UpdateOperator(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
     event UpdateAdministrativeOperator(address _administrativeOperator);
 
     /// @notice Rents Decentraland Estate/LAND.

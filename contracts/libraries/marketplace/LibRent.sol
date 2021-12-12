@@ -19,7 +19,7 @@ library LibRent {
         address indexed _renter,
         uint256 _start,
         uint256 _end,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _fee
     );
 

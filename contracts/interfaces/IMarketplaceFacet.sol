@@ -7,20 +7,20 @@ interface IMarketplaceFacet {
     event List(
         uint256 _assetId,
         uint256 _metaverseId,
-        address _metaverseRegistry,
-        uint256 _metaverseAssetId,
+        address indexed _metaverseRegistry,
+        uint256 indexed _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureTime,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _pricePerSecond
     );
     event UpdateConditions(
-        uint256 _assetId,
+        uint256 indexed _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureTime,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _pricePerSecond
     );
     event Rent(
@@ -29,19 +29,19 @@ interface IMarketplaceFacet {
         address indexed _renter,
         uint256 _start,
         uint256 _end,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _fee
     );
-    event Delist(uint256 _assetId, address indexed _caller);
-    event Withdraw(uint256 _assetId, address indexed _caller);
+    event Delist(uint256 indexed _assetId, address indexed _caller);
+    event Withdraw(uint256 indexed _assetId, address indexed _caller);
     event ClaimRentFee(
-        uint256 _assetId,
-        address _token,
+        uint256 indexed _assetId,
+        address indexed _token,
         address indexed _recipient,
         uint256 _amount
     );
-    event SetMetaverseName(uint256 _metaverseId, string _name);
-    event SetRegistry(uint256 _metaverseId, address _registry, bool _status);
+    event SetMetaverseName(uint256 indexed _metaverseId, string _name);
+    event SetRegistry(uint256 indexed _metaverseId, address _registry, bool _status);
 
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
