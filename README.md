@@ -20,6 +20,15 @@ npm install
 ```
 
 ### Compilation
+**Prerequisite**
+
+Before running the deploy `npx hardhat` script, you need to create and populate the `config.ts` file. You can use the `config.sample.ts` file and populate the following variables:
+
+```markdown
+YOUR-INFURA-API-KEY
+YOUR-ETHERSCAN-API-KEY
+```
+
 Before you deploy the contracts, you will need to compile them using:
 
 ```
@@ -27,15 +36,6 @@ npx hardhat compile
 ```
 
 ### Deployment
-
-**Prerequisite**
-
-Before running the deploy `npx hardhat` script, you need to create and populate the `config.ts` file. You can use the `config.sample.ts` file and populate the following variables: 
-
-```markdown
-YOUR-INFURA-API-KEY
-YOUR-ETHERSCAN-API-KEY
-```
 
 **Deployment Script**
 * Deploys all the facets
