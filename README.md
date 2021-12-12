@@ -56,6 +56,13 @@ npx hardhat test
 ```
 
 #### Coverage
+
 ```bash
-npx hardhat coverage
+npm run coverage
+```
+
+or 
+
+```bash
+npx hardhat coverage --solcoverjs .solcover.ts
 ```
