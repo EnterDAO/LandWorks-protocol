@@ -93,7 +93,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     }
 
     /// @notice Updates the lending conditions for a given asset.
-    /// Pays out the unclaimed rent fees to the caller.
+    /// Pays out the unclaimed rent fees to the owner or to the caller if caller is the current consumer
     /// Updated conditions apply the next time the asset is rented.
     /// Does not affect previous and queued rents.
     /// If any of the old conditions do not want to be modified, the old ones must be provided.
@@ -181,7 +181,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     }
 
     /// @notice Withdraws the already delisted from marketplace asset.
-    /// Burns the asset and transfers the original metaverse asset represented by the asset to the caller.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the owner.
     /// Pays out the current unclaimed rent fees to the caller.
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) external {
