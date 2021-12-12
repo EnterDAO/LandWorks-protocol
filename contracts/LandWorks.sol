@@ -20,9 +20,7 @@ import "./interfaces/IERC173.sol";
 import "./interfaces/IERC721Consumable.sol";
 
 contract LandWorks {
-    constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner)
-        payable
-    {
+    constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner) {
         require(_owner != address(0), "owner must not be 0x0");
 
         LibOwnership.setContractOwner(_owner);
@@ -64,6 +62,4 @@ contract LandWorks {
             }
         }
     }
-
-    receive() external payable {}
 }
