@@ -2,7 +2,6 @@ import hardhat from 'hardhat';
 import { ethers } from 'hardhat';
 import { Deployer } from "../utils/deployer";
 import { Diamond } from "../utils/diamond";
-import { Erc721Facet, FeeFacet } from "../typechain";
 
 const ERC721_NAME = "LandWorks";
 const ERC721_SYMBOL = "LW";
