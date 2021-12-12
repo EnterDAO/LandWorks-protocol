@@ -25,7 +25,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH.
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
     function list(
         uint256 _metaverseId,
@@ -41,6 +41,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _metaverseRegistry != address(0),
             "_metaverseRegistry must not be 0x0"
         );
+        require(
+            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
+            "_registry not supported"
+        );
         require(_minPeriod != 0, "_minPeriod must not be 0");
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
         require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
@@ -48,11 +52,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _maxPeriod <= _maxFutureTime,
             "_maxPeriod more than _maxFutureTime"
         );
-        require(
-            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
-            "_registry not supported"
-        );
-        enforceIsValidToken(_paymentToken);
+        require(LibFee.supportsTokenPayment(_paymentToken), "payment type not supported");
 
         LibTransfer.erc721SafeTransferFrom(
             _metaverseRegistry,
@@ -104,7 +104,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _pricePerSecond The price for rental per second
     function updateConditions(
         uint256 _assetId,
@@ -114,8 +114,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         address _paymentToken,
         uint256 _pricePerSecond
     ) external {
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
         require(
             LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
                 LibERC721.isConsumerOf(msg.sender, _assetId),
@@ -128,8 +126,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _maxPeriod <= _maxFutureTime,
             "_maxPeriod more than _maxFutureTime"
         );
-        enforceIsValidToken(_paymentToken);
+        require(LibFee.supportsTokenPayment(_paymentToken), "payment type not supported");
 
+        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace.marketplaceStorage();
         LibMarketplace.Asset storage asset = ms.assets[_assetId];
         address oldPaymentToken = asset.paymentToken;
 
@@ -346,14 +345,5 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     ) internal {
         LibTransfer.safeTransfer(_token, _receiver, _amount);
         emit ClaimRentFee(_assetId, _token, _receiver, _amount);
-    }
-
-    /// @dev Checks whether provided token is 0x0 (represents ETH) or supported by the platform.
-    /// @param _token The target token
-    function enforceIsValidToken(address _token) internal view {
-        require(
-            _token == address(0) || LibFee.supportsTokenPayment(_token),
-            "token not supported"
-        );
     }
 }

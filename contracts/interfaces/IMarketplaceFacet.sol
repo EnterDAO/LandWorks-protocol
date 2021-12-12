@@ -54,7 +54,7 @@ interface IMarketplaceFacet {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH.
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
     function list(
         uint256 _metaverseId,
@@ -78,7 +78,7 @@ interface IMarketplaceFacet {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _pricePerSecond The price for rental per second
     function updateConditions(
         uint256 _assetId,

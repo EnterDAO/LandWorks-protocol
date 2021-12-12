@@ -2,11 +2,13 @@ import hardhat from 'hardhat';
 import { ethers } from 'hardhat';
 import { Deployer } from "../utils/deployer";
 import { Diamond } from "../utils/diamond";
-import { Erc721Facet } from "../typechain";
+import { Erc721Facet, FeeFacet } from "../typechain";
 
 const ERC721_NAME = "LandWorks";
 const ERC721_SYMBOL = "LW";
 const ERC721_BASE_URI = "https://api.landworks.xyz/nfts/"
+const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
+const FEE_PERCENTAGE = 3_000; // 3% fee percentage based on 100_000 fee precision
 
 async function deploy() {
     await hardhat.run('compile');
@@ -55,6 +57,10 @@ async function deploy() {
     console.log(`Initialising LandWorks NFT...`);
     const erc721FacetInstance = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
     await erc721FacetInstance.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
+
+    console.log(`Enabling ETH as Payment Type...`);
+    const feeFacetInstance = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
+    await feeFacetInstance.setTokenPayment(ADDRESS_ONE, FEE_PERCENTAGE, true);
 
     /**
      * Verify Contracts

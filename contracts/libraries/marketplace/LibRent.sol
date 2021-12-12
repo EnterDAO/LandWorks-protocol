@@ -13,6 +13,8 @@ import "../marketplace/LibMarketplace.sol";
 library LibRent {
     using SafeERC20 for IERC20;
 
+    address constant ETHEREUM_PAYMENT_TOKEN = address(1);
+
     event Rent(
         uint256 indexed _assetId,
         uint256 _rentId,
@@ -59,7 +61,7 @@ library LibRent {
         );
 
         uint256 rentPayment = _period * asset.pricePerSecond;
-        if (asset.paymentToken == address(0)) {
+        if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
             require(msg.value == rentPayment, "invalid msg.value");
         } else {
             LibTransfer.safeTransferFrom(

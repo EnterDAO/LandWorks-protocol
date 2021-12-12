@@ -21,7 +21,7 @@ interface IFeeFacet {
     function claimMultipleRentFees(uint256[] calldata _assetIds) external;
 
     /// @notice Claims protocol fees of a given payment token to contract owner
-    /// Provide 0x0 for ETH
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _token The target token
     function claimProtocolFee(address _token) external;
 

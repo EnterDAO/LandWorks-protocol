@@ -31,6 +31,7 @@ describe('ERC721Facet', function () {
     const ERROR_REVERT_WITH_MESSAGE = 1;
     const ERROR_REVERT_WITHOUT_MESSAGE = 2;
     const ERROR_PANIC = 3;
+    const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
 
     before(async () => {
         const signers = await ethers.getSigners();
@@ -64,6 +65,8 @@ describe('ERC721Facet', function () {
         feeFacet = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
         erc721Facet = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
         decentralandFacet = (await Diamond.asFacet(diamond, 'DecentralandFacet')) as DecentralandFacet;
+        // Enable ETH payments
+        await feeFacet.setTokenPayment(ADDRESS_ONE, 0, true);
 
         // Init ERC721
         await erc721Facet.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
@@ -82,7 +85,7 @@ describe('ERC721Facet', function () {
             minPeriod,
             maxPeriod,
             maxFutureTime,
-            ethers.constants.AddressZero,
+            ADDRESS_ONE,
             pricePerSecond);
     });
 

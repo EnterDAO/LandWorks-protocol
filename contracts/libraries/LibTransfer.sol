@@ -12,9 +12,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 library LibTransfer {
     using SafeERC20 for IERC20;
 
+    address constant ETHEREUM_PAYMENT_TOKEN = address(1);
+
     /// @notice Transfers tokens from contract to a recipient
     /// @dev If amount is 0, transfer is not done
-    /// If token is 0x0, an ETH transfer is done
+    /// If token is 0x0000000000000000000000000000000000000001, an ETH transfer is done
     /// @param _token The target token
     /// @param _recipient The recipient of the transfer
     /// @param _amount The amount of the transfer
@@ -24,7 +26,7 @@ library LibTransfer {
         uint256 _amount
     ) internal {
         if (_amount != 0) {
-            if (_token == address(0)) {
+            if (_token == ETHEREUM_PAYMENT_TOKEN) {
                 payable(_recipient).transfer(_amount);
             } else {
                 IERC20(_token).safeTransfer(_recipient, _amount);
