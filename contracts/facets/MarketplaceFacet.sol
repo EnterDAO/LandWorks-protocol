@@ -36,7 +36,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond
-    ) external {
+    ) external returns (uint256){
         require(
             _metaverseRegistry != address(0),
             "_metaverseRegistry must not be 0x0"
@@ -90,6 +90,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _paymentToken,
             _pricePerSecond
         );
+        return asset;
     }
 
     /// @notice Updates the lending conditions for a given asset.
@@ -209,8 +210,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
-    function rent(uint256 _assetId, uint256 _period) external payable {
-        LibRent.rent(_assetId, _period);
+    function rent(uint256 _assetId, uint256 _period) external payable returns (uint256, bool) {
+        (uint256 rentId, bool rentStartsNow) = LibRent.rent(_assetId, _period);
+        return (rentId, rentStartsNow);
     }
 
     /// @notice Sets name for a given Metaverse.

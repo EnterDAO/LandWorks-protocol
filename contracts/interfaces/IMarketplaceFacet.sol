@@ -65,7 +65,7 @@ interface IMarketplaceFacet {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond
-    ) external;
+    ) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.
     /// Pays out the unclaimed rent fees to the caller.
@@ -107,7 +107,7 @@ interface IMarketplaceFacet {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
-    function rent(uint256 _assetId, uint256 _period) external payable;
+    function rent(uint256 _assetId, uint256 _period) external payable returns (uint256, bool);
 
     /// @notice Sets name for a given Metaverse.
     /// @param _metaverseId The target metaverse
