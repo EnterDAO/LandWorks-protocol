@@ -2,6 +2,11 @@ import hardhat from 'hardhat';
 import { ethers } from 'hardhat';
 import { Deployer } from "../utils/deployer";
 import { Diamond } from "../utils/diamond";
+import { Erc721Facet } from "../typechain";
+
+const ERC721_NAME = "LandWorks";
+const ERC721_SYMBOL = "LW";
+const ERC721_BASE_URI = "https://api.landworks.xyz/nfts/"
 
 async function deploy() {
     await hardhat.run('compile');
@@ -46,6 +51,10 @@ async function deploy() {
         deployerAddress,
     );
     console.log(`LandWorks (Diamond) deployed at: ${diamond.address}`);
+
+    console.log(`Initialising LandWorks NFT...`);
+    const erc721FacetInstance = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
+    await erc721FacetInstance.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
 
     /**
      * Verify Contracts
