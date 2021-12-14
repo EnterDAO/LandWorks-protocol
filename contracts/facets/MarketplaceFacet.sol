@@ -54,18 +54,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         );
         require(LibFee.supportsTokenPayment(_paymentToken), "payment type not supported");
 
-        LibTransfer.erc721SafeTransferFrom(
-            _metaverseRegistry,
-            msg.sender,
-            address(this),
-            _metaverseAssetId
-        );
+        uint256 asset = LibERC721.safeMint(msg.sender);
 
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
-
-        uint256 asset = LibERC721.safeMint(msg.sender);
-
         ms.assets[asset] = LibMarketplace.Asset({
             metaverseId: _metaverseId,
             metaverseRegistry: _metaverseRegistry,
@@ -78,6 +70,13 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             status: LibMarketplace.AssetStatus.Listed,
             totalRents: 0
         });
+
+        LibTransfer.erc721SafeTransferFrom(
+            _metaverseRegistry,
+            msg.sender,
+            address(this),
+            _metaverseAssetId
+        );
 
         emit List(
             asset,
