@@ -63,13 +63,6 @@ library LibRent {
         uint256 rentPayment = _period * asset.pricePerSecond;
         if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
             require(msg.value == rentPayment, "invalid msg.value");
-        } else {
-            LibTransfer.safeTransferFrom(
-                asset.paymentToken,
-                msg.sender,
-                address(this),
-                rentPayment
-            );
         }
 
         LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
@@ -79,6 +72,15 @@ library LibRent {
             rentStart,
             rentEnd
         );
+
+        if (asset.paymentToken != ETHEREUM_PAYMENT_TOKEN) {
+            LibTransfer.safeTransferFrom(
+                asset.paymentToken,
+                msg.sender,
+                address(this),
+                rentPayment
+            );
+        }
 
         emit Rent(
             _assetId,
