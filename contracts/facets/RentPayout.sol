@@ -19,9 +19,9 @@ contract RentPayout is IRentPayout {
     /// IMPORTANT! Every method calling this function must protect itself from reentrancy
     function payoutRent(uint256 tokenId) internal {
         address paymentToken = LibMarketplace
-        .marketplaceStorage()
-        .assets[tokenId]
-        .paymentToken;
+            .marketplaceStorage()
+            .assets[tokenId]
+            .paymentToken;
         uint256 amount = LibFee.clearAccumulatedRent(tokenId, paymentToken);
         if (amount == 0) {
             return;

@@ -3,15 +3,8 @@ import {expect} from 'chai';
 import {Contract} from 'ethers';
 import {Diamond} from '../utils/diamond';
 import {
-    DecentralandFacet,
-    DiamondCutFacet,
-    DiamondLoupeFacet,
-    Erc721Facet,
     EstateRegistry,
-    FeeFacet,
     LandRegistry,
-    MarketplaceFacet,
-    OwnershipFacet,
     Test1Facet,
     Test2Facet
 } from '../typechain';
@@ -753,6 +746,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
+                        .to.not.emit(landWorks, 'ClaimRentFee')
                 });
 
                 it('should successfully update conditions when caller is approved', async () => {
@@ -777,6 +771,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
+                        .to.not.emit(landWorks, 'ClaimRentFee')
 
                     // then:
                     expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
@@ -855,6 +850,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2)
+                        .to.not.emit(landWorks, 'ClaimRentFee')
 
                     // then:
                     expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
@@ -1212,12 +1208,11 @@ describe('LandWorks', function () {
                             .withArgs(assetId, owner.address)
                             .to.emit(landWorks, 'Transfer')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(landWorks, 'ClaimRentFee')
-                            .withArgs(assetId, ADDRESS_ONE, owner.address, 0)
                             .to.emit(mockERC721Registry, 'Transfer')
                             .withArgs(landWorks.address, owner.address, metaverseTokenId)
                             .to.emit(landWorks, 'Withdraw')
-                            .withArgs(assetId, owner.address);
+                            .withArgs(assetId, owner.address)
+                            .to.not.emit(landWorks, 'ClaimRentFee');
                     });
 
                     it('should not claim, transfer, burn and clear storage when an active rent exists', async () => {

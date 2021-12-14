@@ -1186,4 +1186,108 @@ describe('ERC721Facet', function () {
                 .to.be.revertedWith(expectedRevertMessage);
         });
     });
+
+    describe('payouts', async () => {
+
+        before(async () => {
+            await erc721Facet.approve(approved.address, tokenID);
+            await erc721Facet.setApprovalForAll(operator.address, true);
+            await marketplaceFacet.connect(other).rent(tokenID, 1, { value: pricePerSecond });
+        });
+
+        describe('transferFrom', async () => {
+            it('should payout rent on transferFrom when called from owner', async () => {
+                const beforeBalance = await owner.getBalance();
+
+                // when
+                const tx = await erc721Facet.transferFrom(owner.address, other.address, tokenID);
+                const receipt = await tx.wait();
+
+                // then:
+                await expect(tx)
+                    .to.emit(erc721Facet, 'ClaimRentFee')
+                    .withArgs(tokenID, ADDRESS_ONE, owner.address, pricePerSecond);
+
+                // and:
+                const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                const afterBalance = await owner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
+            });
+
+            it('should payout rent on transferFrom when called by approved', async () => {
+                const beforeBalance = await owner.getBalance();
+                // then:
+                await expect(erc721Facet.connect(approved).transferFrom(owner.address, other.address, tokenID))
+                    .to.emit(erc721Facet, 'ClaimRentFee')
+                    .withArgs(tokenID, ADDRESS_ONE, owner.address, pricePerSecond);
+
+                // and:
+                const afterBalance = await owner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+            })
+
+            it('should payout rent on transferFrom when called by operator', async () => {
+                const beforeBalance = await owner.getBalance();
+                // then:
+                await expect(erc721Facet.connect(operator).transferFrom(owner.address, other.address, tokenID))
+                    .to.emit(erc721Facet, 'ClaimRentFee')
+                    .withArgs(tokenID, ADDRESS_ONE, owner.address, pricePerSecond);
+
+                // and:
+                const afterBalance = await owner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+            })
+        });
+
+        describe('safeTransferFrom', async () => {
+
+            it('should payout rent on safeTransferFrom when called from owner', async () => {
+                const beforeBalance = await owner.getBalance();
+
+                // when
+                const tx = await erc721Facet['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
+                const receipt = await tx.wait();
+
+                // then:
+                await expect(tx)
+                    .to.emit(erc721Facet, 'ClaimRentFee')
+                    .withArgs(tokenID, ADDRESS_ONE, owner.address, pricePerSecond);
+
+                // and:
+                const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                const afterBalance = await owner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
+            });
+
+            it('should payout rent on safeTransferFrom when called by approved', async () => {
+                const beforeBalance = await owner.getBalance();
+                // when
+                const tx = await erc721Facet.connect(approved)
+                    ['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
+
+                // then
+                await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
+
+                const afterBalance = await owner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+            })
+
+            it('should payout rent on safeTransferFrom when called by operator', async () => {
+                const beforeBalance = await owner.getBalance();
+                // when
+                const tx = await erc721Facet.connect(operator)
+                    ['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
+
+                // then
+                await expect(tx)
+                    .to.emit(erc721Facet, 'ConsumerChanged')
+                    .withArgs(owner.address, ethers.constants.AddressZero, tokenID)
+
+                const afterBalance = await owner.getBalance();
+                expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+            })
+        })
+    })
 });
