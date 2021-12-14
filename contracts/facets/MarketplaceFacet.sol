@@ -12,7 +12,7 @@ import "../libraries/LibFee.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibRent.sol";
-import "./RentPayout.sol";
+import "../shared/RentPayout.sol";
 
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @notice Provides asset of the given metaverse registry for rental.

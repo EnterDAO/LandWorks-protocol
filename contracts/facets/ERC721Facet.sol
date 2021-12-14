@@ -9,7 +9,7 @@ import "../interfaces/IERC721Facet.sol";
 import "../interfaces/IERC721Consumable.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibERC721.sol";
-import "./RentPayout.sol";
+import "../shared/RentPayout.sol";
 
 contract ERC721Facet is IERC721Facet, IERC721Consumable, RentPayout {
     using Strings for uint256;

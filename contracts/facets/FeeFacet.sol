@@ -8,7 +8,7 @@ import "../libraries/LibOwnership.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibRent.sol";
-import "./RentPayout.sol";
+import "../shared/RentPayout.sol";
 
 contract FeeFacet is IFeeFacet, RentPayout {
     /// @notice Claims protocol fees of a given payment token to contract owner
