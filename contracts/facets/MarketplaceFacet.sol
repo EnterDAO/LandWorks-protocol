@@ -12,8 +12,9 @@ import "../libraries/LibFee.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibRent.sol";
+import "./RentPayout.sol";
 
-contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
+contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
     /// and mints an asset, representing the locked asset.
@@ -112,7 +113,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond
-    ) external {
+    ) external payout(_assetId) {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
                 LibERC721.isConsumerOf(msg.sender, _assetId),
@@ -129,22 +130,11 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
 
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace.marketplaceStorage();
         LibMarketplace.Asset storage asset = ms.assets[_assetId];
-        address oldPaymentToken = asset.paymentToken;
-
         asset.paymentToken = _paymentToken;
         asset.minPeriod = _minPeriod;
         asset.maxPeriod = _maxPeriod;
         asset.maxFutureTime = _maxFutureTime;
         asset.pricePerSecond = _pricePerSecond;
-
-        uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
-
-        address receiver = LibERC721.consumerOf(_assetId);
-        if (receiver == address(0)) {
-            receiver = LibERC721.ownerOf(_assetId);
-        }
-
-        transferRentFee(_assetId, oldPaymentToken, receiver, rentFee);
 
         emit UpdateConditions(
             _assetId,
@@ -176,7 +166,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit Delist(_assetId, msg.sender);
 
         if (block.timestamp >= ms.rents[_assetId][asset.totalRents].end) {
-            withdraw(_assetId, asset);
+            withdraw(_assetId);
         }
     }
 
@@ -184,7 +174,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// Burns the asset and transfers the original metaverse asset represented by the asset to the owner.
     /// Pays out the current unclaimed rent fees to the caller.
     /// @param _assetId The target _assetId
-    function withdraw(uint256 _assetId) external {
+    function withdraw(uint256 _assetId) public payout(_assetId) {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
@@ -201,7 +191,18 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_assetId has an active rent"
         );
 
-        withdraw(_assetId, asset);
+        delete LibMarketplace.marketplaceStorage().assets[_assetId];
+        address owner = LibERC721.ownerOf(_assetId);
+        LibERC721.burn(_assetId);
+
+        LibTransfer.erc721SafeTransferFrom(
+            asset.metaverseRegistry,
+            address(this),
+            owner,
+            asset.metaverseAssetId
+        );
+
+        emit Withdraw(_assetId, owner);
     }
 
     /// @notice Rents an asset for a given period.
@@ -304,46 +305,5 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         returns (LibMarketplace.Rent memory)
     {
         return LibMarketplace.rentAt(_assetId, _rentId);
-    }
-
-    /// @notice Burns the asset and transfers the original metaverse asset,
-    /// represented by the asset to the owner of the asset.
-    /// Pays out the current unclaimed rent fees to the owner of the asset.
-    /// @param _assetId The target asset
-    /// @param _asset The preloaded asset information
-    function withdraw(uint256 _assetId, LibMarketplace.Asset memory _asset)
-        internal
-    {
-        delete LibMarketplace.marketplaceStorage().assets[_assetId];
-        address owner = LibERC721.ownerOf(_assetId);
-        LibERC721.burn(_assetId);
-
-        uint256 rentFee = LibFee.claimRentFee(_assetId, _asset.paymentToken);
-        transferRentFee(_assetId, _asset.paymentToken, owner, rentFee);
-
-        LibTransfer.erc721SafeTransferFrom(
-            _asset.metaverseRegistry,
-            address(this),
-            owner,
-            _asset.metaverseAssetId
-        );
-
-        emit Withdraw(_assetId, owner);
-    }
-
-    /// @notice Transfers rent fee to a receiver
-    /// @dev Emits and event for the given asset
-    /// @param _assetId The target asset
-    /// @param _token The target token
-    /// @param _receiver The target receiver
-    /// @param _amount The amount to be transferred
-    function transferRentFee(
-        uint256 _assetId,
-        address _token,
-        address _receiver,
-        uint256 _amount
-    ) internal {
-        LibTransfer.safeTransfer(_token, _receiver, _amount);
-        emit ClaimRentFee(_assetId, _token, _receiver, _amount);
     }
 }

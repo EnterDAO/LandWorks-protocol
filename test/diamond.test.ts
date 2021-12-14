@@ -753,8 +753,6 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(landWorks, 'ClaimRentFee')
-                        .withArgs(assetId, ADDRESS_ONE, owner.address, 0);
                 });
 
                 it('should successfully update conditions when caller is approved', async () => {
@@ -779,8 +777,6 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(landWorks, 'ClaimRentFee')
-                        .withArgs(assetId, ADDRESS_ONE, owner.address, 0);
 
                     // then:
                     expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
@@ -820,8 +816,6 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2)
-                        .to.emit(landWorks, 'ClaimRentFee')
-                        .withArgs(assetId, ADDRESS_ONE, owner.address, 0);
 
                     // then:
                     expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
@@ -861,8 +855,6 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2)
-                        .to.emit(landWorks, 'ClaimRentFee')
-                        .withArgs(assetId, ADDRESS_ONE, consumer.address, 0);
 
                     // then:
                     expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);

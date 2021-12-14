@@ -7,16 +7,21 @@ import "../libraries/LibTransfer.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
+import "../libraries/marketplace/LibRent.sol";
+import "./RentPayout.sol";
 
-contract FeeFacet is IFeeFacet {
+contract FeeFacet is IFeeFacet, RentPayout {
     /// @notice Claims protocol fees of a given payment token to contract owner
     /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _token The target token
     function claimProtocolFee(address _token) public {
-        address owner = LibOwnership.contractOwner();
-        uint256 protocolFee = LibFee.claimProtocolFee(_token);
-        LibTransfer.safeTransfer(_token, owner, protocolFee);
+        uint256 protocolFee = LibFee.clearAccumulatedProtocolFee(_token);
+        if (protocolFee == 0) {
+            return;
+        }
 
+        address owner = LibOwnership.contractOwner();
+        LibTransfer.safeTransfer(_token, owner, protocolFee);
         emit ClaimProtocolFee(_token, owner, protocolFee);
     }
 
@@ -37,19 +42,7 @@ contract FeeFacet is IFeeFacet {
             "caller must be consumer, approved or owner of asset"
         );
 
-        address receiver = LibERC721.consumerOf(_assetId);
-        if (receiver == address(0)) {
-            receiver = LibERC721.ownerOf(_assetId);
-        }
-
-        address paymentToken = LibMarketplace
-            .marketplaceStorage()
-            .assets[_assetId]
-            .paymentToken;
-        uint256 amount = LibFee.claimRentFee(_assetId, paymentToken);
-
-        LibTransfer.safeTransfer(paymentToken, receiver, amount);
-        emit ClaimRentFee(_assetId, paymentToken, receiver, amount);
+        payoutRent(_assetId);
     }
 
     /// @notice Claims unclaimed rent fees for a set of assets to assets' owners

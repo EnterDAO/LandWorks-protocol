@@ -9,8 +9,9 @@ import "../interfaces/IERC721Facet.sol";
 import "../interfaces/IERC721Consumable.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibERC721.sol";
+import "./RentPayout.sol";
 
-contract ERC721Facet is IERC721Facet, IERC721Consumable {
+contract ERC721Facet is IERC721Facet, IERC721Consumable, RentPayout {
     using Strings for uint256;
 
     /// @notice Initialises the ERC721's name, symbol and base URI.
@@ -154,7 +155,7 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable {
         address from,
         address to,
         uint256 tokenId
-    ) public {
+    ) public payout(tokenId) {
         //solhint-disable-next-line max-line-length
         require(
             LibERC721.isApprovedOrOwner(msg.sender, tokenId),
@@ -183,7 +184,7 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable {
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) public {
+    ) public payout(tokenId) {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"

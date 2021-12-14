@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-interface IRentClaimable {
+interface IRentPayout {
 
     /// @notice Emitted once Rent has been claimed for a given asset Id
     event ClaimRentFee(

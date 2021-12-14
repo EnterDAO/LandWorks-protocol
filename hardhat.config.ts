@@ -49,6 +49,6 @@ module.exports = {
         flat: true,
     },
     gasReporter: {
-        enabled: !!(process.env.REPORT_GAS),
+        enabled: true,
     },
 };

@@ -47,7 +47,7 @@ library LibFee {
         fs.protocolFees[_token] += protocolFee;
     }
 
-    function claimRentFee(uint256 _assetId, address _token)
+    function clearAccumulatedRent(uint256 _assetId, address _token)
         internal
         returns (uint256)
     {
@@ -59,7 +59,7 @@ library LibFee {
         return amount;
     }
 
-    function claimProtocolFee(address _token) internal returns (uint256) {
+    function clearAccumulatedProtocolFee(address _token) internal returns (uint256) {
         LibFee.FeeStorage storage fs = feeStorage();
 
         uint256 amount = fs.protocolFees[_token];
