@@ -36,7 +36,9 @@ export namespace Diamond {
         const signatures: string[] = Object.keys(contract.interface.functions);
 
         return signatures.reduce((acc: string[], val) => {
-            if (val !== 'init(bytes)') {
+            // c_0xe50f189a(bytes32) is added by coverage and it acts erroneously resulting in duplicated function
+            // selectors
+            if (val !== 'init(bytes)' && val !== 'c_0xe50f189a(bytes32)') {
                 acc.push(contract.interface.getSighash(val));
             }
             return acc;
