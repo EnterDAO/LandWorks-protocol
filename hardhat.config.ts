@@ -17,7 +17,7 @@ module.exports = {
     solidity: {
         compilers: [
             {
-                version: "0.8.9"
+                version: "0.8.10"
             },
             {
                 version: "0.4.24" // LAND Mock
@@ -49,6 +49,6 @@ module.exports = {
         flat: true,
     },
     gasReporter: {
-        enabled: !!(process.env.REPORT_GAS),
+        enabled: true,
     },
 };

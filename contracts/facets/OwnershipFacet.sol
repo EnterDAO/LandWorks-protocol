@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.10;
 
 import {LibOwnership} from "../libraries/LibOwnership.sol";
 import {IERC173} from "../interfaces/IERC173.sol";

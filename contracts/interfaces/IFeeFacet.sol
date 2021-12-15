@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.10;
 
 interface IFeeFacet {
-    event ClaimProtocolFee(address _token, address _recipient, uint256 _amount);
-    event ClaimRentFee(
-        uint256 _assetId,
-        address _token,
-        address indexed _recipient,
-        uint256 _amount
-    );
-    event SetFee(address _token, uint256 _fee);
-    event SetTokenPayment(address _token, bool _status);
+
+    event ClaimProtocolFee(address indexed _token, address indexed _recipient, uint256 _amount);
+    event SetFee(address indexed _token, uint256 _fee);
+    event SetTokenPayment(address indexed _token, bool _status);
 
     /// @notice Claims unclaimed rent fees for a given asset to asset owner
     /// @param _assetId The target asset
@@ -21,7 +16,7 @@ interface IFeeFacet {
     function claimMultipleRentFees(uint256[] calldata _assetIds) external;
 
     /// @notice Claims protocol fees of a given payment token to contract owner
-    /// Provide 0x0 for ETH
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _token The target token
     function claimProtocolFee(address _token) external;
 

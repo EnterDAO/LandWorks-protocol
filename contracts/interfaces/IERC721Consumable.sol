@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.10;
 
 /// @title ERC-721 Consumer Role extension
 ///  Note: the ERC-165 identifier for this interface is 0x953c8dfa

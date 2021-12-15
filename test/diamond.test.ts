@@ -1,26 +1,36 @@
-import { ethers } from 'hardhat';
-import { expect } from 'chai';
-import { Contract } from 'ethers';
-import { Diamond } from '../utils/diamond';
-import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, EstateRegistry, FeeFacet, LandRegistry, MarketplaceFacet, OwnershipFacet, Test1Facet, Test2Facet } from '../typechain';
-import { Deployer } from "../utils/deployer";
+import {ethers} from 'hardhat';
+import {expect} from 'chai';
+import {Contract} from 'ethers';
+import {Diamond} from '../utils/diamond';
+import {
+    EstateRegistry,
+    LandRegistry,
+    Test1Facet,
+    Test2Facet
+} from '../typechain';
+import {Deployer} from "../utils/deployer";
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import FacetCutAction = Diamond.FacetCutAction;
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('LandWorks', function () {
-    let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, fee: Contract, erc721: Contract, decentraland: Contract, diamond: Contract;
-    let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
-    let landRegistry: LandRegistry;
-    let estateRegistry: EstateRegistry;
-    let owner: SignerWithAddress, nonOwner: SignerWithAddress, artificialRegistry: SignerWithAddress, administrativeOperator: SignerWithAddress, consumer: SignerWithAddress;
     let snapshotId: any;
 
+    let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, fee: Contract, erc721: Contract,
+        decentraland: Contract, diamond: Contract;
+    let landRegistry: LandRegistry;
+    let estateRegistry: EstateRegistry;
+
+    let owner: SignerWithAddress, nonOwner: SignerWithAddress, artificialRegistry: SignerWithAddress,
+        administrativeOperator: SignerWithAddress, consumer: SignerWithAddress;
+
+    let landWorks: Contract;
     const ERC721_SYMBOL = 'LW';
     const ERC721_NAME = 'LandWorks';
     const ERC721_BASE_URI = 'ipfs://';
 
     const FEE_PERCENTAGE = 3_000; // 3%
     const FEE_PRECISION = 100_000;
+    const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
 
     const assetId = 0; // The first minted ERC721 Asset
 
@@ -38,25 +48,19 @@ describe('LandWorks', function () {
         marketplace = await Deployer.deployContract('MarketplaceFacet');
         fee = await Deployer.deployContract('FeeFacet');
         decentraland = await Deployer.deployContract('DecentralandFacet');
-
         erc721 = await Deployer.deployContract('ERC721Facet');
-
         diamond = await Deployer.deployDiamond(
             'LandWorks',
             [cut, loupe, ownership, marketplace, fee, erc721, decentraland],
             owner.address,
         );
 
-        loupeFacet = (await Diamond.asFacet(diamond, 'DiamondLoupeFacet')) as DiamondLoupeFacet;
-        cutFacet = (await Diamond.asFacet(diamond, 'DiamondCutFacet')) as DiamondCutFacet;
-        ownershipFacet = (await Diamond.asFacet(diamond, 'OwnershipFacet')) as OwnershipFacet;
-        marketplaceFacet = (await Diamond.asFacet(diamond, 'MarketplaceFacet')) as MarketplaceFacet;
-        feeFacet = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
-        erc721Facet = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
-        decentralandFacet = (await Diamond.asFacet(diamond, 'DecentralandFacet')) as DecentralandFacet;
+        landWorks = await ethers.getContractAt("ILandWorks", diamond.address);
 
         // Init ERC721
-        await erc721Facet.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
+        await landWorks.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
+        // Set ETH as payment type
+        await landWorks.setTokenPayment(ADDRESS_ONE, 0, true);
 
         // Deploy Decentraland Registry
         const decentralandProxy = await Deployer.deployContract('LANDProxyMock');
@@ -95,66 +99,66 @@ describe('LandWorks', function () {
         });
 
         it('should have 7 facets', async () => {
-            const actualFacets = await loupeFacet.facetAddresses();
+            const actualFacets = await landWorks.facetAddresses();
             expect(actualFacets.length).to.be.equal(7);
             expect(actualFacets).to.eql([cut.address, loupe.address, ownership.address, marketplace.address, fee.address, erc721.address, decentraland.address]);
         });
 
         it('has correct function selectors linked to facet', async function () {
             const actualCutSelectors: Array<string> = Diamond.getSelectorsFor(cut);
-            expect(await loupeFacet.facetFunctionSelectors(cut.address)).to.deep.equal(actualCutSelectors);
+            expect(await landWorks.facetFunctionSelectors(cut.address)).to.deep.equal(actualCutSelectors);
 
             const actualLoupeSelectors = Diamond.getSelectorsFor(loupe);
-            expect(await loupeFacet.facetFunctionSelectors(loupe.address)).to.deep.equal(actualLoupeSelectors);
+            expect(await landWorks.facetFunctionSelectors(loupe.address)).to.deep.equal(actualLoupeSelectors);
 
             const actualOwnerSelectors = Diamond.getSelectorsFor(ownership);
-            expect(await loupeFacet.facetFunctionSelectors(ownership.address)).to.deep.equal(actualOwnerSelectors);
+            expect(await landWorks.facetFunctionSelectors(ownership.address)).to.deep.equal(actualOwnerSelectors);
 
             const actualMarketplaceSelectors = Diamond.getSelectorsFor(marketplace);
-            expect(await loupeFacet.facetFunctionSelectors(marketplace.address)).to.deep.equal(actualMarketplaceSelectors);
+            expect(await landWorks.facetFunctionSelectors(marketplace.address)).to.deep.equal(actualMarketplaceSelectors);
 
             const actualFeeSelectors = Diamond.getSelectorsFor(fee);
-            expect(await loupeFacet.facetFunctionSelectors(fee.address)).to.deep.equal(actualFeeSelectors);
+            expect(await landWorks.facetFunctionSelectors(fee.address)).to.deep.equal(actualFeeSelectors);
 
             const actualErc721Selectors = Diamond.getSelectorsFor(erc721);
-            expect(await loupeFacet.facetFunctionSelectors(erc721.address)).to.deep.equal(actualErc721Selectors);
+            expect(await landWorks.facetFunctionSelectors(erc721.address)).to.deep.equal(actualErc721Selectors);
 
             const actualDecentralandFacetSelectors = Diamond.getSelectorsFor(decentraland);
-            expect(await loupeFacet.facetFunctionSelectors(decentraland.address)).to.deep.equal(actualDecentralandFacetSelectors);
+            expect(await landWorks.facetFunctionSelectors(decentraland.address)).to.deep.equal(actualDecentralandFacetSelectors);
         });
 
         it('associates selectors correctly to facets', async function () {
             for (const sel of Diamond.getSelectorsFor(loupe)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(loupe.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(loupe.address);
             }
 
             for (const sel of Diamond.getSelectorsFor(cut)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(cut.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(cut.address);
             }
 
             for (const sel of Diamond.getSelectorsFor(ownership)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(ownership.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(ownership.address);
             }
 
             for (const sel of Diamond.getSelectorsFor(marketplace)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(marketplace.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(marketplace.address);
             }
 
             for (const sel of Diamond.getSelectorsFor(fee)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(fee.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(fee.address);
             }
 
             for (const sel of Diamond.getSelectorsFor(erc721)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(erc721.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(erc721.address);
             }
 
             for (const sel of Diamond.getSelectorsFor(decentraland)) {
-                expect(await loupeFacet.facetAddress(sel)).to.be.equal(decentraland.address);
+                expect(await landWorks.facetAddress(sel)).to.be.equal(decentraland.address);
             }
         });
 
         it('returns correct response when facets() is called', async function () {
-            const facets = await loupeFacet.facets();
+            const facets = await landWorks.facets();
 
             expect(facets[0].facetAddress).to.equal(cut.address);
             expect(facets[0].functionSelectors).to.eql(Diamond.getSelectorsFor(cut));
@@ -195,7 +199,7 @@ describe('LandWorks', function () {
             }];
 
             await expect(
-                cutFacet.connect(nonOwner).diamondCut(_diamondCut, ethers.constants.AddressZero, "0x")
+                landWorks.connect(nonOwner).diamondCut(_diamondCut, ethers.constants.AddressZero, "0x")
             ).to.be.revertedWith('Must be contract owner');
         });
 
@@ -205,9 +209,9 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: Diamond.getSelectorsFor(test1Facet),
             }];
-            await expect(cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
+            await expect(landWorks.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
 
-            const facets = await loupeFacet.facets();
+            const facets = await landWorks.facets();
             expect(facets[7].facetAddress).to.eql(test1Facet.address);
             expect(facets[7].functionSelectors).to.eql(Diamond.getSelectorsFor(test1Facet));
 
@@ -221,7 +225,7 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: Diamond.getSelectorsFor(test1Facet),
             }];
-            await cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
+            await landWorks.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
 
             const replaceTest1WithTest2Facet = [{
                 facetAddress: test2Facet.address,
@@ -229,7 +233,7 @@ describe('LandWorks', function () {
                 functionSelectors: Diamond.getSelectorsFor(test2Facet),
             }];
 
-            await expect(cutFacet.connect(owner).diamondCut(replaceTest1WithTest2Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
+            await expect(landWorks.connect(owner).diamondCut(replaceTest1WithTest2Facet, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
 
             const test2 = (await Diamond.asFacet(diamond, 'Test2Facet')) as Test2Facet;
             expect(await test2.test1Func1()).to.be.equal(2);
@@ -241,7 +245,7 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: Diamond.getSelectorsFor(test1Facet),
             }];
-            await cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
+            await landWorks.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
 
             const removeTest1Func = [{
                 facetAddress: ethers.constants.AddressZero,
@@ -249,7 +253,7 @@ describe('LandWorks', function () {
                 functionSelectors: [test1Facet.interface.getSighash('test1Func1()')],
             }];
 
-            await expect(cutFacet.connect(owner).diamondCut(removeTest1Func, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
+            await expect(landWorks.connect(owner).diamondCut(removeTest1Func, ethers.constants.AddressZero, '0x')).to.not.be.reverted;
 
             const test1 = (await Diamond.asFacet(diamond, 'Test1Facet')) as Test1Facet;
             await expect(test1.test1Func1()).to.be.revertedWith('Diamond: Function does not exist');
@@ -257,48 +261,47 @@ describe('LandWorks', function () {
 
         it('should support all declared interfaces', async () => {
             const IERC165 = await ethers.getContractAt('IERC165', ethers.constants.AddressZero);
-            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IERC165))).to.be.true;
-
-            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(cutFacet))).to.be.true;
+            expect(await landWorks.supportsInterface(Diamond.getInterfaceId(IERC165))).to.be.true;
+            expect(await landWorks.supportsInterface(Diamond.getInterfaceId(cut))).to.be.true;
 
             const IDiamondLoupe = await ethers.getContractAt('IDiamondLoupe', ethers.constants.AddressZero);
-            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IDiamondLoupe))).to.be.true;
+            expect(await landWorks.supportsInterface(Diamond.getInterfaceId(IDiamondLoupe))).to.be.true;
 
-            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(ownership))).to.be.true;
+            expect(await landWorks.supportsInterface(Diamond.getInterfaceId(ownership))).to.be.true;
 
             // Calculating the interface id would require an ABI, consisting of all function selectors,
             // **excluding** the inherited ones.
             const IERC721InterfaceId = '0x80ac58cd';
-            expect(await loupeFacet.supportsInterface(IERC721InterfaceId)).to.be.true;
+            expect(await landWorks.supportsInterface(IERC721InterfaceId)).to.be.true;
 
             const IERC721Metadata = '0x5b5e139f';
-            expect(await loupeFacet.supportsInterface(IERC721Metadata)).to.be.true;
+            expect(await landWorks.supportsInterface(IERC721Metadata)).to.be.true;
 
             const IERC721Consumable = await ethers.getContractAt('IERC721Consumable', ethers.constants.AddressZero);
-            expect(await loupeFacet.supportsInterface(Diamond.getInterfaceId(IERC721Consumable))).to.be.true;
+            expect(await landWorks.supportsInterface(Diamond.getInterfaceId(IERC721Consumable))).to.be.true;
         });
     });
 
     describe('Ownership Facet', async () => {
         it('should return owner', async function () {
-            expect(await ownershipFacet.owner()).to.equal(owner.address);
+            expect(await landWorks.owner()).to.equal(owner.address);
         });
 
         it('should revert if transferOwnership not called by owner', async function () {
-            await expect(ownershipFacet.connect(nonOwner).transferOwnership(nonOwner.address))
+            await expect(landWorks.connect(nonOwner).transferOwnership(nonOwner.address))
                 .to.be.revertedWith('Must be contract owner');
         });
 
         it('should revert if transferOwnership called with same address', async function () {
-            await expect(ownershipFacet.connect(owner).transferOwnership(owner.address))
+            await expect(landWorks.connect(owner).transferOwnership(owner.address))
                 .to.be.revertedWith('Previous owner and new owner must be different');
         });
 
         it('should allow transferOwnership if called by owner', async function () {
-            await expect(ownershipFacet.connect(owner).transferOwnership(nonOwner.address))
+            await expect(landWorks.connect(owner).transferOwnership(nonOwner.address))
                 .to.not.be.reverted;
 
-            expect(await ownershipFacet.owner()).to.equal(nonOwner.address);
+            expect(await landWorks.owner()).to.equal(nonOwner.address);
         });
     });
 
@@ -309,32 +312,32 @@ describe('LandWorks', function () {
         describe('setMetaverseName', async () => {
             it('should set metaverse name', async () => {
                 // when:
-                await marketplaceFacet.setMetaverseName(metaverseId, metaverseName);
+                await landWorks.setMetaverseName(metaverseId, metaverseName);
 
                 // then:
-                expect(await marketplaceFacet.metaverseName(metaverseId)).to.equal(metaverseName);
+                expect(await landWorks.metaverseName(metaverseId)).to.equal(metaverseName);
             });
 
             it('should emit event with args', async () => {
-                await expect(marketplaceFacet.setMetaverseName(metaverseId, metaverseName))
-                    .to.emit(marketplaceFacet, 'SetMetaverseName')
+                await expect(landWorks.setMetaverseName(metaverseId, metaverseName))
+                    .to.emit(landWorks, 'SetMetaverseName')
                     .withArgs(metaverseId, metaverseName);
             });
 
             it('should revert when caller is not owner', async () => {
                 const expectedRevertMessage = 'Must be contract owner';
                 // when:
-                await expect(marketplaceFacet.connect(nonOwner).setMetaverseName(metaverseId, metaverseName))
+                await expect(landWorks.connect(nonOwner).setMetaverseName(metaverseId, metaverseName))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should properly set a list of metaverse names', async () => {
                 for (let i = 0; i < 5; i++) {
                     const name = `${i}`;
-                    await expect(marketplaceFacet.setMetaverseName(i, name))
-                        .to.emit(marketplaceFacet, 'SetMetaverseName')
+                    await expect(landWorks.setMetaverseName(i, name))
+                        .to.emit(landWorks, 'SetMetaverseName')
                         .withArgs(i, name);
-                    expect(await marketplaceFacet.metaverseName(i)).to.equal(name);
+                    expect(await landWorks.metaverseName(i)).to.equal(name);
                 }
             });
         });
@@ -342,57 +345,57 @@ describe('LandWorks', function () {
         describe('setRegistry', async () => {
             it('should add registry', async () => {
                 // when:
-                await marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, true);
+                await landWorks.setRegistry(metaverseId, artificialRegistry.address, true);
 
                 // then:
-                expect(await marketplaceFacet.supportsRegistry(metaverseId, artificialRegistry.address)).to.be.true;
-                expect(await marketplaceFacet.totalRegistries(metaverseId)).to.equal(1);
-                expect(await marketplaceFacet.registryAt(metaverseId, 0)).to.equal(artificialRegistry.address);
+                expect(await landWorks.supportsRegistry(metaverseId, artificialRegistry.address)).to.be.true;
+                expect(await landWorks.totalRegistries(metaverseId)).to.equal(1);
+                expect(await landWorks.registryAt(metaverseId, 0)).to.equal(artificialRegistry.address);
             });
 
             it('should emit event with args', async () => {
-                await expect(marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, true))
-                    .to.emit(marketplaceFacet, 'SetRegistry')
+                await expect(landWorks.setRegistry(metaverseId, artificialRegistry.address, true))
+                    .to.emit(landWorks, 'SetRegistry')
                     .withArgs(metaverseId, artificialRegistry.address, true);
             });
 
             it('should remove registry', async () => {
                 // given:
-                await marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, true);
+                await landWorks.setRegistry(metaverseId, artificialRegistry.address, true);
 
                 // when:
-                await marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, false);
+                await landWorks.setRegistry(metaverseId, artificialRegistry.address, false);
 
                 // then:
-                expect(await marketplaceFacet.supportsRegistry(metaverseId, artificialRegistry.address)).to.be.false;
-                expect(await marketplaceFacet.totalRegistries(metaverseId)).to.equal(0);
-                await expect(marketplaceFacet.registryAt(metaverseId, 0)).to.be.reverted;
+                expect(await landWorks.supportsRegistry(metaverseId, artificialRegistry.address)).to.be.false;
+                expect(await landWorks.totalRegistries(metaverseId)).to.equal(0);
+                await expect(landWorks.registryAt(metaverseId, 0)).to.be.reverted;
             });
 
             it('should revert when registry is 0x0', async () => {
                 const expectedRevertMessage = '_registy must not be 0x0';
                 // when:
-                await expect(marketplaceFacet.setRegistry(metaverseId, ethers.constants.AddressZero, true))
+                await expect(landWorks.setRegistry(metaverseId, ethers.constants.AddressZero, true))
                     .to.be.revertedWith(expectedRevertMessage);
                 // and:
-                await expect(marketplaceFacet.setRegistry(metaverseId, ethers.constants.AddressZero, false))
+                await expect(landWorks.setRegistry(metaverseId, ethers.constants.AddressZero, false))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when caller is not owner', async () => {
                 const expectedRevertMessage = 'Must be contract owner';
                 // when:
-                await expect(marketplaceFacet.connect(nonOwner).setRegistry(metaverseId, artificialRegistry.address, false))
+                await expect(landWorks.connect(nonOwner).setRegistry(metaverseId, artificialRegistry.address, false))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when registry is already added', async () => {
                 // given:
                 const expectedRevertMessage = '_registry already added';
-                await marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, true);
+                await landWorks.setRegistry(metaverseId, artificialRegistry.address, true);
 
                 // when:
-                await expect(marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, true))
+                await expect(landWorks.setRegistry(metaverseId, artificialRegistry.address, true))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
@@ -400,7 +403,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_registry not found';
 
                 // when:
-                await expect(marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, false))
+                await expect(landWorks.setRegistry(metaverseId, artificialRegistry.address, false))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
@@ -424,26 +427,26 @@ describe('LandWorks', function () {
                 mockERC20Registry = await Deployer.deployContract('ERC20Mock');
 
                 // and:
-                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                await landWorks.setRegistry(metaverseId, mockERC721Registry.address, true);
             });
 
             describe('list', async () => {
                 it('should list successfully', async () => {
                     // given:
-                    await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
 
                     // when:
-                    await marketplaceFacet.list(metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ethers.constants.AddressZero, pricePerSecond);
+                    await landWorks.list(metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
 
                     // then:
-                    expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(marketplaceFacet.address);
-                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(landWorks.address);
+                    expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                     // and:
-                    const asset = await marketplaceFacet.assetAt(assetId);
+                    const asset = await landWorks.assetAt(assetId);
                     expect(asset.metaverseId).to.equal(metaverseId);
                     expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                     expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
-                    expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                    expect(asset.paymentToken).to.equal(ADDRESS_ONE);
                     expect(asset.minPeriod).to.equal(minPeriod);
                     expect(asset.maxPeriod).to.equal(maxPeriod);
                     expect(asset.maxFutureTime).to.equal(maxFutureTime);
@@ -454,9 +457,9 @@ describe('LandWorks', function () {
 
                 it('should emit event with args', async () => {
                     // given:
-                    await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -464,24 +467,24 @@ describe('LandWorks', function () {
                             minPeriod,
                             maxPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
-                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .to.emit(landWorks, 'ConsumerChanged')
                         .withArgs(ethers.constants.AddressZero, ethers.constants.AddressZero, assetId)
-                        .to.emit(erc721Facet, 'Transfer')
+                        .to.emit(landWorks, 'Transfer')
                         .withArgs(ethers.constants.AddressZero, owner.address, assetId)
-                        .to.emit(marketplaceFacet, 'List')
-                        .withArgs(assetId, metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ethers.constants.AddressZero, pricePerSecond);
+                        .to.emit(landWorks, 'List')
+                        .withArgs(assetId, metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
                 });
 
                 it('should list successfully with a payment token', async () => {
                     // given:
-                    await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
                     // and:
-                    await feeFacet.setTokenPayment(mockERC20Registry.address, 0, true);
+                    await landWorks.setTokenPayment(mockERC20Registry.address, 0, true);
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -491,18 +494,18 @@ describe('LandWorks', function () {
                             maxFutureTime,
                             mockERC20Registry.address,
                             pricePerSecond))
-                        .to.emit(erc721Facet, 'ConsumerChanged')
+                        .to.emit(landWorks, 'ConsumerChanged')
                         .withArgs(ethers.constants.AddressZero, ethers.constants.AddressZero, assetId)
-                        .to.emit(erc721Facet, 'Transfer')
+                        .to.emit(landWorks, 'Transfer')
                         .withArgs(ethers.constants.AddressZero, owner.address, assetId)
-                        .to.emit(marketplaceFacet, 'List')
+                        .to.emit(landWorks, 'List')
                         .withArgs(0, metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, mockERC20Registry.address, pricePerSecond);
 
                     // then:
-                    expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(marketplaceFacet.address);
-                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(landWorks.address);
+                    expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                     // and:
-                    const asset = await marketplaceFacet.assetAt(assetId);
+                    const asset = await landWorks.assetAt(assetId);
                     expect(asset.metaverseId).to.equal(metaverseId);
                     expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                     expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
@@ -518,7 +521,7 @@ describe('LandWorks', function () {
                 it('should revert when metaverse registry is 0x0', async () => {
                     const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             ethers.constants.AddressZero,
@@ -534,7 +537,7 @@ describe('LandWorks', function () {
                 it('should revert when min period is 0', async () => {
                     const expectedRevertMessage = '_minPeriod must not be 0';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -542,7 +545,7 @@ describe('LandWorks', function () {
                             0,
                             maxPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
@@ -550,7 +553,7 @@ describe('LandWorks', function () {
                 it('should revert when max period is 0', async () => {
                     const expectedRevertMessage = '_maxPeriod must not be 0';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -558,7 +561,7 @@ describe('LandWorks', function () {
                             minPeriod,
                             0,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
@@ -566,7 +569,7 @@ describe('LandWorks', function () {
                 it('should revert when min period exceeds max period', async () => {
                     const expectedRevertMessage = '_minPeriod more than _maxPeriod';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -574,7 +577,7 @@ describe('LandWorks', function () {
                             maxPeriod,
                             minPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
@@ -582,7 +585,7 @@ describe('LandWorks', function () {
                 it('should revert when max period exceeds max future time', async () => {
                     const expectedRevertMessage = '_maxPeriod more than _maxFutureTime';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -590,7 +593,7 @@ describe('LandWorks', function () {
                             minPeriod,
                             maxFutureTime,
                             maxPeriod,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
@@ -598,7 +601,7 @@ describe('LandWorks', function () {
                 it('should revert when registry is not supported', async () => {
                     const expectedRevertMessage = '_registry not supported';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             artificialRegistry.address,
@@ -606,15 +609,15 @@ describe('LandWorks', function () {
                             minPeriod,
                             maxPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
                 it('should revert when payment token is not supported', async () => {
-                    const expectedRevertMessage = 'token not supported';
+                    const expectedRevertMessage = 'payment type not supported';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -631,7 +634,7 @@ describe('LandWorks', function () {
                     const invalidTokenId = 1234;
                     const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -639,17 +642,17 @@ describe('LandWorks', function () {
                             minPeriod,
                             maxPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
                 it('should revert when trying to list to a non-contract metaverse registry', async () => {
                     // given:
-                    await marketplaceFacet.setRegistry(metaverseId, artificialRegistry.address, true);
+                    await landWorks.setRegistry(metaverseId, artificialRegistry.address, true);
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             artificialRegistry.address,
@@ -657,7 +660,7 @@ describe('LandWorks', function () {
                             minPeriod,
                             maxPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.reverted;
                 });
@@ -666,7 +669,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = 'ERC721: transfer caller is not owner nor approved';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .list(
                             metaverseId,
                             mockERC721Registry.address,
@@ -674,7 +677,7 @@ describe('LandWorks', function () {
                             minPeriod,
                             maxPeriod,
                             maxFutureTime,
-                            ethers.constants.AddressZero,
+                            ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
@@ -683,24 +686,24 @@ describe('LandWorks', function () {
             describe('updateConditions', async () => {
                 beforeEach(async () => {
                     // given:
-                    await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
                     // and:
-                    await marketplaceFacet.list(
+                    await landWorks.list(
                         metaverseId,
                         mockERC721Registry.address,
                         metaverseTokenId,
                         minPeriod,
                         maxPeriod,
                         maxFutureTime,
-                        ethers.constants.AddressZero,
+                        ADDRESS_ONE,
                         pricePerSecond);
                     // and:
-                    await feeFacet.setTokenPayment(mockERC20Registry.address, 0, true);
+                    await landWorks.setTokenPayment(mockERC20Registry.address, 0, true);
                 });
 
                 it('should successfully update conditions', async () => {
                     // when:
-                    await marketplaceFacet
+                    await landWorks
                         .updateConditions(
                             assetId,
                             minPeriod + 1,
@@ -710,9 +713,9 @@ describe('LandWorks', function () {
                             pricePerSecond + 1);
 
                     // then:
-                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                     // and:
-                    const asset = await marketplaceFacet.assetAt(assetId);
+                    const asset = await landWorks.assetAt(assetId);
                     expect(asset.metaverseId).to.equal(metaverseId);
                     expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                     expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
@@ -727,7 +730,7 @@ describe('LandWorks', function () {
 
                 it('should emit events with args', async () => {
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             assetId,
                             minPeriod + 1,
@@ -735,7 +738,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1))
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 1,
@@ -743,16 +746,15 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0);
+                        .to.not.emit(landWorks, 'ClaimRentFee')
                 });
 
                 it('should successfully update conditions when caller is approved', async () => {
                     // given:
-                    await erc721Facet.approve(nonOwner.address, assetId);
+                    await landWorks.approve(nonOwner.address, assetId);
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .connect(nonOwner)
                         .updateConditions(
                             assetId,
@@ -761,7 +763,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1))
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 1,
@@ -769,13 +771,12 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0);
+                        .to.not.emit(landWorks, 'ClaimRentFee')
 
                     // then:
-                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                     // and:
-                    const asset = await marketplaceFacet.assetAt(assetId);
+                    const asset = await landWorks.assetAt(assetId);
                     expect(asset.metaverseId).to.equal(metaverseId);
                     expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                     expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
@@ -790,10 +791,10 @@ describe('LandWorks', function () {
 
                 it('should successfully update conditions when caller is operator', async () => {
                     // given:
-                    await erc721Facet.setApprovalForAll(nonOwner.address, true);
+                    await landWorks.setApprovalForAll(nonOwner.address, true);
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .connect(nonOwner)
                         .updateConditions(
                             assetId,
@@ -802,7 +803,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2))
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 2,
@@ -810,13 +811,11 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0);
 
                     // then:
-                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                     // and:
-                    const asset = await marketplaceFacet.assetAt(assetId);
+                    const asset = await landWorks.assetAt(assetId);
                     expect(asset.metaverseId).to.equal(metaverseId);
                     expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                     expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
@@ -831,10 +830,10 @@ describe('LandWorks', function () {
 
                 it('should successfully update conditions when caller is consumer', async () => {
                     // given:
-                    await erc721Facet.changeConsumer(consumer.address, assetId);
+                    await landWorks.changeConsumer(consumer.address, assetId);
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .connect(consumer)
                         .updateConditions(
                             assetId,
@@ -843,7 +842,7 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2))
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 2,
@@ -851,13 +850,12 @@ describe('LandWorks', function () {
                             maxFutureTime + 2,
                             mockERC20Registry.address,
                             pricePerSecond + 2)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, consumer.address, 0);
+                        .to.not.emit(landWorks, 'ClaimRentFee')
 
                     // then:
-                    expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                    expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                     // and:
-                    const asset = await marketplaceFacet.assetAt(assetId);
+                    const asset = await landWorks.assetAt(assetId);
                     expect(asset.metaverseId).to.equal(metaverseId);
                     expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                     expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
@@ -876,7 +874,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             invalidNftId,
                             minPeriod,
@@ -892,7 +890,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = 'caller must be consumer, approved or owner of _assetId';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .connect(nonOwner)
                         .updateConditions(
                             assetId,
@@ -909,7 +907,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_minPeriod must not be 0';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             assetId,
                             0,
@@ -925,7 +923,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_maxPeriod must not be 0';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             assetId,
                             minPeriod,
@@ -941,7 +939,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_minPeriod more than _maxPeriod';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             assetId,
                             maxPeriod,
@@ -957,7 +955,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_maxPeriod more than _maxFutureTime';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             assetId,
                             minPeriod,
@@ -970,10 +968,10 @@ describe('LandWorks', function () {
 
                 it('should revert when payment token is not supported', async () => {
                     // given:
-                    const expectedRevertMessage = 'token not supported';
+                    const expectedRevertMessage = 'payment type not supported';
 
                     // when:
-                    await expect(marketplaceFacet
+                    await expect(landWorks
                         .updateConditions(
                             assetId,
                             minPeriod,
@@ -986,11 +984,11 @@ describe('LandWorks', function () {
 
                 it('should also claim rent fee on update', async () => {
                     // given:
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    await landWorks.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
                     const beforeBalance = await owner.getBalance();
 
                     // when:
-                    const tx = await marketplaceFacet
+                    const tx = await landWorks
                         .updateConditions(
                             assetId,
                             minPeriod + 1,
@@ -1002,7 +1000,7 @@ describe('LandWorks', function () {
 
                     // then:
                     await expect(tx)
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 1,
@@ -1010,8 +1008,8 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond);
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, pricePerSecond);
 
                     // and:
                     const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
@@ -1021,12 +1019,12 @@ describe('LandWorks', function () {
 
                 it('should also claim rent fee to owner on update when caller is not owner, but approved for the asset', async () => {
                     // given:
-                    await erc721Facet.approve(nonOwner.address, assetId);
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    await landWorks.approve(nonOwner.address, assetId);
+                    await landWorks.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
                     const beforeBalance = await owner.getBalance();
 
                     // when:
-                    const tx = await marketplaceFacet
+                    const tx = await landWorks
                         .connect(nonOwner)
                         .updateConditions(
                             assetId,
@@ -1038,7 +1036,7 @@ describe('LandWorks', function () {
 
                     // then:
                     await expect(tx)
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 1,
@@ -1046,8 +1044,8 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond);
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, pricePerSecond);
 
                     // and:
                     const afterBalance = await owner.getBalance();
@@ -1056,12 +1054,12 @@ describe('LandWorks', function () {
 
                 it('should also claim rent fee to owner on update when caller is not owner, but operator for the asset', async () => {
                     // given:
-                    await erc721Facet.setApprovalForAll(nonOwner.address, true);
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    await landWorks.setApprovalForAll(nonOwner.address, true);
+                    await landWorks.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
                     const beforeBalance = await owner.getBalance();
 
                     // when:
-                    const tx = await marketplaceFacet
+                    const tx = await landWorks
                         .connect(nonOwner)
                         .updateConditions(
                             assetId,
@@ -1073,7 +1071,7 @@ describe('LandWorks', function () {
 
                     // then:
                     await expect(tx)
-                        .to.emit(marketplaceFacet, 'UpdateConditions')
+                        .to.emit(landWorks, 'UpdateConditions')
                         .withArgs(
                             assetId,
                             minPeriod + 1,
@@ -1081,42 +1079,113 @@ describe('LandWorks', function () {
                             maxFutureTime + 1,
                             mockERC20Registry.address,
                             pricePerSecond + 1)
-                        .to.emit(marketplaceFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond);
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, pricePerSecond);
 
                     // and:
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+                });
+
+                it('should also claim rent fee to consumer on update when there is consumer set', async () => {
+                    // given:
+                    await landWorks.changeConsumer(consumer.address, assetId);
+                    await landWorks.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    const beforeBalance = await consumer.getBalance();
+
+                    // when:
+                    const tx = await landWorks
+                        .updateConditions(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1);
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'UpdateConditions')
+                        .withArgs(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1)
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, consumer.address, pricePerSecond);
+
+                    // and:
+                    const afterBalance = await consumer.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
+                });
+
+                it('should allow consumer to update conditions', async () => {
+                    // given:
+                    await landWorks.changeConsumer(consumer.address, assetId);
+                    await landWorks.connect(nonOwner).rent(assetId, 1, { value: pricePerSecond });
+                    const beforeBalance = await consumer.getBalance();
+
+                    // when:
+                    const tx = await landWorks
+                        .connect(consumer)
+                        .updateConditions(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1);
+                    const receipt = await tx.wait();
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'UpdateConditions')
+                        .withArgs(
+                            assetId,
+                            minPeriod + 1,
+                            maxPeriod + 1,
+                            maxFutureTime + 1,
+                            mockERC20Registry.address,
+                            pricePerSecond + 1)
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, consumer.address, pricePerSecond);
+
+                    // and:
+                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                    const afterBalance = await consumer.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(pricePerSecond));
                 });
             });
 
             describe('', async () => {
                 beforeEach(async () => {
                     // given:
-                    await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
                     // and:
-                    await marketplaceFacet.list(
+                    await landWorks.list(
                         metaverseId,
                         mockERC721Registry.address,
                         metaverseTokenId,
                         minPeriod,
                         maxPeriod,
                         maxFutureTime,
-                        ethers.constants.AddressZero,
+                        ADDRESS_ONE,
                         pricePerSecond);
                 });
 
                 describe('delist', async () => {
                     it('should successfully delist', async () => {
                         // when:
-                        await marketplaceFacet.delist(assetId);
+                        await landWorks.delist(assetId);
 
                         // then:
                         expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(owner.address);
-                        await expect(erc721Facet.ownerOf(assetId))
+                        await expect(landWorks.ownerOf(assetId))
                             .to.be.revertedWith('ERC721: owner query for nonexistent token');
                         // and:
-                        const asset = await marketplaceFacet.assetAt(assetId);
+                        const asset = await landWorks.assetAt(assetId);
                         expect(asset.metaverseId).to.equal(0);
                         expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
                         expect(asset.metaverseAssetId).to.equal(0);
@@ -1131,45 +1200,44 @@ describe('LandWorks', function () {
 
                     it('should emit events with args', async () => {
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .delist(assetId))
-                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .to.emit(landWorks, 'ConsumerChanged')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(marketplaceFacet, 'Delist')
+                            .to.emit(landWorks, 'Delist')
                             .withArgs(assetId, owner.address)
-                            .to.emit(erc721Facet, 'Transfer')
+                            .to.emit(landWorks, 'Transfer')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(marketplaceFacet, 'ClaimRentFee')
-                            .withArgs(assetId, ethers.constants.AddressZero, owner.address, 0)
                             .to.emit(mockERC721Registry, 'Transfer')
-                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
-                            .to.emit(marketplaceFacet, 'Withdraw')
-                            .withArgs(assetId, owner.address);
+                            .withArgs(landWorks.address, owner.address, metaverseTokenId)
+                            .to.emit(landWorks, 'Withdraw')
+                            .withArgs(assetId, owner.address)
+                            .to.not.emit(landWorks, 'ClaimRentFee');
                     });
 
                     it('should not claim, transfer, burn and clear storage when an active rent exists', async () => {
                         // given:
-                        await marketplaceFacet.connect(nonOwner).rent(assetId, maxPeriod, { value: pricePerSecond * maxPeriod });
+                        await landWorks.connect(nonOwner).rent(assetId, maxPeriod, { value: pricePerSecond * maxPeriod });
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .delist(assetId))
-                            .to.emit(marketplaceFacet, 'Delist')
+                            .to.emit(landWorks, 'Delist')
                             .withArgs(assetId, owner.address)
-                            .to.not.emit(erc721Facet, 'ConsumerChanged')
-                            .to.not.emit(erc721Facet, 'Transfer')
-                            .to.not.emit(marketplaceFacet, 'ClaimRentFee')
-                            .to.not.emit(marketplaceFacet, 'Withdraw');
+                            .to.not.emit(landWorks, 'ConsumerChanged')
+                            .to.not.emit(landWorks, 'Transfer')
+                            .to.not.emit(landWorks, 'ClaimRentFee')
+                            .to.not.emit(landWorks, 'Withdraw');
 
                         // then:
-                        expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(marketplaceFacet.address);
-                        expect(await erc721Facet.ownerOf(assetId)).to.equal(owner.address);
+                        expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(landWorks.address);
+                        expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
                         // and:
-                        const asset = await marketplaceFacet.assetAt(assetId);
+                        const asset = await landWorks.assetAt(assetId);
                         expect(asset.metaverseId).to.equal(metaverseId);
                         expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
                         expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
-                        expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                        expect(asset.paymentToken).to.equal(ADDRESS_ONE);
                         expect(asset.minPeriod).to.equal(minPeriod);
                         expect(asset.maxPeriod).to.equal(maxPeriod);
                         expect(asset.maxFutureTime).to.equal(maxFutureTime);
@@ -1180,26 +1248,26 @@ describe('LandWorks', function () {
 
                     it('should claim successfully', async () => {
                         // given:
-                        await marketplaceFacet.connect(nonOwner).rent(assetId, minPeriod, { value: pricePerSecond * minPeriod });
+                        await landWorks.connect(nonOwner).rent(assetId, minPeriod, { value: pricePerSecond * minPeriod });
                         const beforeBalance = await owner.getBalance();
 
                         // when:
-                        const tx = await marketplaceFacet.delist(assetId);
+                        const tx = await landWorks.delist(assetId);
                         const receipt = await tx.wait();
 
                         // then:
                         await expect(tx)
-                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .to.emit(landWorks, 'ConsumerChanged')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(marketplaceFacet, 'Delist')
+                            .to.emit(landWorks, 'Delist')
                             .withArgs(assetId, owner.address)
-                            .to.emit(erc721Facet, 'Transfer')
+                            .to.emit(landWorks, 'Transfer')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(marketplaceFacet, 'ClaimRentFee')
-                            .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond * minPeriod)
+                            .to.emit(landWorks, 'ClaimRentFee')
+                            .withArgs(assetId, ADDRESS_ONE, owner.address, pricePerSecond * minPeriod)
                             .to.emit(mockERC721Registry, 'Transfer')
-                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
-                            .to.emit(marketplaceFacet, 'Withdraw')
+                            .withArgs(landWorks.address, owner.address, metaverseTokenId)
+                            .to.emit(landWorks, 'Withdraw')
                             .withArgs(assetId, owner.address);
 
                         // and:
@@ -1213,7 +1281,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = 'caller must be approved or owner of _assetId';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .connect(nonOwner)
                             .delist(assetId))
                             .to.be.revertedWith(expectedRevertMessage);
@@ -1225,22 +1293,22 @@ describe('LandWorks', function () {
 
                     beforeEach(async () => {
                         // given:
-                        await marketplaceFacet.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
+                        await landWorks.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
                     });
 
                     it('should withdraw successfully', async () => {
                         // given:
-                        await marketplaceFacet.delist(assetId);
+                        await landWorks.delist(assetId);
 
                         // when:
-                        await marketplaceFacet.withdraw(assetId);
+                        await landWorks.withdraw(assetId);
 
                         // then:
                         expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(owner.address);
-                        await expect(erc721Facet.ownerOf(assetId))
+                        await expect(landWorks.ownerOf(assetId))
                             .to.be.revertedWith('ERC721: owner query for nonexistent token');
                         // and:
-                        const asset = await marketplaceFacet.assetAt(assetId);
+                        const asset = await landWorks.assetAt(assetId);
                         expect(asset.metaverseId).to.equal(0);
                         expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
                         expect(asset.metaverseAssetId).to.equal(0);
@@ -1255,20 +1323,20 @@ describe('LandWorks', function () {
 
                     it('should emit events with args', async () => {
                         // given:
-                        await marketplaceFacet.delist(assetId);
+                        await landWorks.delist(assetId);
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .withdraw(assetId))
-                            .to.emit(erc721Facet, 'ConsumerChanged')
+                            .to.emit(landWorks, 'ConsumerChanged')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(erc721Facet, 'Transfer')
+                            .to.emit(landWorks, 'Transfer')
                             .withArgs(owner.address, ethers.constants.AddressZero, assetId)
-                            .to.emit(marketplaceFacet, 'ClaimRentFee')
-                            .withArgs(assetId, ethers.constants.AddressZero, owner.address, pricePerSecond * period)
+                            .to.emit(landWorks, 'ClaimRentFee')
+                            .withArgs(assetId, ADDRESS_ONE, owner.address, pricePerSecond * period)
                             .to.emit(mockERC721Registry, 'Transfer')
-                            .withArgs(marketplaceFacet.address, owner.address, metaverseTokenId)
-                            .to.emit(marketplaceFacet, 'Withdraw')
+                            .withArgs(landWorks.address, owner.address, metaverseTokenId)
+                            .to.emit(landWorks, 'Withdraw')
                             .withArgs(assetId, owner.address);
                     });
 
@@ -1278,7 +1346,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .withdraw(invalidAssetId))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
@@ -1288,7 +1356,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = 'caller must be approved or owner of _assetId';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .connect(nonOwner)
                             .withdraw(assetId))
                             .to.be.revertedWith(expectedRevertMessage);
@@ -1299,19 +1367,19 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = '_assetId not delisted';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .withdraw(assetId))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
 
                     it('should revert when an active rent exists', async () => {
                         // given:
-                        await marketplaceFacet.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
-                        await marketplaceFacet.delist(assetId);
+                        await landWorks.connect(nonOwner).rent(assetId, period, { value: pricePerSecond * period });
+                        await landWorks.delist(assetId);
                         const expectedRevertMessage = '_assetId has an active rent';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .withdraw(assetId))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
@@ -1320,45 +1388,45 @@ describe('LandWorks', function () {
                 describe('rent', async () => {
                     const period = minPeriod;
                     const value = pricePerSecond * period;
+                    const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
+                    const expectedRentFee = value - expectedProtocolFee;
 
                     beforeEach(async () => {
-                        await feeFacet.setFee(ethers.constants.AddressZero, FEE_PERCENTAGE);
+                        await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
                     });
 
                     it('should successfully rent', async () => {
-                        const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
-                        const expectedRentFee = value - expectedProtocolFee;
                         const beforeBalance = await nonOwner.getBalance();
-                        const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                        const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                         const expectedRentId = 1;
 
                         // when:
-                        const tx = await marketplaceFacet
+                        const tx = await landWorks
                             .connect(nonOwner)
                             .rent(assetId, period, { value });
                         const receipt = await tx.wait();
                         const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                         // then:
-                        const rent = await marketplaceFacet.rentAt(assetId, expectedRentId);
+                        const rent = await landWorks.rentAt(assetId, expectedRentId);
                         expect(rent.start).to.equal(timestamp);
                         expect(rent.end).to.equal(rent.start.add(period));
                         expect(rent.renter).to.equal(nonOwner.address);
                         // and:
-                        const asset = await marketplaceFacet.assetAt(assetId);
+                        const asset = await landWorks.assetAt(assetId);
                         expect(asset.totalRents).to.equal(1);
                         // and:
-                        const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                        const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
                         expect(protocolFees).to.equal(expectedProtocolFee);
                         // and:
-                        const assetRentFees = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                        const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                         expect(assetRentFees).to.equal(expectedRentFee);
                         // and:
                         const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                         const afterBalance = await nonOwner.getBalance();
                         expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
                         // and:
-                        const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                        const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                         expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
                     });
 
@@ -1366,49 +1434,48 @@ describe('LandWorks', function () {
                         const expectedRentId = 1;
 
                         // when:
-                        const tx = await marketplaceFacet
+                        const tx = await landWorks
                             .connect(nonOwner)
                             .rent(assetId, period, { value });
                         const receipt = await tx.wait();
-                        const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
-                        const start = timestamp;
+                        const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
                         const end = start + period;
 
                         // then:
                         await expect(tx)
-                            .to.emit(marketplaceFacet, 'Rent')
-                            .withArgs(assetId, expectedRentId, nonOwner.address, start, end, ethers.constants.AddressZero, value);
+                            .to.emit(landWorks, 'Rent')
+                            .withArgs(assetId, expectedRentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee);
                     });
 
                     it('should calculate new rent from latest and accrue fees', async () => {
-                        const expectedProtocolFee = 2 * (Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION)); // calculates 2 rents
-                        const expectedRentFee = 2 * value - expectedProtocolFee;
+                        const expectedProtocolFeeAfterSecondRent = 2 * (Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION)); // calculates 2 rents
+                        const expectedRentFeeAfterSecondRent = 2 * value - expectedProtocolFeeAfterSecondRent;
                         const expectedRentId = 2; // expected second rentId
                         // given:
-                        await marketplaceFacet
+                        await landWorks
                             .connect(nonOwner)
                             .rent(assetId, period, { value });
-                        const expectedStart = (await marketplaceFacet.rentAt(assetId, 1)).end;
+                        const expectedStart = (await landWorks.rentAt(assetId, 1)).end;
                         const expectedEnd = expectedStart.add(period);
 
                         // when:
-                        const tx = await marketplaceFacet
+                        const tx = await landWorks
                             .connect(nonOwner)
                             .rent(assetId, period, { value });
 
                         // then:
                         await expect(tx)
-                            .to.emit(marketplaceFacet, 'Rent')
-                            .withArgs(assetId, expectedRentId, nonOwner.address, expectedStart, expectedEnd, ethers.constants.AddressZero, value);
+                            .to.emit(landWorks, 'Rent')
+                            .withArgs(assetId, expectedRentId, nonOwner.address, expectedStart, expectedEnd, ADDRESS_ONE, expectedRentFee, expectedProtocolFee);
                         // and:
-                        const asset = await marketplaceFacet.assetAt(assetId);
+                        const asset = await landWorks.assetAt(assetId);
                         expect(asset.totalRents).to.equal(2);
                         // and:
-                        const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
-                        expect(protocolFees).to.equal(expectedProtocolFee);
+                        const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
+                        expect(protocolFees).to.equal(expectedProtocolFeeAfterSecondRent);
                         // and:
-                        const assetRentFees = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
-                        expect(assetRentFees).to.equal(expectedRentFee);
+                        const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                        expect(assetRentFees).to.equal(expectedRentFeeAfterSecondRent);
                     });
 
                     it('should revert when asset is not found', async () => {
@@ -1417,7 +1484,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = '_assetId not found';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .rent(invalidNftId, period))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
@@ -1426,14 +1493,14 @@ describe('LandWorks', function () {
                         // given:
                         const expectedRevertMessage = '_assetId not listed';
                         // and:
-                        await marketplaceFacet
+                        await landWorks
                             .connect(nonOwner)
                             .rent(assetId, maxPeriod, { value: maxPeriod * pricePerSecond });
                         // and:
-                        await marketplaceFacet.delist(assetId);
+                        await landWorks.delist(assetId);
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .rent(assetId, period))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
@@ -1443,7 +1510,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = '_period less than minPeriod';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .rent(assetId, 0))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
@@ -1453,7 +1520,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = '_period more than maxPeriod';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .rent(assetId, maxPeriod + 1))
                             .to.be.revertedWith(expectedRevertMessage);
                     });
@@ -1461,14 +1528,14 @@ describe('LandWorks', function () {
                     it('should revert when current rents are more than asset maxFutureTime', async () => {
                         // given:
                         const expectedRevertMessage = 'rent more than current maxFutureTime';
-                        await marketplaceFacet
+                        await landWorks
                             .connect(nonOwner)
                             .rent(assetId, maxPeriod, { value: maxPeriod * pricePerSecond });
                         // When executing with this period, it will be more than block.timestamp + maxFutureTime
                         const exceedingPeriod = maxFutureTime - maxPeriod + 2;
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .connect(nonOwner)
                             .rent(assetId, exceedingPeriod))
                             .to.be.revertedWith(expectedRevertMessage);
@@ -1479,7 +1546,7 @@ describe('LandWorks', function () {
                         const expectedRevertMessage = 'invalid msg.value';
 
                         // when:
-                        await expect(marketplaceFacet
+                        await expect(landWorks
                             .connect(nonOwner)
                             .rent(assetId, minPeriod))
                             .to.be.revertedWith(expectedRevertMessage);
@@ -1489,9 +1556,9 @@ describe('LandWorks', function () {
                     describe('using token as payment', async () => {
                         beforeEach(async () => {
                             // when:
-                            await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
+                            await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
                             // and:
-                            await marketplaceFacet
+                            await landWorks
                                 .updateConditions(
                                     assetId,
                                     minPeriod,
@@ -1508,13 +1575,13 @@ describe('LandWorks', function () {
                             const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
                             const expectedRentFee = value - expectedProtocolFee;
                             const beforeBalance = await mockERC20Registry.balanceOf(nonOwner.address);
-                            const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                            const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                             const expectedRentId = 1;
                             // and:
-                            await mockERC20Registry.connect(nonOwner).approve(marketplaceFacet.address, value);
+                            await mockERC20Registry.connect(nonOwner).approve(landWorks.address, value);
 
                             // when:
-                            const tx = await marketplaceFacet
+                            const tx = await landWorks
                                 .connect(nonOwner)
                                 .rent(assetId, period);
                             const receipt = await tx.wait();
@@ -1524,29 +1591,29 @@ describe('LandWorks', function () {
                             const start = timestamp;
                             const end = start + period;
                             expect(tx)
-                                .to.emit(marketplaceFacet, 'Rent')
-                                .withArgs(assetId, expectedRentId, nonOwner.address, start, end, mockERC20Registry.address, value)
+                                .to.emit(landWorks, 'Rent')
+                                .withArgs(assetId, expectedRentId, nonOwner.address, start, end, mockERC20Registry.address, expectedRentFee, expectedProtocolFee)
                                 .to.emit(mockERC20Registry, 'Transfer')
-                                .withArgs(nonOwner.address, marketplaceFacet.address, value);
+                                .withArgs(nonOwner.address, landWorks.address, value);
                             // and:
-                            const rent = await marketplaceFacet.rentAt(assetId, expectedRentId);
+                            const rent = await landWorks.rentAt(assetId, expectedRentId);
                             expect(rent.start).to.equal(timestamp);
                             expect(rent.end).to.equal(rent.start.add(period));
                             expect(rent.renter).to.equal(nonOwner.address);
                             // and:
-                            const asset = await marketplaceFacet.assetAt(assetId);
+                            const asset = await landWorks.assetAt(assetId);
                             expect(asset.totalRents).to.equal(1);
                             // and:
-                            const protocolFees = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                            const protocolFees = await landWorks.protocolFeeFor(mockERC20Registry.address);
                             expect(protocolFees).to.equal(expectedProtocolFee);
                             // and:
-                            const assetRentFees = await feeFacet.assetRentFeesFor(assetId, mockERC20Registry.address);
+                            const assetRentFees = await landWorks.assetRentFeesFor(assetId, mockERC20Registry.address);
                             expect(assetRentFees).to.equal(expectedRentFee);
                             // and:
                             const afterBalance = await mockERC20Registry.balanceOf(nonOwner.address);
                             expect(afterBalance).to.equal(beforeBalance.sub(value));
                             // and:
-                            const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                            const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                             expect(afterMarketplaceBalance).to.equal(beforeMarketplaceBalance.add(value));
                         });
 
@@ -1555,7 +1622,7 @@ describe('LandWorks', function () {
                             const expectedRevertMessage = 'ERC20: transfer amount exceeds allowance';
 
                             // when:
-                            await expect(marketplaceFacet
+                            await expect(landWorks
                                 .connect(nonOwner)
                                 .rent(assetId, period))
                                 .to.be.revertedWith(expectedRevertMessage);
@@ -1576,67 +1643,68 @@ describe('LandWorks', function () {
         describe('feePrecision', async () => {
             it('should get fee precision', async () => {
                 // then:
-                expect(await feeFacet.feePrecision()).to.equal(FEE_PRECISION);
+                expect(await landWorks.feePrecision()).to.equal(FEE_PRECISION);
             });
         });
 
         describe('setTokenPayment', async () => {
             it('should add token payment', async () => {
+                expect(await landWorks.totalTokenPayments()).to.equal(1);
                 // when:
-                await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
+                await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
 
                 // then:
-                expect(await feeFacet.supportsTokenPayment(mockERC20Registry.address)).to.be.true;
-                expect(await feeFacet.totalTokenPayments()).to.equal(1);
-                expect(await feeFacet.tokenPaymentAt(0)).to.equal(mockERC20Registry.address);
-                expect(await feeFacet.feePercentage(mockERC20Registry.address)).to.equal(FEE_PERCENTAGE);
+                expect(await landWorks.supportsTokenPayment(mockERC20Registry.address)).to.be.true;
+                expect(await landWorks.totalTokenPayments()).to.equal(2);
+                expect(await landWorks.tokenPaymentAt(1)).to.equal(mockERC20Registry.address);
+                expect(await landWorks.feePercentage(mockERC20Registry.address)).to.equal(FEE_PERCENTAGE);
             });
 
             it('should emit event with args', async () => {
-                await expect(feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true))
-                    .to.emit(feeFacet, 'SetTokenPayment')
+                await expect(landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true))
+                    .to.emit(landWorks, 'SetTokenPayment')
                     .withArgs(mockERC20Registry.address, true)
-                    .to.emit(feeFacet, 'SetFee')
+                    .to.emit(landWorks, 'SetFee')
                     .withArgs(mockERC20Registry.address, FEE_PERCENTAGE);
             });
 
             it('should remove token payment', async () => {
                 // given:
-                await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
-
+                await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
+                expect(await landWorks.totalTokenPayments()).to.equal(2);
                 // when:
-                await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
+                await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
 
                 // then:
-                expect(await feeFacet.supportsTokenPayment(mockERC20Registry.address)).to.be.false;
-                expect(await feeFacet.totalTokenPayments()).to.equal(0);
-                await expect(feeFacet.tokenPaymentAt(0)).to.be.reverted;
+                expect(await landWorks.supportsTokenPayment(mockERC20Registry.address)).to.be.false;
+                expect(await landWorks.totalTokenPayments()).to.equal(1);
+                await expect(landWorks.tokenPaymentAt(1)).to.be.reverted;
             });
 
             it('should revert when token payment is 0x0', async () => {
                 const expectedRevertMessage = '_token must not be 0x0';
                 // when:
-                await expect(feeFacet.setTokenPayment(ethers.constants.AddressZero, FEE_PERCENTAGE, true))
+                await expect(landWorks.setTokenPayment(ethers.constants.AddressZero, FEE_PERCENTAGE, true))
                     .to.be.revertedWith(expectedRevertMessage);
                 // and:
-                await expect(feeFacet.setTokenPayment(ethers.constants.AddressZero, FEE_PERCENTAGE, false))
+                await expect(landWorks.setTokenPayment(ethers.constants.AddressZero, FEE_PERCENTAGE, false))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when caller is not owner', async () => {
                 const expectedRevertMessage = 'Must be contract owner';
                 // when:
-                await expect(feeFacet.connect(nonOwner).setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false))
+                await expect(landWorks.connect(nonOwner).setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when token payment is already added', async () => {
                 // given:
                 const expectedRevertMessage = '_token already added';
-                await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
+                await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
 
                 // when:
-                await expect(feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true))
+                await expect(landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
@@ -1644,7 +1712,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_token not found';
 
                 // when:
-                await expect(feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false))
+                await expect(landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
@@ -1652,7 +1720,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_feePercentage exceeds or equal to feePrecision';
 
                 // when:
-                await expect(feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PRECISION, true))
+                await expect(landWorks.setTokenPayment(mockERC20Registry.address, FEE_PRECISION, true))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
@@ -1660,7 +1728,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_feePercentage exceeds or equal to feePrecision';
 
                 // when:
-                await expect(feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PRECISION + 1, true))
+                await expect(landWorks.setTokenPayment(mockERC20Registry.address, FEE_PRECISION + 1, true))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
@@ -1668,15 +1736,15 @@ describe('LandWorks', function () {
         describe('setFee', async () => {
             it('should set fee', async () => {
                 // when:
-                await feeFacet.setFee(mockERC20Registry.address, FEE_PERCENTAGE);
+                await landWorks.setFee(mockERC20Registry.address, FEE_PERCENTAGE);
 
                 // then:
-                expect(await feeFacet.feePercentage(mockERC20Registry.address)).to.equal(FEE_PERCENTAGE);
+                expect(await landWorks.feePercentage(mockERC20Registry.address)).to.equal(FEE_PERCENTAGE);
             });
 
             it('should emit event with args', async () => {
-                await expect(feeFacet.setFee(mockERC20Registry.address, FEE_PERCENTAGE))
-                    .to.emit(feeFacet, 'SetFee')
+                await expect(landWorks.setFee(mockERC20Registry.address, FEE_PERCENTAGE))
+                    .to.emit(landWorks, 'SetFee')
                     .withArgs(mockERC20Registry.address, FEE_PERCENTAGE);
             });
 
@@ -1684,7 +1752,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = 'Must be contract owner';
 
                 // when:
-                await expect(feeFacet.connect(nonOwner).setFee(mockERC20Registry.address, FEE_PERCENTAGE))
+                await expect(landWorks.connect(nonOwner).setFee(mockERC20Registry.address, FEE_PERCENTAGE))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
@@ -1713,46 +1781,46 @@ describe('LandWorks', function () {
                 await mockERC20Registry.mint(nonOwner.address, 10_000);
 
                 // and:
-                await feeFacet.setFee(ethers.constants.AddressZero, FEE_PERCENTAGE);
-                await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
+                await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
+                await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, true);
 
                 // and:
-                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                await landWorks.setRegistry(metaverseId, mockERC721Registry.address, true);
                 // and:
-                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
+                await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
                 // and:
-                await marketplaceFacet.list(
+                await landWorks.list(
                     metaverseId,
                     mockERC721Registry.address,
                     metaverseTokenId,
                     minPeriod,
                     maxPeriod,
                     maxFutureTime,
-                    ethers.constants.AddressZero,
+                    ADDRESS_ONE,
                     pricePerSecond);
 
                 // and:
-                await marketplaceFacet.connect(nonOwner).rent(assetId, minPeriod, { value: rentValue });
+                await landWorks.connect(nonOwner).rent(assetId, minPeriod, { value: rentValue });
             });
 
             describe('claimProtocolFee', async () => {
 
                 beforeEach(async () => {
                     // given:
-                    await marketplaceFacet
+                    await landWorks
                         .updateConditions(assetId, minPeriod, maxPeriod, maxFutureTime, mockERC20Registry.address, pricePerSecond);
                     // and:
-                    await mockERC20Registry.connect(nonOwner).approve(marketplaceFacet.address, rentValue);
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, minPeriod);
+                    await mockERC20Registry.connect(nonOwner).approve(landWorks.address, rentValue);
+                    await landWorks.connect(nonOwner).rent(assetId, minPeriod);
                 });
 
                 it('should claim ETH protocol fee', async () => {
                     // given:
                     const beforeBalance = await owner.getBalance();
-                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
-                    const tx = await feeFacet.claimProtocolFee(ethers.constants.AddressZero);
+                    const tx = await landWorks.claimProtocolFee(ADDRESS_ONE);
                     const receipt = await tx.wait();
 
                     // then:
@@ -1760,100 +1828,100 @@ describe('LandWorks', function () {
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedProtocolFee));
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.protocolFeeFor(ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
                 it('should claim ETH protocol fee with approved nonOwner', async () => {
                     // given:
                     const beforeBalance = await owner.getBalance();
-                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimProtocolFee(ethers.constants.AddressZero);
+                    await landWorks.connect(nonOwner).claimProtocolFee(ADDRESS_ONE);
 
                     // then:
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.add(expectedProtocolFee));
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.protocolFeeFor(ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
                 it('should claim token protocol fee', async () => {
                     // given:
                     const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.claimProtocolFee(mockERC20Registry.address);
+                    await landWorks.claimProtocolFee(mockERC20Registry.address);
 
                     // then:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    const afterClaim = await landWorks.protocolFeeFor(mockERC20Registry.address);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
                 it('should claim token protocol fee with nonOwner', async () => {
                     // given:
                     const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimProtocolFee(mockERC20Registry.address);
+                    await landWorks.connect(nonOwner).claimProtocolFee(mockERC20Registry.address);
 
                     // then:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    const afterClaim = await landWorks.protocolFeeFor(mockERC20Registry.address);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
                 it('should emit event with args', async () => {
-                    await expect(feeFacet.claimProtocolFee(ethers.constants.AddressZero))
-                        .to.emit(feeFacet, 'ClaimProtocolFee')
-                        .withArgs(ethers.constants.AddressZero, owner.address, expectedProtocolFee);
+                    await expect(landWorks.claimProtocolFee(ADDRESS_ONE))
+                        .to.emit(landWorks, 'ClaimProtocolFee')
+                        .withArgs(ADDRESS_ONE, owner.address, expectedProtocolFee);
 
-                    await expect(feeFacet.claimProtocolFee(mockERC20Registry.address))
-                        .to.emit(feeFacet, 'ClaimProtocolFee')
+                    await expect(landWorks.claimProtocolFee(mockERC20Registry.address))
+                        .to.emit(landWorks, 'ClaimProtocolFee')
                         .withArgs(mockERC20Registry.address, owner.address, expectedProtocolFee)
                         .to.emit(mockERC20Registry, 'Transfer')
-                        .withArgs(feeFacet.address, owner.address, expectedProtocolFee);
+                        .withArgs(landWorks.address, owner.address, expectedProtocolFee);
                 });
 
                 it('should claim fee even if payment token is removed', async () => {
                     // given:
-                    await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
+                    await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
                     // and:
                     const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.claimProtocolFee(mockERC20Registry.address);
+                    await landWorks.claimProtocolFee(mockERC20Registry.address);
 
                     // then:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    const afterClaim = await landWorks.protocolFeeFor(mockERC20Registry.address);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
             });
@@ -1863,23 +1931,23 @@ describe('LandWorks', function () {
 
                 beforeEach(async () => {
                     // given:
-                    tokens = [ethers.constants.AddressZero, mockERC20Registry.address];
-                    await marketplaceFacet
+                    tokens = [ADDRESS_ONE, mockERC20Registry.address];
+                    await landWorks
                         .updateConditions(assetId, minPeriod, maxPeriod, maxFutureTime, mockERC20Registry.address, pricePerSecond);
                     // and:
-                    await mockERC20Registry.connect(nonOwner).approve(marketplaceFacet.address, rentValue);
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, minPeriod);
+                    await mockERC20Registry.connect(nonOwner).approve(landWorks.address, rentValue);
+                    await landWorks.connect(nonOwner).rent(assetId, minPeriod);
                 });
 
                 it('should claim protocol fees', async () => {
                     // given:
                     const beforeETHBalance = await owner.getBalance();
-                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    const tx = await feeFacet.claimProtocolFees(tokens);
+                    const tx = await landWorks.claimProtocolFees(tokens);
                     const receipt = await tx.wait();
 
                     // then:
@@ -1887,80 +1955,80 @@ describe('LandWorks', function () {
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeETHBalance.sub(txFee).add(expectedProtocolFee));
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.protocolFeeFor(ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedProtocolFee));
                     // and:
                     const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedProtocolFee);
                     // and:
-                    const afterTokenClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    const afterTokenClaim = await landWorks.protocolFeeFor(mockERC20Registry.address);
                     expect(afterTokenClaim).to.be.equal(0);
                     // and:
-                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
                 it('should claim protocol fees with nonOwner', async () => {
                     // given:
                     const beforeETHBalance = await owner.getBalance();
-                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimProtocolFees(tokens);
+                    await landWorks.connect(nonOwner).claimProtocolFees(tokens);
 
                     // then:
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeETHBalance.add(expectedProtocolFee));
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.protocolFeeFor(ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedProtocolFee));
                     // and:
                     const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedProtocolFee);
                     // and:
-                    const afterTokenClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    const afterTokenClaim = await landWorks.protocolFeeFor(mockERC20Registry.address);
                     expect(afterTokenClaim).to.be.equal(0);
                     // and:
-                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedProtocolFee));
                 });
 
                 it('should emit events with args', async () => {
-                    await expect(feeFacet.claimProtocolFees(tokens))
-                        .to.emit(feeFacet, 'ClaimProtocolFee')
-                        .withArgs(ethers.constants.AddressZero, owner.address, expectedProtocolFee)
-                        .to.emit(feeFacet, 'ClaimProtocolFee')
+                    await expect(landWorks.claimProtocolFees(tokens))
+                        .to.emit(landWorks, 'ClaimProtocolFee')
+                        .withArgs(ADDRESS_ONE, owner.address, expectedProtocolFee)
+                        .to.emit(landWorks, 'ClaimProtocolFee')
                         .withArgs(mockERC20Registry.address, owner.address, expectedProtocolFee)
                         .to.emit(mockERC20Registry, 'Transfer')
-                        .withArgs(feeFacet.address, owner.address, expectedProtocolFee);
+                        .withArgs(landWorks.address, owner.address, expectedProtocolFee);
                 });
 
                 it('should claim fees even if payment token is removed', async () => {
                     // given:
-                    await feeFacet.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
+                    await landWorks.setTokenPayment(mockERC20Registry.address, FEE_PERCENTAGE, false);
                     // and:
                     const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.claimProtocolFees(tokens);
+                    await landWorks.claimProtocolFees(tokens);
 
                     // then:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterBalance).to.be.equal(beforeBalance + expectedProtocolFee);
                     // and:
-                    const afterClaim = await feeFacet.protocolFeeFor(mockERC20Registry.address);
+                    const afterClaim = await landWorks.protocolFeeFor(mockERC20Registry.address);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
                 });
             });
@@ -1969,10 +2037,10 @@ describe('LandWorks', function () {
                 it('should claim ETH rent fee', async () => {
                     // given:
                     const beforeBalance = await owner.getBalance();
-                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
-                    const tx = await feeFacet.claimRentFee(assetId);
+                    const tx = await landWorks.claimRentFee(assetId);
                     const receipt = await tx.wait();
 
                     // then:
@@ -1980,61 +2048,61 @@ describe('LandWorks', function () {
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
                     // and:
-                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
                 it('should claim token rent fee', async () => {
                     // given:
-                    await marketplaceFacet
+                    await landWorks
                         .updateConditions(assetId, minPeriod, maxPeriod, maxFutureTime, mockERC20Registry.address, pricePerSecond);
                     // and:
-                    await mockERC20Registry.connect(nonOwner).approve(marketplaceFacet.address, rentValue);
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, minPeriod);
+                    await mockERC20Registry.connect(nonOwner).approve(landWorks.address, rentValue);
+                    await landWorks.connect(nonOwner).rent(assetId, minPeriod);
                     // and:
                     const beforeBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.claimRentFee(assetId);
+                    await landWorks.claimRentFee(assetId);
 
                     // then:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterBalance).to.be.equal(beforeBalance + expectedRentFee);
                     // and:
-                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, mockERC20Registry.address);
+                    const afterClaim = await landWorks.assetRentFeesFor(assetId, mockERC20Registry.address);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
                 it('should emit event with args', async () => {
-                    await expect(feeFacet.claimRentFee(assetId))
-                        .to.emit(feeFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, expectedRentFee);
+                    await expect(landWorks.claimRentFee(assetId))
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, expectedRentFee);
                     // given:
-                    await marketplaceFacet
+                    await landWorks
                         .updateConditions(assetId, minPeriod, maxPeriod, maxFutureTime, mockERC20Registry.address, pricePerSecond);
                     // and:
-                    await mockERC20Registry.connect(nonOwner).approve(marketplaceFacet.address, rentValue);
-                    await marketplaceFacet.connect(nonOwner).rent(assetId, minPeriod);
+                    await mockERC20Registry.connect(nonOwner).approve(landWorks.address, rentValue);
+                    await landWorks.connect(nonOwner).rent(assetId, minPeriod);
 
-                    await expect(feeFacet.claimRentFee(assetId))
-                        .to.emit(feeFacet, 'ClaimRentFee')
+                    await expect(landWorks.claimRentFee(assetId))
+                        .to.emit(landWorks, 'ClaimRentFee')
                         .withArgs(assetId, mockERC20Registry.address, owner.address, expectedRentFee)
                         .to.emit(mockERC20Registry, 'Transfer')
-                        .withArgs(feeFacet.address, owner.address, expectedRentFee);
+                        .withArgs(landWorks.address, owner.address, expectedRentFee);
                 });
 
                 it('should revert when caller is not approved', async () => {
                     const expectedRevertMessage = 'caller must be consumer, approved or owner of asset';
 
                     // then:
-                    await expect(feeFacet.connect(nonOwner).claimRentFee(assetId))
+                    await expect(landWorks.connect(nonOwner).claimRentFee(assetId))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
@@ -2042,62 +2110,88 @@ describe('LandWorks', function () {
                     const invalidAssetId = 2;
                     const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
-                    await expect(feeFacet.connect(nonOwner).claimRentFee(invalidAssetId))
+                    await expect(landWorks.connect(nonOwner).claimRentFee(invalidAssetId))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
-                it('should successfully claim rent fees to owner when caller is approved', async () => {
+                it('should successfully claim rent fees to owner when caller is approved and there is no consumer', async () => {
                     // given:
-                    await erc721Facet.approve(nonOwner.address, assetId);
+                    await landWorks.approve(nonOwner.address, assetId);
                     // and:
                     const beforeBalance = await owner.getBalance();
-                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimRentFee(assetId);
+                    await landWorks.connect(nonOwner).claimRentFee(assetId);
 
                     // then:
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.add(expectedRentFee));
                     // and:
-                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
-                it('should successfully claim rent fees to owner when caller is operator', async () => {
+                it('should successfully claim rent fees to owner when caller is operator and there is no consumer', async () => {
                     // given:
-                    await erc721Facet.setApprovalForAll(nonOwner.address, true);
+                    await landWorks.setApprovalForAll(nonOwner.address, true);
                     // and:
                     const beforeBalance = await owner.getBalance();
-                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimRentFee(assetId);
+                    await landWorks.connect(nonOwner).claimRentFee(assetId);
 
                     // then:
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.add(expectedRentFee));
                     // and:
-                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
                 });
 
-                it('should successfully claim rent fees to consumer when caller is consumer', async () => {
+                it('should successfully claim rent fees to consumer if there is consumer', async () => {
                     // given:
-                    await erc721Facet.changeConsumer(consumer.address, assetId);
+                    await landWorks.changeConsumer(consumer.address, assetId);
                     // and:
                     const beforeOwnerBalance = await owner.getBalance();
                     const beforeConsumerBalance = await consumer.getBalance();
-                    const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
-                    const tx = await feeFacet.connect(consumer).claimRentFee(assetId);
+                    const tx = await landWorks.claimRentFee(assetId);
+                    const receipt = await tx.wait();
+
+                    // then:
+                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                    const afterOwnerBalance = await owner.getBalance();
+                    expect(afterOwnerBalance).to.equal(beforeOwnerBalance.sub(txFee));
+                    const afterConsumerBalance = await consumer.getBalance();
+                    expect(afterConsumerBalance).to.equal(beforeConsumerBalance.add(expectedRentFee));
+                    // and:
+                    const afterClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(afterClaim).to.be.equal(0);
+                    // and:
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
+                });
+
+                it('should successfully claim rent fees when caller is consumer', async () => {
+                    // given:
+                    await landWorks.changeConsumer(consumer.address, assetId);
+                    // and:
+                    const beforeOwnerBalance = await owner.getBalance();
+                    const beforeConsumerBalance = await consumer.getBalance();
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
+
+                    // when:
+                    const tx = await landWorks.connect(consumer).claimRentFee(assetId);
                     const receipt = await tx.wait();
 
                     // then:
@@ -2107,12 +2201,12 @@ describe('LandWorks', function () {
                     const afterConsumerBalance = await consumer.getBalance();
                     expect(afterConsumerBalance).to.equal(beforeConsumerBalance.sub(txFee).add(expectedRentFee));
                     // and:
-                    const afterClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterClaim).to.be.equal(0);
                     // and:
-                    const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedRentFee));
-                });
+                })
             });
 
             describe('claimMultipleRentFees', async () => {
@@ -2124,9 +2218,9 @@ describe('LandWorks', function () {
                     await mockERC721Registry.mint(owner.address, secondMetaverseTokenId);
 
                     // and:
-                    await mockERC721Registry.approve(marketplaceFacet.address, secondMetaverseTokenId);
+                    await mockERC721Registry.approve(landWorks.address, secondMetaverseTokenId);
                     // and:
-                    await marketplaceFacet.list(
+                    await landWorks.list(
                         metaverseId,
                         mockERC721Registry.address,
                         secondMetaverseTokenId,
@@ -2137,21 +2231,21 @@ describe('LandWorks', function () {
                         pricePerSecond);
 
                     // and:
-                    await mockERC20Registry.connect(nonOwner).approve(marketplaceFacet.address, rentValue)
-                    await marketplaceFacet.connect(nonOwner).rent(secondAssetId, minPeriod);
+                    await mockERC20Registry.connect(nonOwner).approve(landWorks.address, rentValue)
+                    await landWorks.connect(nonOwner).rent(secondAssetId, minPeriod);
                 });
 
                 it('should claim multiple rent fees successfully', async () => {
                     // given:
                     const beforeETHBalance = await owner.getBalance();
-                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // and:
                     const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    const tx = await feeFacet.claimMultipleRentFees(assetIds);
+                    const tx = await landWorks.claimMultipleRentFees(assetIds);
                     const receipt = await tx.wait();
 
                     // then:
@@ -2159,30 +2253,30 @@ describe('LandWorks', function () {
                     const afterETHBalance = await owner.getBalance();
                     expect(afterETHBalance).to.equal(beforeETHBalance.sub(txFee).add(expectedRentFee));
                     // and:
-                    const afterETHClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterETHClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterETHClaim).to.be.equal(0);
                     // and:
-                    const afterETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterETHMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedRentFee));
                     // and:
                     const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedRentFee);
                     // and:
-                    const afterTokenClaim = await feeFacet.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
+                    const afterTokenClaim = await landWorks.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
                     expect(afterTokenClaim).to.be.equal(0);
                     // and:
-                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedRentFee));
                 });
 
                 it('should emit events with args', async () => {
-                    await expect(feeFacet.claimMultipleRentFees(assetIds))
-                        .to.emit(feeFacet, 'ClaimRentFee')
-                        .withArgs(assetId, ethers.constants.AddressZero, owner.address, expectedRentFee)
-                        .to.emit(feeFacet, 'ClaimRentFee')
+                    await expect(landWorks.claimMultipleRentFees(assetIds))
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, expectedRentFee)
+                        .to.emit(landWorks, 'ClaimRentFee')
                         .withArgs(secondAssetId, mockERC20Registry.address, owner.address, expectedRentFee)
                         .to.emit(mockERC20Registry, 'Transfer')
-                        .withArgs(feeFacet.address, owner.address, expectedRentFee);
+                        .withArgs(landWorks.address, owner.address, expectedRentFee);
                 });
 
                 it('should revert when one of assets is not found', async () => {
@@ -2190,7 +2284,7 @@ describe('LandWorks', function () {
                     const invalidAssetId = 2;
                     const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
-                    await expect(feeFacet.claimMultipleRentFees([...assetIds, invalidAssetId]))
+                    await expect(landWorks.claimMultipleRentFees([...assetIds, invalidAssetId]))
                         .to.be.revertedWith(expectedRevertMessage);
 
                     // then:
@@ -2202,76 +2296,76 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = 'caller must be consumer, approved or owner of asset';
 
                     // then:
-                    await expect(feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds))
+                    await expect(landWorks.connect(nonOwner).claimMultipleRentFees(assetIds))
                         .to.be.revertedWith(expectedRevertMessage);
                 });
 
                 it('should successfully claim rent fees to owner when caller is approved', async () => {
                     // given:
-                    await erc721Facet.approve(nonOwner.address, assetId);
-                    await erc721Facet.approve(nonOwner.address, secondAssetId);
+                    await landWorks.approve(nonOwner.address, assetId);
+                    await landWorks.approve(nonOwner.address, secondAssetId);
                     // and:
                     const beforeETHBalance = await owner.getBalance();
-                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     // and:
                     const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds);
+                    await landWorks.connect(nonOwner).claimMultipleRentFees(assetIds);
 
                     // then:
                     const afterETHBalance = await owner.getBalance();
                     expect(afterETHBalance).to.equal(beforeETHBalance.add(expectedRentFee));
                     // and:
-                    const afterETHClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterETHClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterETHClaim).to.be.equal(0);
                     // and:
-                    const afterETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterETHMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedRentFee));
 
                     // and:
                     const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedRentFee);
                     // and:
-                    const afterTokenClaim = await feeFacet.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
+                    const afterTokenClaim = await landWorks.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
                     expect(afterTokenClaim).to.be.equal(0);
                     // and:
-                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedRentFee));
                 });
 
                 it('should successfully claim rent fees to owner when caller is operator', async () => {
                     // given:
-                    await erc721Facet.setApprovalForAll(nonOwner.address, true);
+                    await landWorks.setApprovalForAll(nonOwner.address, true);
                     // and:
                     const beforeETHBalance = await owner.getBalance();
-                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const beforeETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     // and:
                     const beforeTokenBalance = Number(await mockERC20Registry.balanceOf(owner.address));
-                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const beforeTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
-                    await feeFacet.connect(nonOwner).claimMultipleRentFees(assetIds);
+                    await landWorks.connect(nonOwner).claimMultipleRentFees(assetIds);
 
                     // then:
                     const afterETHBalance = await owner.getBalance();
                     expect(afterETHBalance).to.equal(beforeETHBalance.add(expectedRentFee));
                     // and:
-                    const afterETHClaim = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                    const afterETHClaim = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                     expect(afterETHClaim).to.be.equal(0);
                     // and:
-                    const afterETHMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                    const afterETHMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                     expect(afterETHMarketplaceBalance).to.be.equal(beforeETHMarketplaceBalance.sub(expectedRentFee));
 
                     // and:
                     const afterTokenBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterTokenBalance).to.be.equal(beforeTokenBalance + expectedRentFee);
                     // and:
-                    const afterTokenClaim = await feeFacet.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
+                    const afterTokenClaim = await landWorks.assetRentFeesFor(secondAssetId, mockERC20Registry.address);
                     expect(afterTokenClaim).to.be.equal(0);
                     // and:
-                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(marketplaceFacet.address);
+                    const afterTokenMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterTokenMarketplaceBalance).to.be.equal(beforeTokenMarketplaceBalance.sub(expectedRentFee));
                 });
             });
@@ -2291,8 +2385,8 @@ describe('LandWorks', function () {
 
         beforeEach(async () => {
             // given:
-            await marketplaceFacet.setRegistry(metaverseId, landRegistry.address, true);
-            await feeFacet.setFee(ethers.constants.AddressZero, FEE_PERCENTAGE);
+            await landWorks.setRegistry(metaverseId, landRegistry.address, true);
+            await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
 
             // Mint LAND
             const x = 0, y = 0;
@@ -2300,9 +2394,9 @@ describe('LandWorks', function () {
             await landRegistry.assignNewParcel(x, y, owner.address);
             const landId = await landRegistry.encodeTokenId(x, y);
             // and:
-            await landRegistry.approve(marketplaceFacet.address, landId);
+            await landRegistry.approve(landWorks.address, landId);
 
-            await marketplaceFacet
+            await landWorks
                 .list(
                     metaverseId,
                     landRegistry.address,
@@ -2310,7 +2404,7 @@ describe('LandWorks', function () {
                     minPeriod,
                     maxPeriod,
                     maxFutureTime,
-                    ethers.constants.AddressZero,
+                    ADDRESS_ONE,
                     pricePerSecond);
         });
 
@@ -2318,88 +2412,86 @@ describe('LandWorks', function () {
             it('should successfully rent decentraland', async () => {
                 // given:
                 const beforeBalance = await nonOwner.getBalance();
-                const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                 const expectedRentId = 1;
 
                 // when:
-                const tx = await decentralandFacet
+                const tx = await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
                 const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
-                const rent = await marketplaceFacet.rentAt(assetId, rentId);
+                const rent = await landWorks.rentAt(assetId, rentId);
                 expect(rent.start).to.equal(timestamp);
                 expect(rent.end).to.equal(rent.start.add(minPeriod));
                 expect(rent.renter).to.equal(nonOwner.address);
                 // and:
-                const asset = await marketplaceFacet.assetAt(assetId);
+                const asset = await landWorks.assetAt(assetId);
                 expect(asset.totalRents).to.equal(1);
                 // and:
-                const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
                 expect(protocolFees).to.equal(expectedProtocolFee);
                 // and:
-                const assetRentFees = await feeFacet.assetRentFeesFor(assetId, ethers.constants.AddressZero);
+                const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
                 expect(assetRentFees).to.equal(expectedRentFee);
                 // and:
                 const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                 const afterBalance = await nonOwner.getBalance();
                 expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
                 // and:
-                const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                 expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
                 // and:
-                const operator = await decentralandFacet.operatorFor(assetId, expectedRentId);
+                const operator = await landWorks.operatorFor(assetId, expectedRentId);
                 expect(operator).to.equal(nonOwner.address);
                 // and:
-                const landId = (await marketplaceFacet.assetAt(assetId)).metaverseAssetId;
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
                 expect(await landRegistry.updateOperator(landId)).to.equal(nonOwner.address);
             });
 
             it('should emit event with args', async () => {
                 // when:
-                const tx = await decentralandFacet
+                const tx = await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
-                const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
-
                 // then:
-                const start = timestamp;
+                const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
                 const end = start + minPeriod;
 
                 await expect(tx)
-                    .to.emit(decentralandFacet, 'UpdateOperator')
+                    .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(assetId, rentId, nonOwner.address)
-                    .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(assetId, rentId, nonOwner.address, start, end, ethers.constants.AddressZero, value)
-                    .to.emit(decentralandFacet, 'UpdateState')
+                    .to.emit(landWorks, 'Rent')
+                    .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
+                    .to.emit(landWorks, 'UpdateState')
                     .withArgs(assetId, rentId, nonOwner.address);
             });
 
             it('should not update state when rent does not begin in execution block timestamp', async () => {
                 // given:
                 const secondRentId = 2;
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 2 * minPeriod, nonOwner.address, { value: value * 2 });
 
                 // when:
-                const tx = await decentralandFacet
+                const tx = await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, artificialRegistry.address, { value });
 
                 // then:
-                const start = await (await marketplaceFacet.rentAt(assetId, rentId)).end;
+                const start = await (await landWorks.rentAt(assetId, rentId)).end;
                 const end = start.add(minPeriod);
 
                 await expect(tx)
-                    .to.emit(decentralandFacet, 'UpdateOperator')
+                    .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(assetId, secondRentId, artificialRegistry.address)
-                    .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(assetId, secondRentId, nonOwner.address, start, end, ethers.constants.AddressZero, value)
-                    .to.not.emit(decentralandFacet, 'UpdateState')
+                    .to.emit(landWorks, 'Rent')
+                    .withArgs(assetId, secondRentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
+                    .to.not.emit(landWorks, 'UpdateState')
                     .withArgs(assetId, secondRentId, artificialRegistry.address);
             });
 
@@ -2408,7 +2500,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_operator must not be 0x0';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .rentDecentraland(assetId, minPeriod, ethers.constants.AddressZero))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2419,7 +2511,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_assetId not found';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .rentDecentraland(invalidNftId, minPeriod, owner.address))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2428,14 +2520,14 @@ describe('LandWorks', function () {
                 // given:
                 const expectedRevertMessage = '_assetId not listed';
                 // and:
-                await marketplaceFacet
+                await landWorks
                     .connect(nonOwner)
                     .rent(assetId, maxPeriod, { value: maxPeriod * pricePerSecond });
                 // and:
-                await marketplaceFacet.delist(assetId);
+                await landWorks.delist(assetId);
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -2446,7 +2538,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_period less than minPeriod';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .rentDecentraland(assetId, 0, owner.address))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2456,7 +2548,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_period more than maxPeriod';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .rentDecentraland(assetId, maxPeriod + 1, owner.address))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2464,14 +2556,14 @@ describe('LandWorks', function () {
             it('should revert when current rents are more than asset maxFutureTime', async () => {
                 // given:
                 const expectedRevertMessage = 'rent more than current maxFutureTime';
-                await marketplaceFacet
+                await landWorks
                     .connect(nonOwner)
                     .rent(assetId, maxPeriod, { value: maxPeriod * pricePerSecond });
                 // When executing with this period, it will be more than block.timestamp + maxFutureTime
                 const exceedingPeriod = maxFutureTime - maxPeriod + 2;
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, exceedingPeriod, owner.address))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -2482,7 +2574,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = 'invalid msg.value';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, owner.address))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -2494,10 +2586,10 @@ describe('LandWorks', function () {
                 const metaverseTokenId = 50;
                 await mockERC721Registry.mint(owner.address, metaverseTokenId);
                 // and:
-                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                await landWorks.setRegistry(metaverseId, mockERC721Registry.address, true);
                 // and:
-                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
-                await marketplaceFacet
+                await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
+                await landWorks
                     .list(
                         metaverseId,
                         mockERC721Registry.address,
@@ -2505,11 +2597,11 @@ describe('LandWorks', function () {
                         minPeriod,
                         maxPeriod,
                         maxFutureTime,
-                        ethers.constants.AddressZero,
+                        ADDRESS_ONE,
                         pricePerSecond);
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .rentDecentraland(secondAssetId, minPeriod, nonOwner.address, { value }))
                     .to.be.reverted;
@@ -2517,17 +2609,17 @@ describe('LandWorks', function () {
 
             it('should rent using decentraland facet even if asset is not from a decentraland registry', async () => {
                 const beforeBalance = await nonOwner.getBalance();
-                const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                 const expectedRentId = 1;
                 const mockERC721Registry = await Deployer.deployContract('ERC721WithSetUpdateOperatorMock');
                 const secondAssetId = 1;
                 const metaverseTokenId = 50;
                 await mockERC721Registry.mint(owner.address, metaverseTokenId);
                 // and:
-                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                await landWorks.setRegistry(metaverseId, mockERC721Registry.address, true);
                 // and:
-                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
-                await marketplaceFacet
+                await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
+                await landWorks
                     .list(
                         metaverseId,
                         mockERC721Registry.address,
@@ -2535,39 +2627,39 @@ describe('LandWorks', function () {
                         minPeriod,
                         maxPeriod,
                         maxFutureTime,
-                        ethers.constants.AddressZero,
+                        ADDRESS_ONE,
                         pricePerSecond);
 
                 // when:
-                const tx = await decentralandFacet
+                const tx = await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(secondAssetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
                 const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
-                const rent = await marketplaceFacet.rentAt(secondAssetId, rentId);
+                const rent = await landWorks.rentAt(secondAssetId, rentId);
                 expect(rent.start).to.equal(timestamp);
                 expect(rent.end).to.equal(rent.start.add(minPeriod));
                 expect(rent.renter).to.equal(nonOwner.address);
                 // and:
-                const asset = await marketplaceFacet.assetAt(secondAssetId);
+                const asset = await landWorks.assetAt(secondAssetId);
                 expect(asset.totalRents).to.equal(1);
                 // and:
-                const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
                 expect(protocolFees).to.equal(expectedProtocolFee);
                 // and:
-                const assetRentFees = await feeFacet.assetRentFeesFor(secondAssetId, ethers.constants.AddressZero);
+                const assetRentFees = await landWorks.assetRentFeesFor(secondAssetId, ADDRESS_ONE);
                 expect(assetRentFees).to.equal(expectedRentFee);
                 // and:
                 const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                 const afterBalance = await nonOwner.getBalance();
                 expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
                 // and:
-                const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                 expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
                 // and:
-                const operator = await decentralandFacet.operatorFor(secondAssetId, expectedRentId);
+                const operator = await landWorks.operatorFor(secondAssetId, expectedRentId);
                 expect(operator).to.equal(nonOwner.address);
             });
         });
@@ -2575,13 +2667,13 @@ describe('LandWorks', function () {
         describe('updateState', async () => {
             it('should successfully update state', async () => {
                 // given:
-                const landId = (await marketplaceFacet.assetAt(assetId)).metaverseAssetId;
-                await decentralandFacet
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 2, nonOwner.address, { value: 2 * value });
 
                 // when:
-                await decentralandFacet.updateState(assetId, rentId);
+                await landWorks.updateState(assetId, rentId);
 
                 // then:
                 expect(await landRegistry.updateOperator(landId)).to.equal(nonOwner.address);
@@ -2589,13 +2681,13 @@ describe('LandWorks', function () {
 
             it('should emit event with args', async () => {
                 // given:
-                const landId = (await marketplaceFacet.assetAt(assetId)).metaverseAssetId;
-                await decentralandFacet
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 2, nonOwner.address, { value: 2 * value });
                 // then:
-                await expect(decentralandFacet.updateState(assetId, rentId))
-                    .to.emit(decentralandFacet, 'UpdateState')
+                await expect(landWorks.updateState(assetId, rentId))
+                    .to.emit(landWorks, 'UpdateState')
                     .withArgs(assetId, rentId, nonOwner.address)
                     .to.emit(landRegistry, 'UpdateOperator')
                     .withArgs(landId, nonOwner.address);
@@ -2607,7 +2699,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_assetId not found';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateState(invalidNftId, rentId))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2615,42 +2707,42 @@ describe('LandWorks', function () {
             it('should revert if it is not this rent\'s period ', async () => {
                 // given:
                 const expectedRevertMessage = 'block timestamp less than rent start';
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 3, nonOwner.address, { value: 3 * value });
                 // and:
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 2, nonOwner.address, { value: 2 * value });
 
                 // when:
-                await expect(decentralandFacet.updateState(assetId, 2))
+                await expect(landWorks.updateState(assetId, 2))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert if the rent has expired', async () => {
                 const expectedRevertMessage = 'block timestamp more than or equal to rent end';
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
 
                 // when:
-                await expect(decentralandFacet.updateState(assetId, rentId))
+                await expect(landWorks.updateState(assetId, rentId))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
 
         describe('updateAdministrativeState', async () => {
             beforeEach(async () => {
-                await decentralandFacet.updateAdministrativeOperator(administrativeOperator.address);
+                await landWorks.updateAdministrativeOperator(administrativeOperator.address);
             });
 
             it('should successfully update state', async () => {
                 // given:
-                const landId = (await marketplaceFacet.assetAt(assetId)).metaverseAssetId;
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
 
                 // when:
-                await decentralandFacet.updateAdministrativeState(assetId);
+                await landWorks.updateAdministrativeState(assetId);
 
                 // then:
                 expect(await landRegistry.updateOperator(landId)).to.equal(administrativeOperator.address);
@@ -2658,12 +2750,12 @@ describe('LandWorks', function () {
 
             it('should emit event with args', async () => {
                 // given:
-                const landId = (await marketplaceFacet.assetAt(assetId)).metaverseAssetId;
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
                 // then:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .updateAdministrativeState(assetId))
-                    .to.emit(decentralandFacet, 'UpdateAdministrativeState')
+                    .to.emit(landWorks, 'UpdateAdministrativeState')
                     .withArgs(assetId, administrativeOperator.address)
                     .to.emit(landRegistry, 'UpdateOperator')
                     .withArgs(landId, administrativeOperator.address);
@@ -2675,7 +2767,7 @@ describe('LandWorks', function () {
                 const expectedRevertMessage = '_assetId not found';
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateAdministrativeState(invalidNftId))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2683,12 +2775,12 @@ describe('LandWorks', function () {
             it('should revert if there is an active rent', async () => {
                 // given:
                 const expectedRevertMessage = '_assetId has an active rent';
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, 3, nonOwner.address, { value: 3 * value });
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateAdministrativeState(assetId))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2699,10 +2791,10 @@ describe('LandWorks', function () {
                 const metaverseTokenId = 50;
                 await mockERC721Registry.mint(owner.address, metaverseTokenId);
                 // and:
-                await marketplaceFacet.setRegistry(metaverseId, mockERC721Registry.address, true);
+                await landWorks.setRegistry(metaverseId, mockERC721Registry.address, true);
                 // and:
-                await mockERC721Registry.approve(marketplaceFacet.address, metaverseTokenId);
-                await marketplaceFacet
+                await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
+                await landWorks
                     .list(
                         metaverseId,
                         mockERC721Registry.address,
@@ -2710,11 +2802,11 @@ describe('LandWorks', function () {
                         minPeriod,
                         maxPeriod,
                         maxFutureTime,
-                        ethers.constants.AddressZero,
+                        ADDRESS_ONE,
                         pricePerSecond);
 
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateAdministrativeState(secondAssetId))
                     .to.be.reverted;
             });
@@ -2723,34 +2815,34 @@ describe('LandWorks', function () {
         describe('updateOperator', async () => {
             it('should successfully update operator', async () => {
                 // given:
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
 
                 // when:
-                await decentralandFacet.connect(nonOwner).updateOperator(assetId, rentId, artificialRegistry.address);
+                await landWorks.connect(nonOwner).updateOperator(assetId, rentId, artificialRegistry.address);
 
                 // then:
-                expect(await decentralandFacet.operatorFor(assetId, rentId)).to.equal(artificialRegistry.address);
+                expect(await landWorks.operatorFor(assetId, rentId)).to.equal(artificialRegistry.address);
             });
 
             it('should emit event with args', async () => {
                 // given:
-                await decentralandFacet
+                await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(assetId, minPeriod, nonOwner.address, { value });
 
                 // when:
-                await expect(decentralandFacet.connect(nonOwner)
+                await expect(landWorks.connect(nonOwner)
                     .updateOperator(assetId, rentId, artificialRegistry.address))
-                    .to.emit(decentralandFacet, 'UpdateOperator')
+                    .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(assetId, rentId, artificialRegistry.address);
             });
 
             it('should revert when operator is 0x0', async () => {
                 const expectedRevertMessage = '_newOperator must not be 0x0';
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .updateOperator(assetId, rentId, ethers.constants.AddressZero))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -2760,7 +2852,7 @@ describe('LandWorks', function () {
                 const invalidAssetId = 213;
                 const expectedRevertMessage = '_assetId not found';
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .updateOperator(invalidAssetId, rentId, nonOwner.address))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -2769,7 +2861,7 @@ describe('LandWorks', function () {
             it('should revert when caller is not renter', async () => {
                 const expectedRevertMessage = 'caller is not renter';
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateOperator(assetId, rentId, nonOwner.address))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2778,24 +2870,24 @@ describe('LandWorks', function () {
         describe('updateAdministrativeOperator', async () => {
             it('should successfully update administrative operator', async () => {
                 // when:
-                await decentralandFacet.updateAdministrativeOperator(administrativeOperator.address);
+                await landWorks.updateAdministrativeOperator(administrativeOperator.address);
 
                 // then:
-                expect(await decentralandFacet.administrativeOperator()).to.equal(administrativeOperator.address);
+                expect(await landWorks.administrativeOperator()).to.equal(administrativeOperator.address);
             });
 
             it('should emit event with args', async () => {
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateAdministrativeOperator(administrativeOperator.address))
-                    .to.emit(decentralandFacet, 'UpdateAdministrativeOperator')
+                    .to.emit(landWorks, 'UpdateAdministrativeOperator')
                     .withArgs(administrativeOperator.address);
             });
 
             it('should revert when new administrative operator is 0x0', async () => {
                 const expectedRevertMessage = '_administrativeOperator must not be 0x0';
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .updateAdministrativeOperator(ethers.constants.AddressZero))
                     .to.be.revertedWith(expectedRevertMessage);
             });
@@ -2803,7 +2895,7 @@ describe('LandWorks', function () {
             it('should revert when caller is not owner', async () => {
                 const expectedRevertMessage = 'Must be contract owner';
                 // when:
-                await expect(decentralandFacet
+                await expect(landWorks
                     .connect(nonOwner)
                     .updateAdministrativeOperator(administrativeOperator.address))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -2814,8 +2906,8 @@ describe('LandWorks', function () {
             const estateId = 1;
             beforeEach(async () => {
                 // given:
-                await marketplaceFacet.setRegistry(metaverseId, estateRegistry.address, true);
-                await feeFacet.setFee(ethers.constants.AddressZero, FEE_PERCENTAGE);
+                await landWorks.setRegistry(metaverseId, estateRegistry.address, true);
+                await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
                 // Creates an estate, consisting of 5 LAND parcels
                 const parcels = 5;
 
@@ -2829,9 +2921,9 @@ describe('LandWorks', function () {
 
                 await landRegistry.createEstate(coordsX, coordsY, owner.address);
 
-                await estateRegistry.approve(marketplaceFacet.address, estateId);
+                await estateRegistry.approve(landWorks.address, estateId);
 
-                await marketplaceFacet
+                await landWorks
                     .list(
                         metaverseId,
                         estateRegistry.address,
@@ -2839,7 +2931,7 @@ describe('LandWorks', function () {
                         minPeriod,
                         maxPeriod,
                         maxFutureTime,
-                        ethers.constants.AddressZero,
+                        ADDRESS_ONE,
                         pricePerSecond);
             });
 
@@ -2847,52 +2939,52 @@ describe('LandWorks', function () {
                 const estateAssetId = 1;
                 // given:
                 const beforeBalance = await nonOwner.getBalance();
-                const beforeMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                 const expectedRentId = 1;
 
                 // when:
-                const tx = await decentralandFacet
+                const tx = await landWorks
                     .connect(nonOwner)
                     .rentDecentraland(estateAssetId, minPeriod, nonOwner.address, { value });
                 const receipt = await tx.wait();
                 const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
 
                 // then:
-                const rent = await marketplaceFacet.rentAt(estateAssetId, rentId);
+                const rent = await landWorks.rentAt(estateAssetId, rentId);
                 expect(rent.start).to.equal(timestamp);
                 expect(rent.end).to.equal(rent.start.add(minPeriod));
                 expect(rent.renter).to.equal(nonOwner.address);
                 // and:
-                const asset = await marketplaceFacet.assetAt(estateAssetId);
+                const asset = await landWorks.assetAt(estateAssetId);
                 expect(asset.totalRents).to.equal(1);
                 // and:
-                const protocolFees = await feeFacet.protocolFeeFor(ethers.constants.AddressZero);
+                const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
                 expect(protocolFees).to.equal(expectedProtocolFee);
                 // and:
-                const assetRentFees = await feeFacet.assetRentFeesFor(estateAssetId, ethers.constants.AddressZero);
+                const assetRentFees = await landWorks.assetRentFeesFor(estateAssetId, ADDRESS_ONE);
                 expect(assetRentFees).to.equal(expectedRentFee);
                 // and:
                 const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                 const afterBalance = await nonOwner.getBalance();
                 expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
                 // and:
-                const afterMarketplaceBalance = await ethers.provider.getBalance(marketplaceFacet.address);
+                const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                 expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
                 // and:
-                const operator = await decentralandFacet.operatorFor(estateAssetId, expectedRentId);
+                const operator = await landWorks.operatorFor(estateAssetId, expectedRentId);
                 expect(operator).to.equal(nonOwner.address);
                 // and:
-                const estateId = (await marketplaceFacet.assetAt(estateAssetId)).metaverseAssetId;
+                const estateId = (await landWorks.assetAt(estateAssetId)).metaverseAssetId;
                 expect(await estateRegistry.updateOperator(estateId)).to.equal(nonOwner.address);
                 // and:
                 const start = timestamp;
                 const end = start + minPeriod;
                 await expect(tx)
-                    .to.emit(decentralandFacet, 'UpdateOperator')
+                    .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(estateAssetId, rentId, nonOwner.address)
-                    .to.emit(decentralandFacet, 'Rent')
-                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end, ethers.constants.AddressZero, value)
-                    .to.emit(decentralandFacet, 'UpdateState')
+                    .to.emit(landWorks, 'Rent')
+                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
+                    .to.emit(landWorks, 'UpdateState')
                     .withArgs(estateAssetId, rentId, nonOwner.address);
             });
         });
@@ -2940,7 +3032,7 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Add,
                 functionSelectors: selectors
             }];
-            await cutFacet.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
+            await landWorks.connect(owner).diamondCut(addTest1Facet, ethers.constants.AddressZero, '0x');
 
             // Remove the function selectors
             const selectorsToRemove = [ownerSel, sel5, sel10];
@@ -2949,10 +3041,10 @@ describe('LandWorks', function () {
                 action: FacetCutAction.Remove,
                 functionSelectors: selectorsToRemove
             }];
-            await cutFacet.connect(owner).diamondCut(removeSelectorsFacet, ethers.constants.AddressZero, '0x');
+            await landWorks.connect(owner).diamondCut(removeSelectorsFacet, ethers.constants.AddressZero, '0x');
 
             // Get the test1Facet's registered functions
-            let actualSelectors = await loupeFacet.facetFunctionSelectors(test1Facet.address);
+            let actualSelectors = await landWorks.facetFunctionSelectors(test1Facet.address);
             // Check individual correctness
             expect(actualSelectors).to.include(sel0, 'Does not contain sel0');
             expect(actualSelectors).to.include(sel1, 'Does not contain sel1');

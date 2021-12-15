@@ -1,47 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.10;
 
 import "../libraries/marketplace/LibMarketplace.sol";
+import "./IRentable.sol";
 
-interface IMarketplaceFacet {
+interface IMarketplaceFacet is IRentable {
     event List(
         uint256 _assetId,
         uint256 _metaverseId,
-        address _metaverseRegistry,
-        uint256 _metaverseAssetId,
+        address indexed _metaverseRegistry,
+        uint256 indexed _metaverseAssetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureTime,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _pricePerSecond
     );
     event UpdateConditions(
-        uint256 _assetId,
+        uint256 indexed _assetId,
         uint256 _minPeriod,
         uint256 _maxPeriod,
         uint256 _maxFutureTime,
-        address _paymentToken,
+        address indexed _paymentToken,
         uint256 _pricePerSecond
     );
-    event Rent(
-        uint256 indexed _assetId,
-        uint256 _rentId,
-        address indexed _renter,
-        uint256 _start,
-        uint256 _end,
-        address _paymentToken,
-        uint256 _fee
-    );
-    event Delist(uint256 _assetId, address indexed _caller);
-    event Withdraw(uint256 _assetId, address indexed _caller);
-    event ClaimRentFee(
-        uint256 _assetId,
-        address _token,
-        address indexed _recipient,
-        uint256 _amount
-    );
-    event SetMetaverseName(uint256 _metaverseId, string _name);
-    event SetRegistry(uint256 _metaverseId, address _registry, bool _status);
+    event Delist(uint256 indexed _assetId, address indexed _caller);
+    event Withdraw(uint256 indexed _assetId, address indexed _caller);
+    event SetMetaverseName(uint256 indexed _metaverseId, string _name);
+    event SetRegistry(uint256 indexed _metaverseId, address _registry, bool _status);
 
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
@@ -54,7 +40,7 @@ interface IMarketplaceFacet {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH.
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
     function list(
         uint256 _metaverseId,
@@ -65,7 +51,7 @@ interface IMarketplaceFacet {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond
-    ) external;
+    ) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.
     /// Pays out the unclaimed rent fees to the caller.
@@ -78,7 +64,7 @@ interface IMarketplaceFacet {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _pricePerSecond The price for rental per second
     function updateConditions(
         uint256 _assetId,
@@ -107,7 +93,7 @@ interface IMarketplaceFacet {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
-    function rent(uint256 _assetId, uint256 _period) external payable;
+    function rent(uint256 _assetId, uint256 _period) external payable returns (uint256, bool);
 
     /// @notice Sets name for a given Metaverse.
     /// @param _metaverseId The target metaverse

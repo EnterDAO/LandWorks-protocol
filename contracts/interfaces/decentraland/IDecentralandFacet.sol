@@ -1,22 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.10;
 
-interface IDecentralandFacet {
-    event Rent(
-        uint256 indexed _assetId,
-        uint256 _rentId,
-        address indexed _renter,
-        uint256 _start,
-        uint256 _end,
-        address _paymentToken,
-        uint256 _fee
-    );
-    event UpdateState(uint256 _assetId, uint256 _rentId, address _operator);
+import "../IRentable.sol";
+
+interface IDecentralandFacet is IRentable {
+    event UpdateState(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
     event UpdateAdministrativeState(
-        uint256 _assetId,
+        uint256 indexed _assetId,
         address indexed _operator
     );
-    event UpdateOperator(uint256 _assetId, uint256 _rentId, address _operator);
+    event UpdateOperator(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
     event UpdateAdministrativeOperator(address _administrativeOperator);
 
     /// @notice Rents Decentraland Estate/LAND.
