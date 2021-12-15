@@ -22,7 +22,8 @@ library LibRent {
         uint256 _start,
         uint256 _end,
         address indexed _paymentToken,
-        uint256 _fee
+        uint256 _rent,
+        uint256 _protocolFee
     );
 
     /// @dev Rents asset for a given period (in seconds)
@@ -65,7 +66,7 @@ library LibRent {
             require(msg.value == rentPayment, "invalid msg.value");
         }
 
-        LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
+        (uint256 _rentFee, uint256 _protocolFee) = LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
         uint256 rentId = LibMarketplace.addRent(
             _assetId,
             msg.sender,
@@ -89,7 +90,8 @@ library LibRent {
             rentStart,
             rentEnd,
             asset.paymentToken,
-            rentPayment
+            _rentFee,
+            _protocolFee
         );
 
         return (rentId, rentStartsNow);

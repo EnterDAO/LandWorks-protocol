@@ -36,7 +36,7 @@ library LibFee {
         uint256 _assetId,
         address _token,
         uint256 _amount
-    ) internal {
+    ) internal returns(uint256, uint256) {
         LibFee.FeeStorage storage fs = feeStorage();
 
         uint256 protocolFee = (_amount * fs.feePercentages[_token]) /
@@ -45,6 +45,8 @@ library LibFee {
         uint256 rentFee = _amount - protocolFee;
         fs.assetRentFees[_assetId][_token] += rentFee;
         fs.protocolFees[_token] += protocolFee;
+
+        return (rentFee, protocolFee);
     }
 
     function clearAccumulatedRent(uint256 _assetId, address _token)

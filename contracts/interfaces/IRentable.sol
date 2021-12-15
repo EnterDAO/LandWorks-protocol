@@ -11,6 +11,7 @@ interface IRentable {
         uint256 _start,
         uint256 _end,
         address indexed _paymentToken,
-        uint256 _fee
+        uint256 _rent,
+        uint256 _protocolFee
     );
 }

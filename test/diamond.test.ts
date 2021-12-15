@@ -1388,14 +1388,14 @@ describe('LandWorks', function () {
                 describe('rent', async () => {
                     const period = minPeriod;
                     const value = pricePerSecond * period;
+                    const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
+                    const expectedRentFee = value - expectedProtocolFee;
 
                     beforeEach(async () => {
                         await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
                     });
 
                     it('should successfully rent', async () => {
-                        const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
-                        const expectedRentFee = value - expectedProtocolFee;
                         const beforeBalance = await nonOwner.getBalance();
                         const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
                         const expectedRentId = 1;
@@ -1444,12 +1444,12 @@ describe('LandWorks', function () {
                         // then:
                         await expect(tx)
                             .to.emit(landWorks, 'Rent')
-                            .withArgs(assetId, expectedRentId, nonOwner.address, start, end, ADDRESS_ONE, value);
+                            .withArgs(assetId, expectedRentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee);
                     });
 
                     it('should calculate new rent from latest and accrue fees', async () => {
-                        const expectedProtocolFee = 2 * (Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION)); // calculates 2 rents
-                        const expectedRentFee = 2 * value - expectedProtocolFee;
+                        const expectedProtocolFeeAfterSecondRent = 2 * (Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION)); // calculates 2 rents
+                        const expectedRentFeeAfterSecondRent = 2 * value - expectedProtocolFeeAfterSecondRent;
                         const expectedRentId = 2; // expected second rentId
                         // given:
                         await landWorks
@@ -1466,16 +1466,16 @@ describe('LandWorks', function () {
                         // then:
                         await expect(tx)
                             .to.emit(landWorks, 'Rent')
-                            .withArgs(assetId, expectedRentId, nonOwner.address, expectedStart, expectedEnd, ADDRESS_ONE, value);
+                            .withArgs(assetId, expectedRentId, nonOwner.address, expectedStart, expectedEnd, ADDRESS_ONE, expectedRentFee, expectedProtocolFee);
                         // and:
                         const asset = await landWorks.assetAt(assetId);
                         expect(asset.totalRents).to.equal(2);
                         // and:
                         const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
-                        expect(protocolFees).to.equal(expectedProtocolFee);
+                        expect(protocolFees).to.equal(expectedProtocolFeeAfterSecondRent);
                         // and:
                         const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
-                        expect(assetRentFees).to.equal(expectedRentFee);
+                        expect(assetRentFees).to.equal(expectedRentFeeAfterSecondRent);
                     });
 
                     it('should revert when asset is not found', async () => {
@@ -1592,7 +1592,7 @@ describe('LandWorks', function () {
                             const end = start + period;
                             expect(tx)
                                 .to.emit(landWorks, 'Rent')
-                                .withArgs(assetId, expectedRentId, nonOwner.address, start, end, mockERC20Registry.address, value)
+                                .withArgs(assetId, expectedRentId, nonOwner.address, start, end, mockERC20Registry.address, expectedRentFee, expectedProtocolFee)
                                 .to.emit(mockERC20Registry, 'Transfer')
                                 .withArgs(nonOwner.address, landWorks.address, value);
                             // and:
@@ -2465,7 +2465,7 @@ describe('LandWorks', function () {
                     .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(assetId, rentId, nonOwner.address)
                     .to.emit(landWorks, 'Rent')
-                    .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, value)
+                    .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
                     .to.emit(landWorks, 'UpdateState')
                     .withArgs(assetId, rentId, nonOwner.address);
             });
@@ -2490,7 +2490,7 @@ describe('LandWorks', function () {
                     .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(assetId, secondRentId, artificialRegistry.address)
                     .to.emit(landWorks, 'Rent')
-                    .withArgs(assetId, secondRentId, nonOwner.address, start, end, ADDRESS_ONE, value)
+                    .withArgs(assetId, secondRentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
                     .to.not.emit(landWorks, 'UpdateState')
                     .withArgs(assetId, secondRentId, artificialRegistry.address);
             });
@@ -2983,7 +2983,7 @@ describe('LandWorks', function () {
                     .to.emit(landWorks, 'UpdateOperator')
                     .withArgs(estateAssetId, rentId, nonOwner.address)
                     .to.emit(landWorks, 'Rent')
-                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, value)
+                    .withArgs(estateAssetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
                     .to.emit(landWorks, 'UpdateState')
                     .withArgs(estateAssetId, rentId, nonOwner.address);
             });

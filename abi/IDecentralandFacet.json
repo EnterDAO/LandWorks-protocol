@@ -41,7 +41,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_fee",
+        "name": "_rent",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_protocolFee",
         "type": "uint256"
       }
     ],
