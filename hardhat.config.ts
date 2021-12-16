@@ -13,6 +13,15 @@ task('deploy', 'Deploys the LandWorks Diamond with all of its facets')
         await deployLandWorks();
     });
 
+task('rentDecentraland', 'Rents decentraland')
+    .addParam('landWorks', 'LandWorks contract address')
+    .addParam('assetId', 'Id of the asset')
+    .addParam('period', 'Period in seconds')
+    .setAction(async (taskArgs) => {
+        const rentDecentraland = require('./scripts/rentDecentraland');
+        await rentDecentraland(taskArgs.landWorks, taskArgs.assetId, taskArgs.period);
+    });
+
 module.exports = {
     solidity: {
         compilers: [
