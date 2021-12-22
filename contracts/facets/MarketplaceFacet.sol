@@ -94,7 +94,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     }
 
     /// @notice Updates the lending conditions for a given asset.
-    /// Pays out the unclaimed rent fees to the owner or to the caller if caller is the current consumer
+    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// Updated conditions apply the next time the asset is rented.
     /// Does not affect previous and queued rents.
     /// If any of the old conditions do not want to be modified, the old ones must be provided.
@@ -171,8 +171,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     }
 
     /// @notice Withdraws the already delisted from marketplace asset.
-    /// Burns the asset and transfers the original metaverse asset represented by the asset to the owner.
-    /// Pays out the current unclaimed rent fees to the caller.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
+    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) public payout(_assetId) {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace

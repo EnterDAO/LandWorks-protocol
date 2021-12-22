@@ -54,7 +54,7 @@ interface IMarketplaceFacet is IRentable {
     ) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.
-    /// Pays out the unclaimed rent fees to the caller.
+    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// Updated conditions apply the next time the asset is rented.
     /// Does not affect previous and queued rents.
     /// If any of the old conditions do not want to be modified, the old ones must be provided.
@@ -84,7 +84,7 @@ interface IMarketplaceFacet is IRentable {
 
     /// @notice Withdraws the already delisted from marketplace asset.
     /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
-    /// Pays out the current unclaimed rent fees to the asset owner.
+    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) external;
 
