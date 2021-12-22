@@ -171,7 +171,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     }
 
     /// @notice Withdraws the already delisted from marketplace asset.
-    /// Burns the asset and transfers the original metaverse asset represented by the asset to the owner.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
     /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) public payout(_assetId) {
