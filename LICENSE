@@ -1,7 +1,7 @@
 MIT License
 
-Copyright (c) 2021 EnterDAO, except for the files "DiamondCutFacet.sol", "DiamondLoupeFacet.sol", "OwnershipFacet.sol"
-and "LibDiamond.sol" which are copyright 2020 Nick Mudge <nick@perfectabstractions.com>
+Copyright (c) 2021 EnterDAO, except for the files "DiamondCutFacet.sol", "DiamondLoupeFacet.sol", "OwnershipFacet.sol",
+"IDiamondCut.sol", "IDiamondLoupe.sol" and "LibDiamond.sol" which are copyright 2020 Nick Mudge <nick@perfectabstractions.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
