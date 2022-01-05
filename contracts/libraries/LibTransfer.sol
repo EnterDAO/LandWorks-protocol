@@ -16,7 +16,6 @@ library LibTransfer {
 
     /// @notice Transfers tokens from contract to a recipient
     /// @dev If token is 0x0000000000000000000000000000000000000001, an ETH transfer is done
-    /// IMPORTANT! Any method calling safeTransfer must protect itself from reentrancy!
     /// @param _token The target token
     /// @param _recipient The recipient of the transfer
     /// @param _amount The amount of the transfer
