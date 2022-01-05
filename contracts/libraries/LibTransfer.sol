@@ -26,8 +26,7 @@ library LibTransfer {
         uint256 _amount
     ) internal {
         if (_token == ETHEREUM_PAYMENT_TOKEN) {
-            (bool success, ) = _recipient.call{value: _amount}("");
-            require(success, "Unable to send value, recipient may have reverted");
+            payable(_recipient).transfer(_amount);
         } else {
             IERC20(_token).safeTransfer(_recipient, _amount);
         }
