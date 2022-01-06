@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,14 +13,17 @@ import "../marketplace/LibMarketplace.sol";
 library LibRent {
     using SafeERC20 for IERC20;
 
+    address constant ETHEREUM_PAYMENT_TOKEN = address(1);
+
     event Rent(
         uint256 indexed _assetId,
         uint256 _rentId,
         address indexed _renter,
         uint256 _start,
         uint256 _end,
-        address _paymentToken,
-        uint256 _fee
+        address indexed _paymentToken,
+        uint256 _rent,
+        uint256 _protocolFee
     );
 
     /// @dev Rents asset for a given period (in seconds)
@@ -59,9 +62,19 @@ library LibRent {
         );
 
         uint256 rentPayment = _period * asset.pricePerSecond;
-        if (asset.paymentToken == address(0)) {
+        if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
             require(msg.value == rentPayment, "invalid msg.value");
-        } else {
+        }
+
+        (uint256 rentFee, uint256 protocolFee) = LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
+        uint256 rentId = LibMarketplace.addRent(
+            _assetId,
+            msg.sender,
+            rentStart,
+            rentEnd
+        );
+
+        if (asset.paymentToken != ETHEREUM_PAYMENT_TOKEN) {
             LibTransfer.safeTransferFrom(
                 asset.paymentToken,
                 msg.sender,
@@ -70,14 +83,6 @@ library LibRent {
             );
         }
 
-        LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
-        uint256 rentId = LibMarketplace.addRent(
-            _assetId,
-            msg.sender,
-            rentStart,
-            rentEnd
-        );
-
         emit Rent(
             _assetId,
             rentId,
@@ -85,7 +90,8 @@ library LibRent {
             rentStart,
             rentEnd,
             asset.paymentToken,
-            rentPayment
+            rentFee,
+            protocolFee
         );
 
         return (rentId, rentStartsNow);

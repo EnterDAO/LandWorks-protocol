@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.10;
+
+/******************************************************************************\
+* Co-Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* EIP-2535 Diamond Standard: https://eips.ethereum.org/EIPS/eip-2535
+*
+* Implementation of a diamond.
+/******************************************************************************/
 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -13,9 +20,7 @@ import "./interfaces/IERC173.sol";
 import "./interfaces/IERC721Consumable.sol";
 
 contract LandWorks {
-    constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner)
-        payable
-    {
+    constructor(IDiamondCut.FacetCut[] memory _diamondCut, address _owner) {
         require(_owner != address(0), "owner must not be 0x0");
 
         LibOwnership.setContractOwner(_owner);
@@ -57,6 +62,4 @@ contract LandWorks {
             }
         }
     }
-
-    receive() external payable {}
 }

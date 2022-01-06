@@ -9,6 +9,9 @@
 
 LandWorks is a protocol, developed by [EnterDao](https://enterdao.xyz). Detailed information and description can be found in the [Whitepaper](./Whitepaper.md).
 
+Audits on the LandWorks Protocol and Yield Farming contracts:
+- [Omega](audits/2021-12-Omega.pdf)
+
 ## Development
 
 [hardhat](https://hardhat.org/) - framework used for the development and testing of the contracts
@@ -20,6 +23,15 @@ npm install
 ```
 
 ### Compilation
+**Prerequisite**
+
+Before running the deploy `npx hardhat` script, you need to create and populate the `config.ts` file. You can use the `config.sample.ts` file and populate the following variables:
+
+```markdown
+YOUR-INFURA-API-KEY
+YOUR-ETHERSCAN-API-KEY
+```
+
 Before you deploy the contracts, you will need to compile them using:
 
 ```
@@ -27,15 +39,6 @@ npx hardhat compile
 ```
 
 ### Deployment
-
-**Prerequisite**
-
-Before running the deploy `npx hardhat` script, you need to create and populate the `config.ts` file. You can use the `config.sample.ts` file and populate the following variables: 
-
-```markdown
-YOUR-INFURA-API-KEY
-YOUR-ETHERSCAN-API-KEY
-```
 
 **Deployment Script**
 * Deploys all the facets
@@ -56,6 +59,13 @@ npx hardhat test
 ```
 
 #### Coverage
+
 ```bash
-npx hardhat coverage
+npm run coverage
+```
+
+or 
+
+```bash
+npx hardhat coverage --solcoverjs .solcover.ts
 ```

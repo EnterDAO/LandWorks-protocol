@@ -4,7 +4,8 @@
   "description": "LandWorks smart contracts",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage --solcoverjs .solcover.ts"
   },
   "repository": {
     "type": "git",
@@ -40,6 +41,6 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.3.2"
+    "@openzeppelin/contracts": "4.4.0"
   }
 }

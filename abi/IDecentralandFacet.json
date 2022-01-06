@@ -33,7 +33,7 @@
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "_paymentToken",
         "type": "address"
@@ -41,7 +41,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_fee",
+        "name": "_rent",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_protocolFee",
         "type": "uint256"
       }
     ],
@@ -65,7 +71,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_assetId",
         "type": "uint256"
@@ -84,7 +90,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_assetId",
         "type": "uint256"
@@ -96,7 +102,7 @@
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "_operator",
         "type": "address"
@@ -109,7 +115,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_assetId",
         "type": "uint256"
@@ -121,7 +127,7 @@
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "_operator",
         "type": "address"

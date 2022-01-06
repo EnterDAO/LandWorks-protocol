@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.9;
+pragma solidity 0.8.10;
 
 /**
  * @dev A mixture of IERC721 and IERC721Metadata, including some additions.

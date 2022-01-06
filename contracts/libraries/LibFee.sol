@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
@@ -10,8 +10,8 @@ library LibFee {
     bytes32 constant FEE_STORAGE_POSITION =
         keccak256("com.enterdao.landworks.fee");
 
-    event SetTokenPayment(address _token, bool _status);
-    event SetFee(address _token, uint256 _fee);
+    event SetTokenPayment(address indexed _token, bool _status);
+    event SetFee(address indexed _token, uint256 _fee);
 
     struct FeeStorage {
         // Supported tokens as a form of payment
@@ -36,7 +36,7 @@ library LibFee {
         uint256 _assetId,
         address _token,
         uint256 _amount
-    ) internal {
+    ) internal returns(uint256, uint256) {
         LibFee.FeeStorage storage fs = feeStorage();
 
         uint256 protocolFee = (_amount * fs.feePercentages[_token]) /
@@ -45,9 +45,11 @@ library LibFee {
         uint256 rentFee = _amount - protocolFee;
         fs.assetRentFees[_assetId][_token] += rentFee;
         fs.protocolFees[_token] += protocolFee;
+
+        return (rentFee, protocolFee);
     }
 
-    function claimRentFee(uint256 _assetId, address _token)
+    function clearAccumulatedRent(uint256 _assetId, address _token)
         internal
         returns (uint256)
     {
@@ -59,7 +61,7 @@ library LibFee {
         return amount;
     }
 
-    function claimProtocolFee(address _token) internal returns (uint256) {
+    function clearAccumulatedProtocolFee(address _token) internal returns (uint256) {
         LibFee.FeeStorage storage fs = feeStorage();
 
         uint256 amount = fs.protocolFees[_token];

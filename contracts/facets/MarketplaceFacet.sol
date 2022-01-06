@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
@@ -12,8 +12,9 @@ import "../libraries/LibFee.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibRent.sol";
+import "../shared/RentPayout.sol";
 
-contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
+contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
     /// and mints an asset, representing the locked asset.
@@ -25,7 +26,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH.
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
     function list(
         uint256 _metaverseId,
@@ -36,10 +37,14 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond
-    ) external {
+    ) external returns (uint256){
         require(
             _metaverseRegistry != address(0),
             "_metaverseRegistry must not be 0x0"
+        );
+        require(
+            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
+            "_registry not supported"
         );
         require(_minPeriod != 0, "_minPeriod must not be 0");
         require(_maxPeriod != 0, "_maxPeriod must not be 0");
@@ -48,24 +53,12 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _maxPeriod <= _maxFutureTime,
             "_maxPeriod more than _maxFutureTime"
         );
-        require(
-            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
-            "_registry not supported"
-        );
-        enforceIsValidToken(_paymentToken);
-
-        LibTransfer.erc721SafeTransferFrom(
-            _metaverseRegistry,
-            msg.sender,
-            address(this),
-            _metaverseAssetId
-        );
-
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
+        require(LibFee.supportsTokenPayment(_paymentToken), "payment type not supported");
 
         uint256 asset = LibERC721.safeMint(msg.sender);
 
+        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
+            .marketplaceStorage();
         ms.assets[asset] = LibMarketplace.Asset({
             metaverseId: _metaverseId,
             metaverseRegistry: _metaverseRegistry,
@@ -79,6 +72,13 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             totalRents: 0
         });
 
+        LibTransfer.erc721SafeTransferFrom(
+            _metaverseRegistry,
+            msg.sender,
+            address(this),
+            _metaverseAssetId
+        );
+
         emit List(
             asset,
             _metaverseId,
@@ -90,10 +90,11 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _paymentToken,
             _pricePerSecond
         );
+        return asset;
     }
 
     /// @notice Updates the lending conditions for a given asset.
-    /// Pays out the unclaimed rent fees to the caller.
+    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// Updated conditions apply the next time the asset is rented.
     /// Does not affect previous and queued rents.
     /// If any of the old conditions do not want to be modified, the old ones must be provided.
@@ -103,7 +104,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
-    /// Provide 0x0 for ETH
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _pricePerSecond The price for rental per second
     function updateConditions(
         uint256 _assetId,
@@ -112,9 +113,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond
-    ) external {
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
+    ) external payout(_assetId) {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
                 LibERC721.isConsumerOf(msg.sender, _assetId),
@@ -127,24 +126,15 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             _maxPeriod <= _maxFutureTime,
             "_maxPeriod more than _maxFutureTime"
         );
-        enforceIsValidToken(_paymentToken);
+        require(LibFee.supportsTokenPayment(_paymentToken), "payment type not supported");
 
+        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace.marketplaceStorage();
         LibMarketplace.Asset storage asset = ms.assets[_assetId];
-        address oldPaymentToken = asset.paymentToken;
-
         asset.paymentToken = _paymentToken;
         asset.minPeriod = _minPeriod;
         asset.maxPeriod = _maxPeriod;
         asset.maxFutureTime = _maxFutureTime;
         asset.pricePerSecond = _pricePerSecond;
-
-        uint256 rentFee = LibFee.claimRentFee(_assetId, oldPaymentToken);
-
-        address receiver = LibERC721.consumerOf(_assetId);
-        if (msg.sender != receiver) {
-            receiver = LibERC721.ownerOf(_assetId);
-        }
-        transferRentFee(_assetId, oldPaymentToken, receiver, rentFee);
 
         emit UpdateConditions(
             _assetId,
@@ -176,15 +166,15 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         emit Delist(_assetId, msg.sender);
 
         if (block.timestamp >= ms.rents[_assetId][asset.totalRents].end) {
-            withdraw(_assetId, asset);
+            withdraw(_assetId);
         }
     }
 
     /// @notice Withdraws the already delisted from marketplace asset.
-    /// Burns the asset and transfers the original metaverse asset represented by the asset to the caller.
-    /// Pays out the current unclaimed rent fees to the caller.
+    /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
+    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
     /// @param _assetId The target _assetId
-    function withdraw(uint256 _assetId) external {
+    function withdraw(uint256 _assetId) public payout(_assetId) {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         require(
@@ -201,7 +191,18 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
             "_assetId has an active rent"
         );
 
-        withdraw(_assetId, asset);
+        delete LibMarketplace.marketplaceStorage().assets[_assetId];
+        address owner = LibERC721.ownerOf(_assetId);
+        LibERC721.burn(_assetId);
+
+        LibTransfer.erc721SafeTransferFrom(
+            asset.metaverseRegistry,
+            address(this),
+            owner,
+            asset.metaverseAssetId
+        );
+
+        emit Withdraw(_assetId, owner);
     }
 
     /// @notice Rents an asset for a given period.
@@ -209,8 +210,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
-    function rent(uint256 _assetId, uint256 _period) external payable {
-        LibRent.rent(_assetId, _period);
+    function rent(uint256 _assetId, uint256 _period) external payable returns (uint256, bool) {
+        (uint256 rentId, bool rentStartsNow) = LibRent.rent(_assetId, _period);
+        return (rentId, rentStartsNow);
     }
 
     /// @notice Sets name for a given Metaverse.
@@ -303,55 +305,5 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder {
         returns (LibMarketplace.Rent memory)
     {
         return LibMarketplace.rentAt(_assetId, _rentId);
-    }
-
-    /// @notice Burns the asset and transfers the original metaverse asset,
-    /// represented by the asset to the owner of the asset.
-    /// Pays out the current unclaimed rent fees to the owner of the asset.
-    /// @param _assetId The target asset
-    /// @param _asset The preloaded asset information
-    function withdraw(uint256 _assetId, LibMarketplace.Asset memory _asset)
-        internal
-    {
-        delete LibMarketplace.marketplaceStorage().assets[_assetId];
-        address owner = LibERC721.ownerOf(_assetId);
-        LibERC721.burn(_assetId);
-
-        uint256 rentFee = LibFee.claimRentFee(_assetId, _asset.paymentToken);
-        transferRentFee(_assetId, _asset.paymentToken, owner, rentFee);
-
-        LibTransfer.erc721SafeTransferFrom(
-            _asset.metaverseRegistry,
-            address(this),
-            owner,
-            _asset.metaverseAssetId
-        );
-
-        emit Withdraw(_assetId, owner);
-    }
-
-    /// @notice Transfers rent fee to a receiver
-    /// @dev Emits and event for the given asset
-    /// @param _assetId The target asset
-    /// @param _token The target token
-    /// @param _receiver The target receiver
-    /// @param _amount The amount to be transferred
-    function transferRentFee(
-        uint256 _assetId,
-        address _token,
-        address _receiver,
-        uint256 _amount
-    ) internal {
-        LibTransfer.safeTransfer(_token, _receiver, _amount);
-        emit ClaimRentFee(_assetId, _token, _receiver, _amount);
-    }
-
-    /// @dev Checks whether provided token is 0x0 (represents ETH) or supported by the platform.
-    /// @param _token The target token
-    function enforceIsValidToken(address _token) internal view {
-        require(
-            _token == address(0) || LibFee.supportsTokenPayment(_token),
-            "token not supported"
-        );
     }
 }

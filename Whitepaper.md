@@ -75,13 +75,16 @@ where `startTimestamp` & `endTimestamp` are the start and end timestamps during 
 
 ### Providing Land
 
-Users who own Мetaverse land will be able to `add` their land into the LandWorks protocol by executing an `add` transaction. Once executed, the land NFT will be transferred and locked into the LandWorks contracts. The protocol will mint `LandWorksNFT` (representing the deposited land) to the sender in exchange for that.
+Users who own Мetaverse land will be able to `list` their land into the LandWorks protocol by executing an `list` transaction. Once executed, the land NFT will be transferred and locked into the LandWorks contracts. The protocol will mint `LandWorksNFT` (representing the deposited land) to the sender in exchange for that.
 
-The owner of the land will specify the following properties as part of the `add` transaction:
+The owner of the land will specify the following properties as part of the `list` transaction:
 
+- `metaverseId` - the ID of the metaverse
+- `metaverseRegistry` - the registry of the metaverse
+- `metaverseAssetId` - the ID from the metaverse registry
 - `minPeriod` - the minimum number of seconds the land can be rented
 - `maxPeriod` - the maximum number of seconds the land can be rented
-- `maxFutureTimestamp` - the timestamp delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureTimestamp=100_000`, the land will be rented at most 100_000 seconds in the future.
+- `maxFutureTime` - the timestamp delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureTimestamp=100_000`, the land will be rented at most 100_000 seconds in the future.
 - `pricePerSecond` - the price of the rent charged per second
 
 Lenders will be able to control the assets that they will be getting paid in. They will be able to choose from a whitelisted set of `ERC20` tokens or `ETH` as a form of payment. The list of supported tokens will be governed by the EnterDAO.
@@ -90,7 +93,8 @@ Lenders will be able to control the assets that they will be getting paid in. Th
 
 ### Removing Provided Land
 
-Users that own `LandWorkNft`s will be able to `remove` the land represented by the `LandWorksNft` from the marketplace. Once executed, the transaction will:
+Users that own `LandWorkNft`s will be able to `delist` the land represented by the `LandWorksNft` from the marketplace. 
+Once executed, the transaction will:
 
 - Transfer and burn the `LandWorksNft`
 - Payout the accumulated rent to the `LandWorksNft` owner
@@ -110,7 +114,7 @@ Lenders will receive `LandWorksNft` that represents the ownership of a given lan
 
 Users that want to rent land will be able to do it by executing `rent` transactions. The renter will specify:
 
-- `LandWorksNft` - The ID of the Land that he wants to rent
+- `assetId` - The ID of the Land that he wants to rent
 - `period` - number of seconds for which the land will be rented
 - Other metaverse specific arguments such as `operator` address (in the case of Decentraland). The `operator` address will be set as a default operator of the LAND.
 
@@ -139,7 +143,9 @@ Since renters will be queueing when they execute `rent` transactions, there is n
 
 **Decentraland**
 
-There will be a `updateState(LandWorksNft, ruler)` transaction that will update the `ruler` of the LAND/Estate to the one specified as an argument if it is indeed the `renter` that must be the new `ruler`. Anyone can execute the transaction. The transaction will change the `operator` of the LAND/Estate to the one specified by the `ruler`. Doing so, the protocol will authorise the `ruler` to install scenes. He will not be able to transfer or sell the rented land. The only permission given to him is the permission to install scenes.
+There will be a `updateState(assetId, rentId)` transaction that will update the `ruler` of the LAND/Estate to the one 
+configured for the rent. Anyone can execute  the transaction. The transaction will change the `operator` of the 
+LAND/Estate to the one specified by the `ruler`. Doing so, the protocol will authorise the `ruler` to install scenes. He will not be able to transfer or sell the rented land. The only permission given to him is the permission to install scenes.
 
 **Note (1):** The `ruler` will be able to update the default `operator` address that he provided as part of the `rent` transaction. He will be able to do so by executing `updateOperator` transaction.
 
@@ -171,13 +177,19 @@ Owners (or approved addresses/operators) of `LandWorksNft` are eligible to execu
 
 ### Updating lending conditions
 
-Lenders (`LandWorksNft` owners) will be able to update their lending conditions by executing `updateConditions` transactions. They will be able to update the parameters on the land they provided in the protocol. Those parameters are the same as the one specified on `add` transactions:
+Lenders (`LandWorksNft` owners) will be able to update their lending conditions by executing `updateConditions` 
+transactions. They will be able to update the parameters on the land they provided in the protocol. Those parameters 
+are the same as the one specified on `list` transactions:
 
+- `assetId` - the target asset
 - `minPeriod` - the minimum number of seconds the land can be rented
 - `maxPeriod` - the maximum number of seconds the land can be rented
-- `maxFutureSecond` - the block delta after which the protocol will not allow for the land to be rented. Example: If `maxFutureSecond=100_000`, the land will be rented at most 100_000 seconds in the future. This is needed in order to enable the lender to balance between land usage optimisation and their own perceived rate of the land price increase. It is advised for them to set it to the minimum period they feel that the land will noticeably appreciate therefore the rent should be increased.
-- `pricePerSecond` - the price of the rent charged per block
-- `tokenAddress` - the token in which rent will be charged (if different from ETH)
+- `maxFutureTime` - the block delta after which the protocol will not allow for the land to be rented. Example: If 
+  `maxFutureTime=100_000`, the land will be rented at most 100_000 seconds in the future. This is needed in order to 
+  enable the lender to balance between land usage optimisation and their own perceived rate of the land price increase. It is advised for them to set it to the minimum period they feel that the land will noticeably appreciate therefore the rent should be increased.
+- `paymentToken` - the token which will be accepted as a form of payment. Provide 0x0 for ETH
+- `pricePerSecond` - the price of the rental per second
+
 
 **Note (1):**
 

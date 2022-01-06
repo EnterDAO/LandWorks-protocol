@@ -3,6 +3,12 @@ import { ethers } from 'hardhat';
 import { Deployer } from "../utils/deployer";
 import { Diamond } from "../utils/diamond";
 
+const ERC721_NAME = "LandWorks";
+const ERC721_SYMBOL = "LW";
+const ERC721_BASE_URI = "https://api.landworks.xyz/nfts/"
+const ADDRESS_ONE = '0x0000000000000000000000000000000000000001';
+const FEE_PERCENTAGE = 3_000; // 3% fee percentage based on 100_000 fee precision
+
 async function deploy() {
     await hardhat.run('compile');
     const deployers = await ethers.getSigners();
@@ -46,6 +52,13 @@ async function deploy() {
         deployerAddress,
     );
     console.log(`LandWorks (Diamond) deployed at: ${diamond.address}`);
+
+    console.log(`Initialising LandWorks NFT...`);
+    const landWorks = await ethers.getContractAt("ILandWorks", diamond.address);
+    await landWorks.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI);
+
+    console.log(`Enabling ETH as Payment Type...`);
+    await landWorks.setTokenPayment(ADDRESS_ONE, FEE_PERCENTAGE, true);
 
     /**
      * Verify Contracts
