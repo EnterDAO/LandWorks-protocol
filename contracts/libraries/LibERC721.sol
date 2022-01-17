@@ -20,7 +20,7 @@ library LibERC721 {
         string symbol;
         // Token base URI
         string baseURI;
-        // Tracks the tokens minted.
+        // Tracks the total tokens minted.
         Counters.Counter totalMinted;
         // Mapping from token ID to owner address
         mapping(uint256 => address) owners;
