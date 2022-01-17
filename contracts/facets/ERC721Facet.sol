@@ -36,11 +36,7 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable, RentPayout {
      * @dev See {IERC721-balanceOf}.
      */
     function balanceOf(address owner) public view returns (uint256) {
-        require(
-            owner != address(0),
-            "ERC721: balance query for the zero address"
-        );
-        return LibERC721.erc721Storage().balances[owner];
+        return LibERC721.balanceOf(owner);
     }
 
     /**
@@ -85,6 +81,47 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable, RentPayout {
      */
     function baseURI() public view returns (string memory) {
         return LibERC721.erc721Storage().baseURI;
+    }
+
+    /**
+     * @dev See {IERC721Enumerable-totalSupply}.
+     */
+    function totalSupply() public view returns (uint256) {
+        return LibERC721.erc721Storage().allTokens.length;
+    }
+
+    /**
+     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
+     */
+    function tokenOfOwnerByIndex(address owner, uint256 index)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        require(
+            index < balanceOf(owner),
+            "ERC721Enumerable: owner index out of bounds"
+        );
+        return LibERC721.erc721Storage().ownedTokens[owner][index];
+    }
+
+    /**
+     * @dev See {IERC721Enumerable-tokenByIndex}.
+     */
+    function tokenByIndex(uint256 index)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        require(
+            index < totalSupply(),
+            "ERC721Enumerable: global index out of bounds"
+        );
+        return LibERC721.erc721Storage().allTokens[index];
     }
 
     /**

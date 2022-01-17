@@ -1,15 +1,15 @@
-import {ethers} from 'hardhat';
-import {expect} from 'chai';
-import {Contract} from 'ethers';
-import {Diamond} from '../utils/diamond';
+import { ethers } from 'hardhat';
+import { expect } from 'chai';
+import { Contract } from 'ethers';
+import { Diamond } from '../utils/diamond';
 import {
     EstateRegistry,
     LandRegistry,
     Test1Facet,
     Test2Facet
 } from '../typechain';
-import {Deployer} from "../utils/deployer";
-import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import { Deployer } from "../utils/deployer";
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import FacetCutAction = Diamond.FacetCutAction;
 
 describe('LandWorks', function () {
@@ -277,6 +277,9 @@ describe('LandWorks', function () {
             const IERC721Metadata = '0x5b5e139f';
             expect(await landWorks.supportsInterface(IERC721Metadata)).to.be.true;
 
+            const IERC721Enumerable = '0x780e9d63';
+            expect(await landWorks.supportsInterface(IERC721Enumerable)).to.be.true;
+
             const IERC721Consumable = await ethers.getContractAt('IERC721Consumable', ethers.constants.AddressZero);
             expect(await landWorks.supportsInterface(Diamond.getInterfaceId(IERC721Consumable))).to.be.true;
         });
@@ -453,6 +456,9 @@ describe('LandWorks', function () {
                     expect(asset.pricePerSecond).equal(pricePerSecond);
                     expect(asset.status).to.equal(0); // Listed
                     expect(asset.totalRents).to.equal(0);
+                    expect(await landWorks.totalSupply()).to.equal(1);
+                    expect(await landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.equal(assetId);
+                    expect(await landWorks.tokenByIndex(assetId)).to.equal(assetId);
                 });
 
                 it('should emit event with args', async () => {
@@ -680,6 +686,39 @@ describe('LandWorks', function () {
                             ADDRESS_ONE,
                             pricePerSecond))
                         .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('withdrawing and listing again should not get the old token id for the latest asset', async () => {
+                    const newlyGeneratedTokenId = 1;
+                    // given:
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
+                    await landWorks.list(metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
+                    await landWorks.delist(assetId);
+
+                    // when:
+                    await mockERC721Registry.approve(landWorks.address, metaverseTokenId);
+                    await landWorks.list(metaverseId, mockERC721Registry.address, metaverseTokenId, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
+
+                    // then:
+                    await expect(landWorks.ownerOf(assetId)).to.be.revertedWith('ERC721: owner query for nonexistent token');
+                    // and:
+                    expect(await mockERC721Registry.ownerOf(metaverseTokenId)).to.equal(landWorks.address);
+                    expect(await landWorks.ownerOf(newlyGeneratedTokenId)).to.be.equal(owner.address);
+                    // and:
+                    const asset = await landWorks.assetAt(newlyGeneratedTokenId);
+                    expect(asset.metaverseId).to.equal(metaverseId);
+                    expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
+                    expect(asset.metaverseAssetId).to.equal(metaverseTokenId);
+                    expect(asset.paymentToken).to.equal(ADDRESS_ONE);
+                    expect(asset.minPeriod).to.equal(minPeriod);
+                    expect(asset.maxPeriod).to.equal(maxPeriod);
+                    expect(asset.maxFutureTime).to.equal(maxFutureTime);
+                    expect(asset.pricePerSecond).equal(pricePerSecond);
+                    expect(asset.status).to.equal(0); // Listed
+                    expect(asset.totalRents).to.equal(0);
+                    expect(await landWorks.totalSupply()).to.equal(1);
+                    expect(await landWorks.tokenOfOwnerByIndex(owner.address, 0)).to.equal(newlyGeneratedTokenId);
+                    expect(await landWorks.tokenByIndex(0)).to.equal(newlyGeneratedTokenId);
                 });
             });
 
@@ -1196,6 +1235,9 @@ describe('LandWorks', function () {
                         expect(asset.pricePerSecond).equal(0);
                         expect(asset.status).to.equal(0);
                         expect(asset.totalRents).to.equal(0);
+                        expect(await landWorks.totalSupply()).to.equal(0);
+                        await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                        await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
                     });
 
                     it('should emit events with args', async () => {
@@ -1319,6 +1361,9 @@ describe('LandWorks', function () {
                         expect(asset.pricePerSecond).equal(0);
                         expect(asset.status).to.equal(0);
                         expect(asset.totalRents).to.equal(0);
+                        expect(await landWorks.totalSupply()).to.equal(0);
+                        await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                        await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
                     });
 
                     it('should emit events with args', async () => {
@@ -1923,6 +1968,15 @@ describe('LandWorks', function () {
                     // and:
                     const afterMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
                     expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.sub(expectedProtocolFee));
+                });
+
+                it('should not emit event with args if protocol fee is zero', async () => {
+                    // given:
+                    await landWorks.claimProtocolFee(mockERC20Registry.address);
+
+                    // when:
+                    await expect(landWorks.claimProtocolFee(mockERC20Registry.address))
+                        .to.not.emit(landWorks, 'ClaimProtocolFee');
                 });
             });
 
