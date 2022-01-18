@@ -109,6 +109,10 @@ describe('ERC721Facet', function () {
         expect(await erc721Facet.baseURI()).to.equal(ERC721_BASE_URI);
     });
 
+    it('should have 1 total supply', async () => {
+        expect(await erc721Facet.totalSupply()).to.equal(1);
+    });
+
     it('should revert when already initialized', async () => {
         const expectedRevertMessage = 'ERC721 Storage already initialized';
         await expect(erc721Facet.initERC721(ERC721_NAME, ERC721_SYMBOL, ERC721_BASE_URI))
@@ -183,6 +187,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully transferFrom when called by approved', async () => {
@@ -207,6 +215,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully transferFrom when called by operator', async () => {
@@ -231,6 +243,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully transferFrom when called by owner without approval', async () => {
@@ -257,6 +273,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully transferFrom from owner to owner', async () => {
@@ -278,6 +298,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.equal(tokenID);
             });
 
             it('should clear consumer when transferred', async () => {
@@ -302,6 +324,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.equal(tokenID);
             });
 
             it('should revert when sender is not owner', async () => {
@@ -351,6 +375,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom when called by approved', async () => {
@@ -373,6 +401,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom when called by operator', async () => {
@@ -395,6 +427,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom when called by owner without approval', async () => {
@@ -419,6 +455,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom from owner to owner', async () => {
@@ -436,6 +476,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.equal(tokenID);
             });
 
 
@@ -459,6 +501,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.equal(tokenID);
             });
 
             it('should revert when sender is not owner', async () => {
@@ -514,6 +558,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should successfully safeTransferFrom when called by approved', async () => {
@@ -536,6 +584,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should successfully safeTransferFrom when called by operator', async () => {
@@ -560,6 +612,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should successfully safeTransferFrom when called by owner without approval', async () => {
@@ -586,6 +642,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should revert when receiver contract returns unexpected value', async () => {
@@ -654,6 +714,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom when called by approved', async () => {
@@ -676,6 +740,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom when called by operator', async () => {
@@ -698,6 +766,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom when called by owner without approval', async () => {
@@ -722,6 +794,10 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                 // and:
                 expect(await erc721Facet.balanceOf(other.address)).to.equal(1);
+                // and:
+                await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.equal(tokenID);
             });
 
             it('should successfully safeTransferFrom from owner to owner', async () => {
@@ -741,6 +817,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.getApproved(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.equal(tokenID);
             });
 
             it('should clear consumer when safeTransferFrom', async () => {
@@ -765,6 +843,8 @@ describe('ERC721Facet', function () {
                 expect(await erc721Facet.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 // and:
                 expect(await erc721Facet.balanceOf(owner.address)).to.equal(1);
+                // and:
+                expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.equal(tokenID);
             });
 
             it('should revert when sender is not owner', async () => {
@@ -820,6 +900,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should successfully safeTransferFrom when called by approved', async () => {
@@ -844,6 +928,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should successfully safeTransferFrom when called by operator', async () => {
@@ -868,6 +956,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should successfully safeTransferFrom when called by owner without approval', async () => {
@@ -894,6 +986,10 @@ describe('ERC721Facet', function () {
                     expect(await erc721Facet.balanceOf(owner.address)).to.equal(0);
                     // and:
                     expect(await erc721Facet.balanceOf(contractReceiver.address)).to.equal(1);
+                    // and:
+                    await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    // and:
+                    expect(await erc721Facet.tokenOfOwnerByIndex(contractReceiver.address, 0)).to.be.equal(tokenID);
                 });
 
                 it('should revert when receiver contract returns unexpected value', async () => {
@@ -1263,7 +1359,7 @@ describe('ERC721Facet', function () {
                 const beforeBalance = await owner.getBalance();
                 // when
                 const tx = await erc721Facet.connect(approved)
-                    ['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
+                ['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
 
                 // then
                 await expect(tx)
@@ -1272,13 +1368,13 @@ describe('ERC721Facet', function () {
 
                 const afterBalance = await owner.getBalance();
                 expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
-            })
+            });
 
             it('should payout rent on safeTransferFrom when called by operator', async () => {
                 const beforeBalance = await owner.getBalance();
                 // when
                 const tx = await erc721Facet.connect(operator)
-                    ['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
+                ['safeTransferFrom(address,address,uint256)'](owner.address, other.address, tokenID);
 
                 // then
                 await expect(tx)
@@ -1287,7 +1383,126 @@ describe('ERC721Facet', function () {
 
                 const afterBalance = await owner.getBalance();
                 expect(afterBalance).to.equal(beforeBalance.add(pricePerSecond));
-            })
-        })
-    })
+            });
+        });
+    });
+
+    describe('tokenOfOwnerByIndex', async () => {
+        it('should sucessfully return the token ID placed at the given index', async () => {
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.equal(tokenID);
+        });
+
+        it('should revert when index is equal to the total tokens owned by the given address', async () => {
+            const expectedRevertMessage = 'ERC721Enumerable: owner index out of bounds';
+            await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 1)).to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should revert when index is greater than the total tokens owned by the given address', async () => {
+            const expectedRevertMessage = 'ERC721Enumerable: owner index out of bounds';
+            await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 2)).to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should revert when the given address does not own any tokens', async () => {
+            const expectedRevertMessage = 'ERC721Enumerable: owner index out of bounds';
+            await expect(erc721Facet.tokenOfOwnerByIndex(other.address, 0)).to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should switch indexes if one is burnt', async () => {
+            // given:
+            // LandWorks NFTS will be [1, 2, 3], given that we start from 0
+            const newIds = [2, 3, 4];
+            await mockERC721Registry.setApprovalForAll(marketplaceFacet.address, true);
+
+            for (const newId of newIds) {
+                await mockERC721Registry.mint(owner.address, newId);
+                // and:
+                await marketplaceFacet.list(
+                    metaverseId,
+                    mockERC721Registry.address,
+                    newId,
+                    minPeriod,
+                    maxPeriod,
+                    maxFutureTime,
+                    ADDRESS_ONE,
+                    pricePerSecond);
+            }
+            expect(await erc721Facet.totalSupply()).to.equal(4);
+            // and:
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.equal(0);
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 1)).to.equal(1);
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 2)).to.equal(2);
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 3)).to.equal(3);
+
+            // when:
+            await marketplaceFacet.delist(tokenID);
+
+            // then:
+            expect(await erc721Facet.totalSupply()).to.equal(3);
+            // and:
+            expect(await erc721Facet.balanceOf(owner.address)).to.equal(3);
+            // and:
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 0)).to.equal(3); // the last token is moved to the removed index
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 1)).to.equal(1);
+            expect(await erc721Facet.tokenOfOwnerByIndex(owner.address, 2)).to.equal(2);
+            await expect(erc721Facet.tokenOfOwnerByIndex(owner.address, 3)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+        });
+    });
+
+    describe('tokenByIndex', async () => {
+        it('should successfully return the token by index', async () => {
+            expect(await erc721Facet.tokenByIndex(tokenID)).to.equal(tokenID);
+        });
+
+        it('should revert when index is equal to total supply', async () => {
+            const expectedRevertMessage = 'ERC721Enumerable: global index out of bounds';
+            await expect(erc721Facet.tokenByIndex(1)).to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should revert when index is more than total supply', async () => {
+            const expectedRevertMessage = 'ERC721Enumerable: global index out of bounds';
+            await expect(erc721Facet.tokenByIndex(2)).to.be.revertedWith(expectedRevertMessage);
+        });
+
+        it('should switch indexes if one is burnt', async () => {
+            // given:
+            // LandWorks NFTS will be [1, 2, 3], given that we start from 0
+            const newIds = [2, 3, 4];
+            await mockERC721Registry.setApprovalForAll(marketplaceFacet.address, true);
+
+            for (const newId of newIds) {
+                await mockERC721Registry.mint(owner.address, newId);
+                // and:
+                await marketplaceFacet.list(
+                    metaverseId,
+                    mockERC721Registry.address,
+                    newId,
+                    minPeriod,
+                    maxPeriod,
+                    maxFutureTime,
+                    ADDRESS_ONE,
+                    pricePerSecond);
+            }
+            expect(await erc721Facet.totalSupply()).to.equal(4);
+            // and:
+            expect(await erc721Facet.balanceOf(owner.address)).to.equal(4);
+            // and:
+            expect(await erc721Facet.tokenByIndex(0)).to.equal(0);
+            expect(await erc721Facet.tokenByIndex(1)).to.equal(1);
+            expect(await erc721Facet.tokenByIndex(2)).to.equal(2);
+            expect(await erc721Facet.tokenByIndex(3)).to.equal(3);
+
+            // when:
+            await marketplaceFacet.delist(tokenID);
+
+            // then:
+            expect(await erc721Facet.totalSupply()).to.equal(3);
+            // and:
+            expect(await erc721Facet.balanceOf(owner.address)).to.equal(3);
+            // and:
+            expect(await erc721Facet.tokenByIndex(0)).to.equal(3); // the last token is moved to the removed index
+            expect(await erc721Facet.tokenByIndex(1)).to.equal(1);
+            expect(await erc721Facet.tokenByIndex(2)).to.equal(2);
+            await expect(erc721Facet.tokenByIndex(3)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
+        });
+    });
 });
