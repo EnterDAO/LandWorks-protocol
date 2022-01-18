@@ -1414,7 +1414,6 @@ describe('ERC721Facet', function () {
             await mockERC721Registry.setApprovalForAll(marketplaceFacet.address, true);
 
             for (const newId of newIds) {
-                console.log(newId);
                 await mockERC721Registry.mint(owner.address, newId);
                 // and:
                 await marketplaceFacet.list(
