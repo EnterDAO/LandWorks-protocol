@@ -13,14 +13,14 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - [Omega](audits/2021-12-Omega.pdf)
 
 **Mainnet Deployment Addresses**
-- `DiamondCutFacet`: `0x1b79b6ab45df32a003c9d6626df259672f7d72d2`
-- `DiamondLoupeFacet`: `0x8e856B842ca3559D05d331313a20c86e7dBDF660`
-- `OwnershipFacet`: `0xf743CF02312dd25060CEe1BF9fa42330194DE971`
-- `FeeFacet`: `0x4b1c9B5609d9e2f6217974eeA2FDc65eEeaFDf5a`
-- `ERC-721Facet`: `0xCda40910dD8e0b175D941adEBfCf78e4bEf508E7`
-- `MarketplaceFacet`: `0x9f7e14c23811dBc2609fc2C95C15b703088c98C7`
-- `DecentralandFacet`: `0xf1912034c9Fa18635db834875d091b447dFE7850`
-- `LandWorks (Diamond)`: `0x1939ff586bf18f7B0fd7C254dBd47432f4DFfEF9`
+- `DiamondCutFacet`: `0xd86a91c5a96adede0d79ae11c63541f336d48a08`
+- `DiamondLoupeFacet`: `0x1c2fe56a7fa18e08e2cf1e8ac8543b9b190d1be1`
+- `OwnershipFacet`: `0x620d20a801c4e3c3d83a88354cc57b904998d137`
+- `FeeFacet`: `0x6c567026f5a1cd09313170ec77adbbf08fa7f409`
+- `ERC-721Facet`: `0x4e0ea52c528647cec98e78cfc1770f9e4e814204`
+- `MarketplaceFacet`: `0x22427c5c6b62837aed5a812c5d01341935034dd8`
+- `DecentralandFacet`: `0x3482121020facfc24dca3bbc5c7139006fad8599`
+- `LandWorks (Diamond)`: `0x678D837fA15eba2B59f6CD5F9F4C580AC2Dfc269`
 
 ## Development
 
