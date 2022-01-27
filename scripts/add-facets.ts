@@ -33,6 +33,18 @@ async function addFacets(diamondAddress: string) {
   const diamondAddFacetsTx = await landWorks.diamondCut(diamondAddFacets, ethers.constants.AddressZero, "0x");
   console.log(`Diamond Cut Add MarketplaceFacet & DecentralandFacet [${diamondAddFacetsTx.hash}] submitted, waiting to be mined...`);
   await diamondAddFacetsTx.wait();
+
+  console.log('Verifying MarketplaceFacet on Etherscan...');
+  await hardhat.run('verify:verify', {
+    address: marketplaceFacet.address,
+    constructorArguments: []
+  });
+
+  console.log('Verifying DecentralandFacet on Etherscan...');
+  await hardhat.run('verify:verify', {
+    address: decentralandFacet.address,
+    constructorArguments: []
+  });
 }
 
 module.exports = addFacets;
