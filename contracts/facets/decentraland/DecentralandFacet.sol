@@ -12,14 +12,25 @@ contract DecentralandFacet is IDecentralandFacet {
     /// @param _assetId The target asset
     /// @param _period The target period of the rental
     /// @param _operator The target operator, which will be set as operator once the rent is active
+    /// @param _paymentToken The current payment token for the asset
+    /// @param _amount The target amount to be paid for the rent
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
-        address _operator
+        address _operator,
+        address _paymentToken,
+        uint256 _amount
     ) external payable {
         require(_operator != address(0), "_operator must not be 0x0");
 
-        (uint256 rentId, bool rentStartsNow) = LibRent.rent(_assetId, _period);
+        (uint256 rentId, bool rentStartsNow) = LibRent.rent(
+            LibRent.RentParams({
+                _assetId: _assetId,
+                _period: _period,
+                _paymentToken: _paymentToken,
+                _amount: _amount
+            })
+        );
         LibDecentraland.setOperator(_assetId, rentId, _operator);
         emit UpdateOperator(_assetId, rentId, _operator);
 

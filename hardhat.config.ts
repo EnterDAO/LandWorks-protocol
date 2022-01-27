@@ -23,6 +23,14 @@ task('removeFacets', 'Removes MarketplaceFacet & DecentralandFacet from Diamond 
         await removeFacets(taskArgs.diamond, taskArgs.marketplaceFacet, taskArgs.decentralandFacet);
     });
 
+task('addFacets', 'Deploys MarketplaceFacet & DecentralandFacet and Adds them to Diamond Router contract')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const addFacets = require('./scripts/add-facets');
+        await addFacets(taskArgs.diamond);
+    });
+
 module.exports = {
     solidity: {
         compilers: [
@@ -61,4 +69,7 @@ module.exports = {
     gasReporter: {
         enabled: true,
     },
+    mocha: {
+        timeout: 40000
+    }
 };

@@ -12,7 +12,7 @@ async function removeFacets(diamondAddress: string, marketplaceFacetAddress: str
   const marketplaceFacet = await ethers.getContractAt('MarketplaceFacet', marketplaceFacetAddress);
   const decentralandFacet = await ethers.getContractAt('DecentralandFacet', decentralandFacetAddress);
 
-  const diamondRemoveOldMarketplaceFacet = [
+  const diamondRemoveOldFacets = [
     {
       facetAddress: ethers.constants.AddressZero,
       action: FacetCutAction.Remove,
@@ -25,7 +25,7 @@ async function removeFacets(diamondAddress: string, marketplaceFacetAddress: str
     }
   ];
 
-  const diamondRemoveFacetsTx = await landWorks.diamondCut(diamondRemoveOldMarketplaceFacet, ethers.constants.AddressZero, "0x");
+  const diamondRemoveFacetsTx = await landWorks.diamondCut(diamondRemoveOldFacets, ethers.constants.AddressZero, "0x");
   console.log(`Diamond Cut Remove MarketplaceFacet & DecentralandFacet [${diamondRemoveFacetsTx.hash}] submitted, waiting to be mined...`);
   await diamondRemoveFacetsTx.wait();
 }
