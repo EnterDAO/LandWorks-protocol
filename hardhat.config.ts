@@ -13,6 +13,16 @@ task('deploy', 'Deploys the LandWorks Diamond with all of its facets')
         await deployLandWorks();
     });
 
+task('removeFacets', 'Removes MarketplaceFacet & DecentralandFacet from Diamond Router contract')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .addParam('marketplaceFacet', 'The address of MarketplaceFacet')
+    .addParam('decentralandFacet', 'The address of DecentralandFacet')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const removeFacets = require('./scripts/remove-facets');
+        await removeFacets(taskArgs.diamond, taskArgs.marketplaceFacet, taskArgs.decentralandFacet);
+    });
+
 module.exports = {
     solidity: {
         compilers: [
