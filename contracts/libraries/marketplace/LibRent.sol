@@ -26,49 +26,74 @@ library LibRent {
         uint256 _protocolFee
     );
 
+    struct RentParams {
+        uint256 _assetId;
+        uint256 _period;
+        address _paymentToken;
+        uint256 _amount;
+    }
+
     /// @dev Rents asset for a given period (in seconds)
     /// Rent is added to the queue of pending rents.
     /// Rent start will begin from the last rented timestamp.
     /// If no active rents are found, rents starts from the current timestamp.
-    function rent(uint256 _assetId, uint256 _period)
+    function rent(RentParams memory rentParams)
         internal
         returns (uint256, bool)
     {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
 
-        require(LibERC721.exists(_assetId), "_assetId not found");
-        LibMarketplace.Asset memory asset = ms.assets[_assetId];
+        require(LibERC721.exists(rentParams._assetId), "_assetId not found");
+        LibMarketplace.Asset memory asset = ms.assets[rentParams._assetId];
         require(
             asset.status == LibMarketplace.AssetStatus.Listed,
             "_assetId not listed"
         );
-        require(_period >= asset.minPeriod, "_period less than minPeriod");
-        require(_period <= asset.maxPeriod, "_period more than maxPeriod");
+        require(
+            rentParams._period >= asset.minPeriod,
+            "_period less than minPeriod"
+        );
+        require(
+            rentParams._period <= asset.maxPeriod,
+            "_period more than maxPeriod"
+        );
+        require(
+            rentParams._paymentToken == asset.paymentToken,
+            "invalid _paymentToken"
+        );
 
         bool rentStartsNow = true;
         uint256 rentStart = block.timestamp;
-        uint256 lastRentEnd = ms.rents[_assetId][asset.totalRents].end;
+        uint256 lastRentEnd = ms
+        .rents[rentParams._assetId][asset.totalRents].end;
 
         if (lastRentEnd > rentStart) {
             rentStart = lastRentEnd;
             rentStartsNow = false;
         }
 
-        uint256 rentEnd = rentStart + _period;
+        uint256 rentEnd = rentStart + rentParams._period;
         require(
             block.timestamp + asset.maxFutureTime >= rentEnd,
             "rent more than current maxFutureTime"
         );
 
-        uint256 rentPayment = _period * asset.pricePerSecond;
+        uint256 rentPayment = rentParams._period * asset.pricePerSecond;
+        require(rentParams._amount == rentPayment, "invalid _amount");
         if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
             require(msg.value == rentPayment, "invalid msg.value");
+        } else {
+            require(msg.value == 0, "invalid token msg.value");
         }
 
-        (uint256 rentFee, uint256 protocolFee) = LibFee.distributeFees(_assetId, asset.paymentToken, rentPayment);
+        (uint256 rentFee, uint256 protocolFee) = LibFee.distributeFees(
+            rentParams._assetId,
+            asset.paymentToken,
+            rentPayment
+        );
         uint256 rentId = LibMarketplace.addRent(
-            _assetId,
+            rentParams._assetId,
             msg.sender,
             rentStart,
             rentEnd
@@ -84,7 +109,7 @@ library LibRent {
         }
 
         emit Rent(
-            _assetId,
+            rentParams._assetId,
             rentId,
             msg.sender,
             rentStart,

@@ -4,22 +4,34 @@ pragma solidity 0.8.10;
 import "../IRentable.sol";
 
 interface IDecentralandFacet is IRentable {
-    event UpdateState(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
+    event UpdateState(
+        uint256 indexed _assetId,
+        uint256 _rentId,
+        address indexed _operator
+    );
     event UpdateAdministrativeState(
         uint256 indexed _assetId,
         address indexed _operator
     );
-    event UpdateOperator(uint256 indexed _assetId, uint256 _rentId, address indexed _operator);
+    event UpdateOperator(
+        uint256 indexed _assetId,
+        uint256 _rentId,
+        address indexed _operator
+    );
     event UpdateAdministrativeOperator(address _administrativeOperator);
 
     /// @notice Rents Decentraland Estate/LAND.
     /// @param _assetId The target asset
     /// @param _period The target period of the rental
     /// @param _operator The target operator, which will be set as operator once the rent is active
+    /// @param _paymentToken The current payment token for the asset
+    /// @param _amount The target amount to be paid for the rent
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
-        address _operator
+        address _operator,
+        address _paymentToken,
+        uint256 _amount
     ) external payable;
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.

@@ -1288,7 +1288,7 @@ describe('ERC721Facet', function () {
         before(async () => {
             await erc721Facet.approve(approved.address, tokenID);
             await erc721Facet.setApprovalForAll(operator.address, true);
-            await marketplaceFacet.connect(other).rent(tokenID, 1, { value: pricePerSecond });
+            await marketplaceFacet.connect(other).rent(tokenID, 1, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
         });
 
         describe('transferFrom', async () => {
