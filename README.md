@@ -18,8 +18,8 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `OwnershipFacet`: `0x620d20a801c4e3c3d83a88354cc57b904998d137`
 - `FeeFacet`: `0x6c567026f5a1cd09313170ec77adbbf08fa7f409`
 - `ERC-721Facet`: `0x4e0ea52c528647cec98e78cfc1770f9e4e814204`
-- `MarketplaceFacet`: `0x22427c5c6b62837aed5a812c5d01341935034dd8`
-- `DecentralandFacet`: `0x3482121020facfc24dca3bbc5c7139006fad8599`
+- `MarketplaceFacet`: `0xF74dECe647bF75e86c0c78486F228a7C5475c652`
+- `DecentralandFacet`: `0xdd65d876f00a4203dc9be33b2728852d3bd7e61c`
 - `LandWorks (Diamond)`: `0x678D837fA15eba2B59f6CD5F9F4C580AC2Dfc269`
 
 ## Development

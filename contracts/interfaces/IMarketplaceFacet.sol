@@ -27,7 +27,11 @@ interface IMarketplaceFacet is IRentable {
     event Delist(uint256 indexed _assetId, address indexed _caller);
     event Withdraw(uint256 indexed _assetId, address indexed _caller);
     event SetMetaverseName(uint256 indexed _metaverseId, string _name);
-    event SetRegistry(uint256 indexed _metaverseId, address _registry, bool _status);
+    event SetRegistry(
+        uint256 indexed _metaverseId,
+        address _registry,
+        bool _status
+    );
 
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
@@ -93,7 +97,14 @@ interface IMarketplaceFacet is IRentable {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
-    function rent(uint256 _assetId, uint256 _period) external payable returns (uint256, bool);
+    /// @param _paymentToken The current payment token for the asset
+    /// @param _amount The target amount to be paid for the rent
+    function rent(
+        uint256 _assetId,
+        uint256 _period,
+        address _paymentToken,
+        uint256 _amount
+    ) external payable returns (uint256, bool);
 
     /// @notice Sets name for a given Metaverse.
     /// @param _metaverseId The target metaverse
