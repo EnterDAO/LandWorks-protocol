@@ -12,6 +12,8 @@ library LibAssetRentOperator {
     struct AssetRentOperatorStorage {
         // Stores the operators for each asset's rentals
         mapping(uint256 => mapping(uint256 => address)) operators;
+        // Stores the metaverse registry administrative operators
+        mapping(address => address) administrativeOperators;
     }
 
     function assetRentOperatorStorage()
