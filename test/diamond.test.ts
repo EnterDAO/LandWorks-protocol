@@ -3344,6 +3344,736 @@ describe('LandWorks', function () {
         });
     });
 
+    describe('Diamond cut MetaverseAdapterFacet', async () => {
+        let metaverseAdapterFacet: Contract;
+
+        let mockERC721Registry: Contract;
+        let metaverseAdapter: Contract;
+        const tokenID = 1;
+        const metaverseID = 1;
+        const metaverseName = 'NoOperator';
+        const minPeriod = 1;
+        const maxPeriod = 100;
+        const maxFutureTime = 120;
+        const pricePerSecond = 1337;
+        const value = minPeriod * pricePerSecond;
+        const expectedProtocolFee = Math.round((value * FEE_PERCENTAGE) / FEE_PRECISION);
+        const expectedRentFee = value - expectedProtocolFee;
+        const rentId = 1;
+
+        before(async () => {
+            metaverseAdapterFacet = await Deployer.deployContract('MetaverseAdapterFacet');
+
+            const diamondAddFacet = [
+                {
+                    facetAddress: metaverseAdapterFacet.address,
+                    action: FacetCutAction.Add,
+                    functionSelectors: Diamond.getSelectorsFor(metaverseAdapterFacet)
+                }
+            ];
+
+            await landWorks.diamondCut(diamondAddFacet, ethers.constants.AddressZero, "0x");
+
+            mockERC721Registry = await Deployer.deployContract('ERC721Mock');
+            await mockERC721Registry.mint(owner.address, tokenID);
+            metaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [landWorks.address, mockERC721Registry.address]);
+
+            await landWorks.setMetaverseName(metaverseID, metaverseName);
+            await landWorks.setRegistry(metaverseID, mockERC721Registry.address, true);
+        });
+
+        beforeEach(async () => {
+            await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
+
+            // and:
+            await mockERC721Registry.approve(landWorks.address, tokenID);
+
+            await landWorks
+                .list(
+                    metaverseID,
+                    mockERC721Registry.address,
+                    tokenID,
+                    minPeriod,
+                    maxPeriod,
+                    maxFutureTime,
+                    ADDRESS_ONE,
+                    pricePerSecond);
+        });
+
+        it('should have 8 facets', async () => {
+            const actualFacets = await landWorks.facetAddresses();
+            expect(actualFacets.length).to.be.equal(8);
+            expect(actualFacets).to.eql([cut.address, loupe.address, ownership.address, marketplace.address, fee.address, erc721.address, decentraland.address, metaverseAdapterFacet.address]);
+        });
+
+        it('should have correct function selectors linked to facet', async function () {
+            const actualCutSelectors: Array<string> = Diamond.getSelectorsFor(cut);
+            expect(await landWorks.facetFunctionSelectors(cut.address)).to.deep.equal(actualCutSelectors);
+
+            const actualLoupeSelectors = Diamond.getSelectorsFor(loupe);
+            expect(await landWorks.facetFunctionSelectors(loupe.address)).to.deep.equal(actualLoupeSelectors);
+
+            const actualOwnerSelectors = Diamond.getSelectorsFor(ownership);
+            expect(await landWorks.facetFunctionSelectors(ownership.address)).to.deep.equal(actualOwnerSelectors);
+
+            const actualMarketplaceSelectors = Diamond.getSelectorsFor(marketplace);
+            expect(await landWorks.facetFunctionSelectors(marketplace.address)).to.deep.equal(actualMarketplaceSelectors);
+
+            const actualFeeSelectors = Diamond.getSelectorsFor(fee);
+            expect(await landWorks.facetFunctionSelectors(fee.address)).to.deep.equal(actualFeeSelectors);
+
+            const actualErc721Selectors = Diamond.getSelectorsFor(erc721);
+            expect(await landWorks.facetFunctionSelectors(erc721.address)).to.deep.equal(actualErc721Selectors);
+
+            const actualDecentralandFacetSelectors = Diamond.getSelectorsFor(decentraland);
+            expect(await landWorks.facetFunctionSelectors(decentraland.address)).to.deep.equal(actualDecentralandFacetSelectors);
+
+            const actualMetaverseAdapterFacetSelectors = Diamond.getSelectorsFor(metaverseAdapterFacet);
+            expect(await landWorks.facetFunctionSelectors(metaverseAdapterFacet.address)).to.deep.equal(actualMetaverseAdapterFacetSelectors);
+        });
+
+        it('should associate selectors correctly to facets', async function () {
+            for (const sel of Diamond.getSelectorsFor(loupe)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(loupe.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(cut)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(cut.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(ownership)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(ownership.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(marketplace)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(marketplace.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(fee)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(fee.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(erc721)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(erc721.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(decentraland)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(decentraland.address);
+            }
+
+            for (const sel of Diamond.getSelectorsFor(metaverseAdapterFacet)) {
+                expect(await landWorks.facetAddress(sel)).to.be.equal(metaverseAdapterFacet.address);
+            }
+        });
+
+        it('should return correct response when facets() is called', async function () {
+            const facets = await landWorks.facets();
+
+            expect(facets[0].facetAddress).to.equal(cut.address);
+            expect(facets[0].functionSelectors).to.eql(Diamond.getSelectorsFor(cut));
+
+            expect(facets[1].facetAddress).to.equal(loupe.address);
+            expect(facets[1].functionSelectors).to.eql(Diamond.getSelectorsFor(loupe));
+
+            expect(facets[2].facetAddress).to.equal(ownership.address);
+            expect(facets[2].functionSelectors).to.eql(Diamond.getSelectorsFor(ownership));
+
+            expect(facets[3].facetAddress).to.equal(marketplace.address);
+            expect(facets[3].functionSelectors).to.eql(Diamond.getSelectorsFor(marketplace));
+
+            expect(facets[4].facetAddress).to.equal(fee.address);
+            expect(facets[4].functionSelectors).to.eql(Diamond.getSelectorsFor(fee));
+
+            expect(facets[5].facetAddress).to.equal(erc721.address);
+            expect(facets[5].functionSelectors).to.eql(Diamond.getSelectorsFor(erc721));
+
+            expect(facets[6].facetAddress).to.equal(decentraland.address);
+            expect(facets[6].functionSelectors).to.eql(Diamond.getSelectorsFor(decentraland));
+
+            expect(facets[7].facetAddress).to.equal(metaverseAdapterFacet.address);
+            expect(facets[7].functionSelectors).to.eql(Diamond.getSelectorsFor(metaverseAdapterFacet));
+        });
+
+        describe('setMetaverseRegistryAdapter', async () => {
+            it('should successfully set metaverse registry adapter', async () => {
+                await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, metaverseAdapter.address);
+
+                expect(await landWorks.metaverseRegistryAdapter(mockERC721Registry.address)).to.equal(metaverseAdapter.address);
+            });
+
+            it('should emit event with args', async () => {
+                await expect(landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, metaverseAdapter.address))
+                    .to.emit(landWorks, 'MetaverseRegistryAdapterUpdated')
+                    .withArgs(mockERC721Registry.address, metaverseAdapter.address);
+            });
+
+            it('should revert when metaverse registry is 0x0', async () => {
+                const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+                // when:
+                await expect(landWorks.setMetaverseRegistryAdapter(ethers.constants.AddressZero, metaverseAdapter.address))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when adapter is 0x0', async () => {
+                const expectedRevertMessage = '_adapter must not be 0x0';
+                // when:
+                await expect(landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, ethers.constants.AddressZero))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when caller is not owner', async () => {
+                const expectedRevertMessage = 'Must be contract owner';
+                // when:
+                await expect(landWorks.connect(nonOwner).setMetaverseRegistryAdapter(mockERC721Registry.address, metaverseAdapter.address))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+        });
+
+        describe('setMetaverseAdministrativeOperator', async () => {
+            it('should successfully set metaverse registry administrative operator', async () => {
+                await landWorks.setMetaverseAdministrativeOperator(mockERC721Registry.address, administrativeOperator.address);
+
+                expect(await landWorks.metaverseRegistryAdministrativeOperator(mockERC721Registry.address)).to.equal(administrativeOperator.address);
+            });
+
+            it('should emit event with args', async () => {
+                await expect(landWorks.setMetaverseAdministrativeOperator(mockERC721Registry.address, administrativeOperator.address))
+                    .to.emit(landWorks, 'MetaverseRegistryAdministrativeOperatorUpdated')
+                    .withArgs(mockERC721Registry.address, administrativeOperator.address);
+            });
+
+            it('should revert when metaverse registry is 0x0', async () => {
+                const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+                // when:
+                await expect(landWorks.setMetaverseAdministrativeOperator(ethers.constants.AddressZero, administrativeOperator.address))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when administrative operator is 0x0', async () => {
+                const expectedRevertMessage = '_administrativeOperator must not be 0x0';
+                // when:
+                await expect(landWorks.setMetaverseAdministrativeOperator(mockERC721Registry.address, ethers.constants.AddressZero))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when caller is not owner', async () => {
+                const expectedRevertMessage = 'Must be contract owner';
+                // when:
+                await expect(landWorks.connect(nonOwner).setMetaverseAdministrativeOperator(mockERC721Registry.address, administrativeOperator.address))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+        });
+
+        describe('', async () => {
+            beforeEach(async () => {
+                await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, metaverseAdapter.address);
+            });
+
+            describe('rentWithOperator', async () => {
+                it('should successfully rent with operator', async () => {
+                    // given:
+                    const beforeBalance = await nonOwner.getBalance();
+                    const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
+                    const expectedRentId = 1;
+
+                    // when:
+                    const tx = await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, nonOwner.address, ADDRESS_ONE, value, { value });
+                    const receipt = await tx.wait();
+                    const timestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+
+                    // then:
+                    const rent = await landWorks.rentAt(assetId, rentId);
+                    expect(rent.start).to.equal(timestamp);
+                    expect(rent.end).to.equal(rent.start.add(minPeriod));
+                    expect(rent.renter).to.equal(nonOwner.address);
+                    // and:
+                    const asset = await landWorks.assetAt(assetId);
+                    expect(asset.totalRents).to.equal(1);
+                    // and:
+                    const protocolFees = await landWorks.protocolFeeFor(ADDRESS_ONE);
+                    expect(protocolFees).to.equal(expectedProtocolFee);
+                    // and:
+                    const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
+                    const afterBalance = await nonOwner.getBalance();
+                    expect(afterBalance).to.equal(beforeBalance.sub(txFee).sub(value));
+                    // and:
+                    const afterMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
+                    expect(afterMarketplaceBalance).to.be.equal(beforeMarketplaceBalance.add(value));
+                    // and:
+                    const operator = await landWorks.rentOperator(assetId, expectedRentId);
+                    expect(operator).to.equal(nonOwner.address);
+                    // and:
+                    const tokenId = (await landWorks.assetAt(assetId)).metaverseAssetId;
+                    expect(await metaverseAdapter.operators(tokenId)).to.equal(nonOwner.address);
+                });
+
+                it('should emit event with args', async () => {
+                    // when:
+                    const tx = await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, nonOwner.address, ADDRESS_ONE, value, { value });
+                    const receipt = await tx.wait();
+                    // then:
+                    const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                    const end = start + minPeriod;
+
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
+                        .to.emit(landWorks, 'UpdateRentOperator')
+                        .withArgs(assetId, rentId, nonOwner.address)
+                        .to.emit(landWorks, 'UpdateAdapterOperator')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
+                        .to.emit(metaverseAdapter, 'OperatorUpdated')
+                        .withArgs(tokenID, nonOwner.address);
+                });
+
+                it('should not update adapter when rent does not begin in execution', async () => {
+                    // given:
+                    const secondRentId = 2;
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, 2 * minPeriod, nonOwner.address, ADDRESS_ONE, value * 2, { value: value * 2 });
+
+                    // when:
+                    const tx = await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, artificialRegistry.address, ADDRESS_ONE, value, { value });
+
+                    // then:
+                    const start = await (await landWorks.rentAt(assetId, rentId)).end;
+                    const end = start.add(minPeriod);
+
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, secondRentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
+                        .to.emit(landWorks, 'UpdateRentOperator')
+                        .withArgs(assetId, secondRentId, artificialRegistry.address)
+                        .to.not.emit(landWorks, 'UpdateAdapterOperator')
+                        .withArgs(assetId, secondRentId, artificialRegistry.address)
+                        .to.not.emit(metaverseAdapter, 'OperatorUpdated')
+                        .withArgs(tokenID, nonOwner.address);
+                    // and:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(nonOwner.address);
+                });
+
+                it('should revert when operator is 0x0', async () => {
+                    // given:
+                    const expectedRevertMessage = '_operator must not be 0x0';
+
+                    // when:
+                    await expect(landWorks
+                        .rentWithOperator(assetId, minPeriod, ethers.constants.AddressZero, ADDRESS_ONE, value, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when asset is not found', async () => {
+                    // given:
+                    const invalidNftId = 123;
+                    const expectedRevertMessage = '_assetId not found';
+
+                    // when:
+                    await expect(landWorks
+                        .rentWithOperator(invalidNftId, minPeriod, owner.address, ADDRESS_ONE, value, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when trying to rent a delisted asset', async () => {
+                    // given:
+                    const expectedRevertMessage = '_assetId not listed';
+                    const amount = maxPeriod * pricePerSecond;
+                    // and:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, maxPeriod, ADDRESS_ONE, amount, { value: amount });
+                    // and:
+                    await landWorks.delist(assetId);
+
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, nonOwner.address, ADDRESS_ONE, amount, { value: amount }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when period is less than asset min period', async () => {
+                    // given:
+                    const expectedRevertMessage = '_period less than minPeriod';
+
+                    // when:
+                    await expect(landWorks
+                        .rentWithOperator(assetId, 0, owner.address, ADDRESS_ONE, value, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when period is more than asset max period', async () => {
+                    // given:
+                    const expectedRevertMessage = '_period more than maxPeriod';
+
+                    // when:
+                    await expect(landWorks
+                        .rentWithOperator(assetId, maxPeriod + 1, owner.address, ADDRESS_ONE, value, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when current rents are more than asset maxFutureTime', async () => {
+                    // given:
+                    const expectedRevertMessage = 'rent more than current maxFutureTime';
+                    const amount = maxPeriod * pricePerSecond;
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, maxPeriod, ADDRESS_ONE, amount, { value: amount });
+                    // When executing with this period, it will be more than block.timestamp + maxFutureTime
+                    const exceedingPeriod = maxFutureTime - maxPeriod + 2;
+
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, exceedingPeriod, owner.address, ADDRESS_ONE, exceedingPeriod * pricePerSecond, { value: exceedingPeriod * pricePerSecond }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when msg.value is invalid', async () => {
+                    // given:
+                    const expectedRevertMessage = 'invalid msg.value';
+
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, owner.address, ADDRESS_ONE, value))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when payment token mismatches actual payment token for the asset', async () => {
+                    // given:
+                    const expectedRevertMessage = 'invalid _paymentToken';
+
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, owner.address, owner.address, value, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when provided amount and actual payment amount mismatch', async () => {
+                    // given:
+                    const expectedRevertMessage = 'invalid _amount';
+
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, owner.address, ADDRESS_ONE, value * 2, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                    // and:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, owner.address, ADDRESS_ONE, 0, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when trying to update adapter which does not implement setOperator', async () => {
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, landRegistry.address);
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, nonOwner.address, ADDRESS_ONE, value, { value }))
+                        .to.be.reverted;
+                });
+
+                it('should revert when adapter is not set for landworks', async () => {
+                    // given:
+                    const invalidMetaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [owner.address, mockERC721Registry.address]);
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    // and:
+                    const expectedRevertMessage = 'Adapter: sender is not LandWorks';
+
+                    // when:
+                    await expect(landWorks
+                        .rentWithOperator(assetId, minPeriod, owner.address, ADDRESS_ONE, value, { value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when adapter is not set for the metaverse registry', async () => {
+                    // given:
+                    const invalidMetaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [landWorks.address, owner.address]);
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+
+                    // when:
+                    await expect(landWorks
+                        .rentWithOperator(assetId, minPeriod, owner.address, ADDRESS_ONE, value, { value }))
+                        .to.be.reverted;
+                });
+            });
+
+            describe('updateAdapterForRent', async () => {
+                it('should successfully update adapter for rent', async () => {
+                    // given:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, 5, nonOwner.address, ADDRESS_ONE, 5 * value, { value: 5 * value });
+                    // and:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(nonOwner.address);
+                    // and:
+                    await landWorks.connect(nonOwner).updateRentOperator(assetId, rentId, artificialRegistry.address);
+
+                    // when:
+                    await landWorks.updateAdapterForRent(assetId, rentId);
+
+                    // then:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(artificialRegistry.address);
+                });
+
+                it('should emit events with args', async () => {
+                    // given:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, 5, nonOwner.address, ADDRESS_ONE, 5 * value, { value: 5 * value });
+                    // and:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(nonOwner.address);
+                    // and:
+                    await landWorks.connect(nonOwner).updateRentOperator(assetId, rentId, artificialRegistry.address);
+
+                    // when:
+                    await expect(landWorks.updateAdapterForRent(assetId, rentId))
+                        .to.emit(landWorks, 'UpdateAdapterOperator')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, artificialRegistry.address)
+                        .to.emit(metaverseAdapter, 'OperatorUpdated')
+                        .withArgs(tokenID, artificialRegistry.address);
+                });
+
+                it('should revert if asset does not exist', async () => {
+                    // given:
+                    const invalidNftId = 123;
+                    const expectedRevertMessage = '_assetId not found';
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterForRent(invalidNftId, rentId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert if it is not rent\'s period', async () => {
+                    // given:
+                    const expectedRevertMessage = 'block timestamp less than rent start';
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
+                    // and:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, 2, nonOwner.address, ADDRESS_ONE, 2 * value, { value: 2 * value });
+
+                    // when:
+                    await expect(landWorks.updateAdapterForRent(assetId, 2))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert if the rent has expired', async () => {
+                    // given:
+                    const expectedRevertMessage = 'block timestamp more than or equal to rent end';
+                    // and:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, minPeriod, ADDRESS_ONE, value, { value });
+
+                    // when:
+                    await expect(landWorks.updateAdapterForRent(assetId, rentId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert if adapter does not implement setOperator', async () => {
+                    // given:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
+                    // and:
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, mockERC721Registry.address);
+
+                    // when:
+                    await expect(landWorks.updateAdapterForRent(assetId, rentId))
+                        .to.be.reverted;
+                });
+
+                it('should revert when adapter is not set for landworks', async () => {
+                    // given:
+                    const invalidMetaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [owner.address, mockERC721Registry.address]);
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    // and:
+                    const expectedRevertMessage = 'Adapter: sender is not LandWorks';
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterForRent(assetId, rentId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when adapter is not set for the metaverse registry', async () => {
+                    // given:
+                    const invalidMetaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [landWorks.address, owner.address]);
+                    await landWorks
+                        .connect(nonOwner)
+                        .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterForRent(assetId, rentId))
+                        .to.be.reverted;
+                });
+            });
+
+            describe('updateRentOperator', async () => {
+                it('should successfully update operator', async () => {
+                    // given:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, nonOwner.address, ADDRESS_ONE, value, { value });
+
+                    // when:
+                    await landWorks.connect(nonOwner).updateRentOperator(assetId, rentId, artificialRegistry.address);
+
+                    // then:
+                    expect(await landWorks.rentOperator(assetId, rentId)).to.equal(artificialRegistry.address);
+                    // and:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(nonOwner.address);
+                });
+
+                it('should emit event with args', async () => {
+                    // given:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, minPeriod, nonOwner.address, ADDRESS_ONE, value, { value });
+
+                    // when:
+                    await expect(landWorks.connect(nonOwner)
+                        .updateRentOperator(assetId, rentId, artificialRegistry.address))
+                        .to.emit(landWorks, 'UpdateRentOperator')
+                        .withArgs(assetId, rentId, artificialRegistry.address)
+                        .to.not.emit(landWorks, 'UpdateAdapterOperator')
+                        .to.not.emit(metaverseAdapter, 'OperatorUpdated');
+                });
+
+                it('should revert when operator is 0x0', async () => {
+                    const expectedRevertMessage = '_newOperator must not be 0x0';
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .updateRentOperator(assetId, rentId, ethers.constants.AddressZero))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert if asset does not exist', async () => {
+                    const invalidAssetId = 213;
+                    const expectedRevertMessage = '_assetId not found';
+                    // when:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .updateRentOperator(invalidAssetId, rentId, nonOwner.address))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when caller is not renter', async () => {
+                    const expectedRevertMessage = 'caller is not renter';
+                    // when:
+                    await expect(landWorks
+                        .updateRentOperator(assetId, rentId, nonOwner.address))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+            });
+
+            describe('updateAdapterWithAdministrativeOperator', async () => {
+                beforeEach(async () => {
+                    await landWorks.setMetaverseAdministrativeOperator(mockERC721Registry.address, administrativeOperator.address);
+                });
+
+                it('should successfully update adapter with administrative operator', async () => {
+                    // given:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(ethers.constants.AddressZero);
+
+                    // when:
+                    await landWorks.updateAdapterWithAdministrativeOperator(assetId);
+
+                    // then:
+                    expect(await metaverseAdapter.operators(tokenID)).to.equal(administrativeOperator.address);
+                });
+
+                it('should emit events with args', async () => {
+                    // then:
+                    await expect(landWorks
+                        .connect(nonOwner)
+                        .updateAdapterWithAdministrativeOperator(assetId))
+                        .to.emit(landWorks, 'UpdateAdapterAdministrativeOperator')
+                        .withArgs(assetId, metaverseAdapter.address, administrativeOperator.address)
+                        .to.emit(metaverseAdapter, 'OperatorUpdated')
+                        .withArgs(tokenID, administrativeOperator.address);
+                });
+
+                it('should revert if asset does not exist', async () => {
+                    // given:
+                    const invalidNftId = 123;
+                    const expectedRevertMessage = '_assetId not found';
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterWithAdministrativeOperator(invalidNftId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert if there is an active rent', async () => {
+                    // given:
+                    const expectedRevertMessage = '_assetId has an active rent';
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithOperator(assetId, 3, nonOwner.address, ADDRESS_ONE, 3 * value, { value: 3 * value });
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterWithAdministrativeOperator(assetId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert if adapter does not implement setOperator', async () => {
+                    // given:
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, mockERC721Registry.address);
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterWithAdministrativeOperator(assetId))
+                        .to.be.reverted;
+                });
+
+                it('should revert when adapter is not set for landworks', async () => {
+                    // given:
+                    const invalidMetaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [owner.address, mockERC721Registry.address]);
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    // and:
+                    const expectedRevertMessage = 'Adapter: sender is not LandWorks';
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterWithAdministrativeOperator(assetId))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when adapter is not set for the metaverse registry', async () => {
+                    // given:
+                    const invalidMetaverseAdapter = await Deployer.deployContract('AdapterV1', undefined, [landWorks.address, owner.address]);
+                    await landWorks.setMetaverseRegistryAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+
+                    // when:
+                    await expect(landWorks
+                        .updateAdapterWithAdministrativeOperator(assetId))
+                        .to.be.reverted;
+                });
+            });
+        });
+    });
+
     /**
      * The diamond example comes with 8 function selectors
      * [cut, loupe, loupe, loupe, loupe, erc165, transferOwnership, owner]
