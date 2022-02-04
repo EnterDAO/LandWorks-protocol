@@ -61,7 +61,7 @@ interface IMetaverseConsumableAdapterFacet {
     /// @param _consumer The target consumer, which will be set as consumer in the
     /// consumable adapter once the rent is active
     /// @param _paymentToken The current payment token for the asset
-    /// @param _amount The target amoun to be paid for the rent
+    /// @param _amount The target amount to be paid for the rent
     function rentWithConsumer(
         uint256 _assetId,
         uint256 _period,
