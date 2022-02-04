@@ -48,7 +48,9 @@ interface IMetaverseConsumableAdapterFacet {
         address _administrativeConsumer
     ) external;
 
-    /// @notice Rents an asset, which metaverse has a consumable adapter.
+    /// @notice Rents an asset, providing a consumer that will consume the asset
+    /// during its rental period.
+    /// @dev The asset's Metaverse must have previously set Metaverse Adapter.
     /// @dev If there are no active rents, this rent will begin, which will set
     /// the consumer directly in the Metaverse Consumable Adapter.
     /// If there are any active or upcoming rents, when this rent's time comes,
