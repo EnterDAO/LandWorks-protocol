@@ -33,7 +33,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         emit MetaverseConsumableAdapterUpdated(_metaverse, _consumableAdapter);
     }
 
-    /// @notice Sets the Metaverse administrative consumer, used
+    /// @notice Sets the metaverse administrative consumer, used
     /// as a consumer when LandWorks NFTs do not have an active rent.
     /// @param _metaverse The target metaverse
     /// @param _administrativeConsumer The target administrative consumer
@@ -60,12 +60,12 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
     /// @notice Rents an asset, providing a consumer that will consume the asset
     /// during its rental period.
-    /// @dev The asset's Metaverse must have previously set Metaverse Adapter.
+    /// @dev The asset's metaverse must have previously set a metaverse consumable adapter.
     /// @dev If there are no active rents, this rent will begin, which will set
-    /// the consumer directly in the Metaverse Consumable Adapter.
+    /// the consumer directly in the metaverse consumable adapter.
     /// If there are any active or upcoming rents, when this rent's time comes,
     /// {IMetaverseConsumableAdapterFacet-updateAdapterState} must be called
-    /// in order to set the consumer in the Metaverse Consumable adapter.
+    /// in order to set the consumer in the metaverse consumable adapter.
     /// @param _assetId The target asset
     /// @param _period The target period of the rental
     /// @param _consumer The target consumer, which will be set as consumer in the
@@ -103,7 +103,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
     /// @notice Updates the consumer for the given rent of an asset
     /// @dev If the current rent is active, after you update the consumer,
-    /// you will need to update the consumer in the Metaverse Adapter as well.
+    /// you will need to update the consumer in the metaverse consumable adapter as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newConsumer The to-be-set new consumer
@@ -128,10 +128,10 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         emit UpdateRentConsumer(_assetId, _rentId, _newConsumer);
     }
 
-    /// @notice Updates the consumer for the given asset in the Metaverse Adapter with rent's provided consumer.
+    /// @notice Updates the consumer for the given asset in the metaverse consumable adapter with rent's provided consumer.
     /// When the rent becomes active (the current block.timestamp is between the rent's start and end),
-    /// this function should be executed to set the provided rent consumer to the Metaverse Consumable Adapter.
-    /// @param _assetId The target asset which will map to its corresponding Metaverse tokenId
+    /// this function should be executed to set the provided rent consumer to the metaverse consumable adapter.
+    /// @param _assetId The target asset which will map to its corresponding metaverse tokenId
     /// @param _rentId The target rent
     function updateAdapterState(uint256 _assetId, uint256 _rentId) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
@@ -154,9 +154,9 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         updateAdapterConsumer(_assetId, _rentId, consumer);
     }
 
-    /// @notice Updates the asset's metaverse tokenId with the administrative consumer in the Metaverse Adapter
+    /// @notice Updates the asset's metaverse tokenId with the administrative consumer in the metaverse consumable adapter
     /// @dev This can be done only when the asset has no active rents.
-    /// @param _assetId The target asset which will map to its corresponding Metaverse tokenId
+    /// @param _assetId The target asset which will map to its corresponding metaverse tokenId
     function updateAdapterAdministrativeState(uint256 _assetId) public {
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
@@ -191,8 +191,8 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         );
     }
 
-    /// @dev Updates the Metaverse Consumable Adapter for the asset's metaverse tokenId
-    /// with the with the rent's set consumer
+    /// @dev Updates the metaverse consumable adapter for the asset's metaverse tokenId
+    /// with the provided consumer
     /// @param _assetId The target asset
     /// @param _rentId The target rent. Used only for event emission.
     /// @param _consumer The rent's consumer
