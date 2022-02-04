@@ -2,13 +2,13 @@
 pragma solidity 0.8.10;
 
 interface IMetaverseConsumableAdapterFacet {
-    event MetaverseRegistryConsumableAdapterUpdated(
-        address indexed _metaverseRegistry,
+    event MetaverseConsumableAdapterUpdated(
+        address indexed _metaverse,
         address indexed _adapter
     );
 
-    event MetaverseRegistryAdministrativeConsumerUpdated(
-        address indexed _metaverseRegistry,
+    event MetaverseAdministrativeConsumerUpdated(
+        address indexed _metaverse,
         address indexed _administrativeConsumer
     );
 
@@ -35,7 +35,7 @@ interface IMetaverseConsumableAdapterFacet {
         external;
 
     function setAdministrativeConsumerFor(
-        address _metaverseRegistry,
+        address _metaverse,
         address _administrativeConsumer
     ) external;
 
@@ -62,12 +62,12 @@ interface IMetaverseConsumableAdapterFacet {
         view
         returns (address);
 
-    function metaverseAdministrativeConsumer(address _metaverseRegistry)
+    function metaverseAdministrativeConsumer(address _metaverse)
         external
         view
         returns (address);
 
-    function metaverseConsumableAdapter(address _metaverseRegistry)
+    function metaverseConsumableAdapter(address _metaverse)
         external
         view
         returns (address);

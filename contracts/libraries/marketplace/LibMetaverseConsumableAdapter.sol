@@ -8,7 +8,7 @@ library LibMetaverseConsumableAdapter {
     struct MetaverseConsumableAdapterStorage {
         // Stores the adapters for each metaverse
         mapping(address => address) metaverseConsumableAdapters;
-        // Stores the metaverse registry administrative consumers
+        // Stores the administrative consumers for each metaverse
         mapping(address => address) administrativeConsumers;
         // Stores the consumers for each asset's rentals
         mapping(uint256 => mapping(uint256 => address)) consumers;

@@ -10,13 +10,10 @@ import "../libraries/marketplace/LibRent.sol";
 
 contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     function setMetaverseConsumableAdapter(
-        address _metaverseRegistry,
+        address _metaverse,
         address _consumableAdapter
     ) public {
-        require(
-            _metaverseRegistry != address(0),
-            "_metaverseRegistry must not be 0x0"
-        );
+        require(_metaverse != address(0), "_metaverse must not be 0x0");
         require(
             _consumableAdapter != address(0),
             "_consumableAdapter must not be 0x0"
@@ -25,24 +22,16 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
         LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()
-            .metaverseConsumableAdapters[
-                _metaverseRegistry
-            ] = _consumableAdapter;
+            .metaverseConsumableAdapters[_metaverse] = _consumableAdapter;
 
-        emit MetaverseRegistryConsumableAdapterUpdated(
-            _metaverseRegistry,
-            _consumableAdapter
-        );
+        emit MetaverseConsumableAdapterUpdated(_metaverse, _consumableAdapter);
     }
 
     function setAdministrativeConsumerFor(
-        address _metaverseRegistry,
+        address _metaverse,
         address _administrativeConsumer
     ) public {
-        require(
-            _metaverseRegistry != address(0),
-            "_metaverseRegistry must not be 0x0"
-        );
+        require(_metaverse != address(0), "_metaverse must not be 0x0");
         require(
             _administrativeConsumer != address(0),
             "_administrativeConsumer must not be 0x0"
@@ -51,12 +40,10 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
         LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()
-            .administrativeConsumers[
-                _metaverseRegistry
-            ] = _administrativeConsumer;
+            .administrativeConsumers[_metaverse] = _administrativeConsumer;
 
-        emit MetaverseRegistryAdministrativeConsumerUpdated(
-            _metaverseRegistry,
+        emit MetaverseAdministrativeConsumerUpdated(
+            _metaverse,
             _administrativeConsumer
         );
     }
@@ -206,7 +193,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
                 .consumers[_assetId][_rentId];
     }
 
-    function metaverseAdministrativeConsumer(address _metaverseRegistry)
+    function metaverseAdministrativeConsumer(address _metaverse)
         public
         view
         returns (address)
@@ -214,10 +201,10 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         return
             LibMetaverseConsumableAdapter
                 .metaverseConsumableAdapterStorage()
-                .administrativeConsumers[_metaverseRegistry];
+                .administrativeConsumers[_metaverse];
     }
 
-    function metaverseConsumableAdapter(address _metaverseRegistry)
+    function metaverseConsumableAdapter(address _metaverse)
         public
         view
         returns (address)
@@ -225,6 +212,6 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         return
             LibMetaverseConsumableAdapter
                 .metaverseConsumableAdapterStorage()
-                .metaverseConsumableAdapters[_metaverseRegistry];
+                .metaverseConsumableAdapters[_metaverse];
     }
 }

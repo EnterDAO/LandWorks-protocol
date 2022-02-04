@@ -3504,12 +3504,12 @@ describe('LandWorks', function () {
 
             it('should emit event with args', async () => {
                 await expect(landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address))
-                    .to.emit(landWorks, 'MetaverseRegistryConsumableAdapterUpdated')
+                    .to.emit(landWorks, 'MetaverseConsumableAdapterUpdated')
                     .withArgs(mockERC721Registry.address, metaverseAdapter.address);
             });
 
             it('should revert when metaverse registry is 0x0', async () => {
-                const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+                const expectedRevertMessage = '_metaverse must not be 0x0';
                 // when:
                 await expect(landWorks.setMetaverseConsumableAdapter(ethers.constants.AddressZero, metaverseAdapter.address))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -3539,12 +3539,12 @@ describe('LandWorks', function () {
 
             it('should emit event with args', async () => {
                 await expect(landWorks.setAdministrativeConsumerFor(mockERC721Registry.address, administrativeConsumer.address))
-                    .to.emit(landWorks, 'MetaverseRegistryAdministrativeConsumerUpdated')
+                    .to.emit(landWorks, 'MetaverseAdministrativeConsumerUpdated')
                     .withArgs(mockERC721Registry.address, administrativeConsumer.address);
             });
 
             it('should revert when metaverse registry is 0x0', async () => {
-                const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+                const expectedRevertMessage = '_metaverse must not be 0x0';
                 // when:
                 await expect(landWorks.setAdministrativeConsumerFor(ethers.constants.AddressZero, administrativeConsumer.address))
                     .to.be.revertedWith(expectedRevertMessage);
