@@ -102,16 +102,16 @@ interface IMetaverseConsumableAdapterFacet {
         view
         returns (address);
 
-    /// @notice Gets the administrative consumer of a metaverse
-    /// @param _metaverse The target metaverse
-    function administrativeConsumer(address _metaverse)
+    /// @notice Gets the administrative consumer of a metaverseRegistry
+    /// @param _metaverseRegistry The target metaverse registry (token address)
+    function administrativeConsumer(address _metaverseRegistry)
         external
         view
         returns (address);
 
     /// @notice Gets the consumable adapter of a metaverse
-    /// @param _metaverse The target metaverse
-    function consumableAdapter(address _metaverse)
+    /// @param _metaverseRegistry The target metaverse registry (token address)
+    function consumableAdapter(address _metaverseRegistry)
         external
         view
         returns (address);

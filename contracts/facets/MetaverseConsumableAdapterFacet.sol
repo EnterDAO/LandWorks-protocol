@@ -12,7 +12,7 @@ import "../libraries/marketplace/LibRent.sol";
 /// with metaverses having an external consumable adapter, used
 /// to store consumers of LandWorks NFTs upon rentals.
 contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
-    /// @notice Sets the Metaverse consumable adapter
+    /// @notice Sets the metaverse consumable adapter
     /// @param _metaverseRegistry The target metaverse registry (token address)
     /// @param _consumableAdapter The address of the consumable adapter
     function setConsumableAdapter(
