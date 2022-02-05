@@ -3495,37 +3495,37 @@ describe('LandWorks', function () {
             expect(facets[7].functionSelectors).to.eql(Diamond.getSelectorsFor(metaverseConsumableAdapterFacet));
         });
 
-        describe('setMetaverseConsumableAdapter', async () => {
+        describe('setConsumableAdapter', async () => {
             it('should successfully set metaverse registry adapter', async () => {
-                await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address);
+                await landWorks.setConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address);
 
                 expect(await landWorks.metaverseConsumableAdapter(mockERC721Registry.address)).to.equal(metaverseAdapter.address);
             });
 
             it('should emit event with args', async () => {
-                await expect(landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address))
-                    .to.emit(landWorks, 'MetaverseConsumableAdapterUpdated')
+                await expect(landWorks.setConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address))
+                    .to.emit(landWorks, 'ConsumableAdapterUpdated')
                     .withArgs(mockERC721Registry.address, metaverseAdapter.address);
             });
 
             it('should revert when metaverse registry is 0x0', async () => {
                 const expectedRevertMessage = '_metaverse must not be 0x0';
                 // when:
-                await expect(landWorks.setMetaverseConsumableAdapter(ethers.constants.AddressZero, metaverseAdapter.address))
+                await expect(landWorks.setConsumableAdapter(ethers.constants.AddressZero, metaverseAdapter.address))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when adapter is 0x0', async () => {
                 const expectedRevertMessage = '_consumableAdapter must not be 0x0';
                 // when:
-                await expect(landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, ethers.constants.AddressZero))
+                await expect(landWorks.setConsumableAdapter(mockERC721Registry.address, ethers.constants.AddressZero))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when caller is not owner', async () => {
                 const expectedRevertMessage = 'Must be contract owner';
                 // when:
-                await expect(landWorks.connect(nonOwner).setMetaverseConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address))
+                await expect(landWorks.connect(nonOwner).setConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
@@ -3539,7 +3539,7 @@ describe('LandWorks', function () {
 
             it('should emit event with args', async () => {
                 await expect(landWorks.setAdministrativeConsumerFor(mockERC721Registry.address, administrativeConsumer.address))
-                    .to.emit(landWorks, 'MetaverseAdministrativeConsumerUpdated')
+                    .to.emit(landWorks, 'AdministrativeConsumerUpdated')
                     .withArgs(mockERC721Registry.address, administrativeConsumer.address);
             });
 
@@ -3567,7 +3567,7 @@ describe('LandWorks', function () {
 
         describe('', async () => {
             beforeEach(async () => {
-                await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address);
+                await landWorks.setConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address);
             });
 
             describe('rentWithConsumer', async () => {
@@ -3775,7 +3775,7 @@ describe('LandWorks', function () {
                 });
 
                 it('should revert when trying to update adapter which does not implement setConsumer', async () => {
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, landRegistry.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, landRegistry.address);
                     // when:
                     await expect(landWorks
                         .connect(nonOwner)
@@ -3786,7 +3786,7 @@ describe('LandWorks', function () {
                 it('should revert when adapter is not set for landworks', async () => {
                     // given:
                     const invalidMetaverseAdapter = await Deployer.deployContract('ConsumableAdapterV1', undefined, [owner.address, mockERC721Registry.address]);
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
                     // and:
                     const expectedRevertMessage = 'ConsumableAdapter: sender is not LandWorks';
 
@@ -3799,7 +3799,7 @@ describe('LandWorks', function () {
                 it('should revert when adapter is not set for the metaverse registry', async () => {
                     // given:
                     const invalidMetaverseAdapter = await Deployer.deployContract('ConsumableAdapterV1', undefined, [landWorks.address, owner.address]);
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
 
                     // when:
                     await expect(landWorks
@@ -3890,7 +3890,7 @@ describe('LandWorks', function () {
                         .connect(nonOwner)
                         .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
                     // and:
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
 
                     // when:
                     await expect(landWorks.updateAdapterState(assetId, rentId))
@@ -3903,7 +3903,7 @@ describe('LandWorks', function () {
                     await landWorks
                         .connect(nonOwner)
                         .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
                     // and:
                     const expectedRevertMessage = 'ConsumableAdapter: sender is not LandWorks';
 
@@ -3919,7 +3919,7 @@ describe('LandWorks', function () {
                     await landWorks
                         .connect(nonOwner)
                         .rent(assetId, 3, ADDRESS_ONE, 3 * value, { value: 3 * value });
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
 
                     // when:
                     await expect(landWorks
@@ -4040,7 +4040,7 @@ describe('LandWorks', function () {
 
                 it('should revert if adapter does not implement setConsumer', async () => {
                     // given:
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
 
                     // when:
                     await expect(landWorks
@@ -4051,7 +4051,7 @@ describe('LandWorks', function () {
                 it('should revert when adapter is not set for landworks', async () => {
                     // given:
                     const invalidMetaverseAdapter = await Deployer.deployContract('ConsumableAdapterV1', undefined, [owner.address, mockERC721Registry.address]);
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
                     // and:
                     const expectedRevertMessage = 'ConsumableAdapter: sender is not LandWorks';
 
@@ -4064,7 +4064,7 @@ describe('LandWorks', function () {
                 it('should revert when adapter is not set for the metaverse registry', async () => {
                     // given:
                     const invalidMetaverseAdapter = await Deployer.deployContract('ConsumableAdapterV1', undefined, [landWorks.address, owner.address]);
-                    await landWorks.setMetaverseConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, invalidMetaverseAdapter.address);
 
                     // when:
                     await expect(landWorks

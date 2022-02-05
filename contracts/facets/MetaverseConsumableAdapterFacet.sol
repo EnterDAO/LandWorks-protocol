@@ -15,7 +15,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     /// @notice Sets the Metaverse consumable adapter
     /// @param _metaverse The target metaverse
     /// @param _consumableAdapter The address of the consumable adapter
-    function setMetaverseConsumableAdapter(
+    function setConsumableAdapter(
         address _metaverse,
         address _consumableAdapter
     ) public {
@@ -28,9 +28,9 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
         LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()
-            .metaverseConsumableAdapters[_metaverse] = _consumableAdapter;
+            .consumableAdapters[_metaverse] = _consumableAdapter;
 
-        emit MetaverseConsumableAdapterUpdated(_metaverse, _consumableAdapter);
+        emit ConsumableAdapterUpdated(_metaverse, _consumableAdapter);
     }
 
     /// @notice Sets the metaverse administrative consumer, used
@@ -52,7 +52,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             .metaverseConsumableAdapterStorage()
             .administrativeConsumers[_metaverse] = _administrativeConsumer;
 
-        emit MetaverseAdministrativeConsumerUpdated(
+        emit AdministrativeConsumerUpdated(
             _metaverse,
             _administrativeConsumer
         );
@@ -175,7 +175,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             asset.metaverseRegistry
         ];
 
-        address consumableAdapter = mcas.metaverseConsumableAdapters[
+        address consumableAdapter = mcas.consumableAdapters[
             asset.metaverseRegistry
         ];
 
@@ -206,7 +206,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             .assets[_assetId];
         address consumableAdapter = LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()
-            .metaverseConsumableAdapters[asset.metaverseRegistry];
+            .consumableAdapters[asset.metaverseRegistry];
 
         IConsumableAdapterV1(consumableAdapter).setConsumer(
             asset.metaverseAssetId,
@@ -258,6 +258,6 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         return
             LibMetaverseConsumableAdapter
                 .metaverseConsumableAdapterStorage()
-                .metaverseConsumableAdapters[_metaverse];
+                .consumableAdapters[_metaverse];
     }
 }

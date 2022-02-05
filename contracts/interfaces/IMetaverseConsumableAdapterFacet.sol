@@ -2,12 +2,12 @@
 pragma solidity 0.8.10;
 
 interface IMetaverseConsumableAdapterFacet {
-    event MetaverseConsumableAdapterUpdated(
+    event ConsumableAdapterUpdated(
         address indexed _metaverse,
         address indexed _adapter
     );
 
-    event MetaverseAdministrativeConsumerUpdated(
+    event AdministrativeConsumerUpdated(
         address indexed _metaverse,
         address indexed _administrativeConsumer
     );
@@ -34,7 +34,7 @@ interface IMetaverseConsumableAdapterFacet {
     /// @notice Sets the metaverse consumable adapter
     /// @param _metaverse The target metaverse
     /// @param _consumableAdapter The address of the consumable adapter
-    function setMetaverseConsumableAdapter(
+    function setConsumableAdapter(
         address _metaverse,
         address _consumableAdapter
     ) external;
