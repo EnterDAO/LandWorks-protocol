@@ -3499,7 +3499,7 @@ describe('LandWorks', function () {
             it('should successfully set metaverse registry adapter', async () => {
                 await landWorks.setConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address);
 
-                expect(await landWorks.metaverseConsumableAdapter(mockERC721Registry.address)).to.equal(metaverseAdapter.address);
+                expect(await landWorks.consumableAdapter(mockERC721Registry.address)).to.equal(metaverseAdapter.address);
             });
 
             it('should emit event with args', async () => {
@@ -3534,7 +3534,7 @@ describe('LandWorks', function () {
             it('should successfully set metaverse registry administrative consumer', async () => {
                 await landWorks.setAdministrativeConsumerFor(mockERC721Registry.address, administrativeConsumer.address);
 
-                expect(await landWorks.metaverseAdministrativeConsumer(mockERC721Registry.address)).to.equal(administrativeConsumer.address);
+                expect(await landWorks.administrativeConsumer(mockERC721Registry.address)).to.equal(administrativeConsumer.address);
             });
 
             it('should emit event with args', async () => {

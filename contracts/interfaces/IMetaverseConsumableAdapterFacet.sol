@@ -3,12 +3,12 @@ pragma solidity 0.8.10;
 
 interface IMetaverseConsumableAdapterFacet {
     event ConsumableAdapterUpdated(
-        address indexed _metaverse,
+        address indexed _metaverseRegistry,
         address indexed _adapter
     );
 
     event AdministrativeConsumerUpdated(
-        address indexed _metaverse,
+        address indexed _metaverseRegistry,
         address indexed _administrativeConsumer
     );
 
@@ -32,19 +32,19 @@ interface IMetaverseConsumableAdapterFacet {
     );
 
     /// @notice Sets the metaverse consumable adapter
-    /// @param _metaverse The target metaverse
+    /// @param _metaverseRegistry The target metaverse registry (token address)
     /// @param _consumableAdapter The address of the consumable adapter
     function setConsumableAdapter(
-        address _metaverse,
+        address _metaverseRegistry,
         address _consumableAdapter
     ) external;
 
     /// @notice Sets the metaverse administrative consumer, used
     /// as a consumer when LandWorks NFTs do not have an active rent.
-    /// @param _metaverse The target metaverse
+    /// @param _metaverseRegistry The target metaverse registry (token address)
     /// @param _administrativeConsumer The target administrative consumer
     function setAdministrativeConsumerFor(
-        address _metaverse,
+        address _metaverseRegistry,
         address _administrativeConsumer
     ) external;
 
@@ -104,14 +104,14 @@ interface IMetaverseConsumableAdapterFacet {
 
     /// @notice Gets the administrative consumer of a metaverse
     /// @param _metaverse The target metaverse
-    function metaverseAdministrativeConsumer(address _metaverse)
+    function administrativeConsumer(address _metaverse)
         external
         view
         returns (address);
 
     /// @notice Gets the consumable adapter of a metaverse
     /// @param _metaverse The target metaverse
-    function metaverseConsumableAdapter(address _metaverse)
+    function consumableAdapter(address _metaverse)
         external
         view
         returns (address);

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 /// @title Version 1 adapter for metaverse integrations
 /// @author Daniel K Ivanov
 /// @notice Adapter for metaverses that lack the necessary consumer role required to be integrated into LandWorks
+/// For reference see https://eips.ethereum.org/EIPS/eip-4400
 contract ConsumableAdapterV1 is IConsumableAdapterV1 {
     /// @notice LandWorks address
     address public immutable landworks;
