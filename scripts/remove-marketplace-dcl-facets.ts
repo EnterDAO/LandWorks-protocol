@@ -4,7 +4,7 @@ import { Deployer } from "../utils/deployer";
 import { Diamond } from "../utils/diamond";
 import FacetCutAction = Diamond.FacetCutAction;
 
-async function removeFacets(diamondAddress: string, marketplaceFacetAddress: string, decentralandFacetAddress: string) {
+async function removeMarketplaceDclFacets(diamondAddress: string, marketplaceFacetAddress: string, decentralandFacetAddress: string) {
   await hardhat.run('compile');
 
   const landWorks = await ethers.getContractAt("ILandWorks", diamondAddress);
@@ -30,4 +30,4 @@ async function removeFacets(diamondAddress: string, marketplaceFacetAddress: str
   await diamondRemoveFacetsTx.wait();
 }
 
-module.exports = removeFacets;
+module.exports = removeMarketplaceDclFacets;

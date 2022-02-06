@@ -4,7 +4,7 @@ import { Deployer } from '../utils/deployer';
 import { Diamond } from "../utils/diamond";
 import FacetCutAction = Diamond.FacetCutAction;
 
-async function addFacets(diamondAddress: string) {
+async function addMarketplaceDclFacets(diamondAddress: string) {
   await hardhat.run('compile');
 
   const landWorks = await ethers.getContractAt("ILandWorks", diamondAddress);
@@ -32,7 +32,7 @@ async function addFacets(diamondAddress: string) {
 
   const diamondAddFacetsTx = await landWorks.diamondCut(diamondAddFacets, ethers.constants.AddressZero, "0x");
   console.log(`Diamond Cut Add MarketplaceFacet & DecentralandFacet [${diamondAddFacetsTx.hash}] submitted, waiting to be mined...`);
-  await diamondAddFacetsTx.wait();
+  await diamondAddFacetsTx.wait(5);
 
   console.log('Verifying MarketplaceFacet on Etherscan...');
   await hardhat.run('verify:verify', {
@@ -47,4 +47,4 @@ async function addFacets(diamondAddress: string) {
   });
 }
 
-module.exports = addFacets;
+module.exports = addMarketplaceDclFacets;
