@@ -377,7 +377,7 @@ describe('LandWorks', function () {
             });
 
             it('should revert when registry is 0x0', async () => {
-                const expectedRevertMessage = '_registy must not be 0x0';
+                const expectedRevertMessage = '_registry must not be 0x0';
                 // when:
                 await expect(landWorks.setRegistry(metaverseId, ethers.constants.AddressZero, true))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -4069,6 +4069,133 @@ describe('LandWorks', function () {
                     // when:
                     await expect(landWorks
                         .updateAdapterAdministrativeState(assetId))
+                        .to.be.reverted;
+                });
+            });
+
+            describe('delist', async () => {
+                it('should successfully delist with withdraw', async () => {
+                    // when:
+                    await landWorks.delist(assetId);
+
+                    // then:
+                    expect(await mockERC721Registry.ownerOf(tokenID)).to.equal(owner.address);
+                    await expect(landWorks.ownerOf(assetId))
+                        .to.be.revertedWith('ERC721: owner query for nonexistent token');
+                    // and:
+                    const asset = await landWorks.assetAt(assetId);
+                    expect(asset.metaverseId).to.equal(0);
+                    expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
+                    expect(asset.metaverseAssetId).to.equal(0);
+                    expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                    expect(asset.minPeriod).to.equal(0);
+                    expect(asset.maxPeriod).to.equal(0);
+                    expect(asset.maxFutureTime).to.equal(0);
+                    expect(asset.pricePerSecond).equal(0);
+                    expect(asset.status).to.equal(0);
+                    expect(asset.totalRents).to.equal(0);
+                    expect(await landWorks.totalSupply()).to.equal(0);
+                    await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
+                    // and:
+                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                });
+
+                it('should emit events with args', async () => {
+                    // when:
+                    await expect(landWorks
+                        .delist(assetId))
+                        .to.emit(landWorks, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(landWorks, 'Delist')
+                        .withArgs(assetId, owner.address)
+                        .to.emit(landWorks, 'Transfer')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(mockERC721Registry, 'Transfer')
+                        .withArgs(landWorks.address, owner.address, tokenID)
+                        .to.emit(landWorks, 'Withdraw')
+                        .withArgs(assetId, owner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
+                        .withArgs(tokenID, ethers.constants.AddressZero);
+                });
+
+                it('should revert when adapter does not implement setConsumer', async () => {
+                    // given:
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
+
+                    // when:
+                    await expect(landWorks.delist(assetId))
+                        .to.be.reverted;
+                });
+            });
+
+            describe('withdraw', async () => {
+                const period = 2;
+                const amount = pricePerSecond * period;
+
+                beforeEach(async () => {
+                    // given:
+                    await landWorks.connect(nonOwner).rentWithConsumer(assetId, period, owner.address, ADDRESS_ONE, amount, { value: amount });
+                });
+
+                it('should withdraw successfully', async () => {
+                    // given:
+                    await landWorks.delist(assetId);
+
+                    // when:
+                    await landWorks.withdraw(assetId);
+
+                    // then:
+                    expect(await mockERC721Registry.ownerOf(tokenID)).to.equal(owner.address);
+                    await expect(landWorks.ownerOf(assetId))
+                        .to.be.revertedWith('ERC721: owner query for nonexistent token');
+                    // and:
+                    const asset = await landWorks.assetAt(assetId);
+                    expect(asset.metaverseId).to.equal(0);
+                    expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
+                    expect(asset.metaverseAssetId).to.equal(0);
+                    expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                    expect(asset.minPeriod).to.equal(0);
+                    expect(asset.maxPeriod).to.equal(0);
+                    expect(asset.maxFutureTime).to.equal(0);
+                    expect(asset.pricePerSecond).equal(0);
+                    expect(asset.status).to.equal(0);
+                    expect(asset.totalRents).to.equal(0);
+                    expect(await landWorks.totalSupply()).to.equal(0);
+                    await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
+                    // and:
+                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                });
+
+                it('should emit events with args', async () => {
+                    // given:
+                    await landWorks.delist(assetId);
+
+                    // when:
+                    await expect(landWorks
+                        .withdraw(assetId))
+                        .to.emit(landWorks, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(landWorks, 'Transfer')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, amount - Math.floor((amount * FEE_PERCENTAGE) / FEE_PRECISION))
+                        .to.emit(mockERC721Registry, 'Transfer')
+                        .withArgs(landWorks.address, owner.address, tokenID)
+                        .to.emit(landWorks, 'Withdraw')
+                        .withArgs(assetId, owner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
+                        .withArgs(tokenID, ethers.constants.AddressZero);
+                });
+
+                it('should revert when adapter does not implement setConsumer', async () => {
+                    // given:
+                    await landWorks.connect(nonOwner).rentWithConsumer(assetId, 1, owner.address, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
+
+                    // when:
+                    await expect(landWorks.withdraw(assetId))
                         .to.be.reverted;
                 });
             });
