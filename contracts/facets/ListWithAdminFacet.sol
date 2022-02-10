@@ -51,11 +51,9 @@ contract ListWithAdminFacet is IListWithAdminFacet {
                 .metaverseConsumableAdapterStorage();
 
         address consumer = mcas.administrativeConsumers[_metaverseRegistry];
-
         address adapter = mcas.consumableAdapters[_metaverseRegistry];
 
         IConsumableAdapterV1(adapter).setConsumer(_metaverseAssetId, consumer);
-
         emit UpdateAdapterAdministrativeConsumer(assetId, adapter, consumer);
 
         return assetId;
