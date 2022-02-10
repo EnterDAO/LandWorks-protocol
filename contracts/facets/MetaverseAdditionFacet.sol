@@ -26,6 +26,14 @@ contract MetaverseAdditionFacet is IMetaverseAdditionFacet {
             _metaverseRegistries.length == _administrativeConsumers.length,
             "invalid metaverse registries and operators length"
         );
+        require(
+            bytes(LibMarketplace.metaverseName(_metaverseId)).length == 0,
+            "metaverse name already set"
+        );
+        require(
+            LibMarketplace.totalRegistries(_metaverseId) == 0,
+            "metaverse registries already exist"
+        );
         LibOwnership.enforceIsContractOwner();
 
         LibMarketplace.setMetaverseName(_metaverseId, _name);

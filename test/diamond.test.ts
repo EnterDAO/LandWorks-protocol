@@ -4380,17 +4380,6 @@ describe('LandWorks', function () {
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
-            it('should revert when registry is already added for the specific metaverse', async () => {
-                // given:
-                const expectedRevertMessage = '_registry already added';
-                await landWorks.setRegistry(allInOneMetaverseId, allInOneMetaverseRegistries[0], true);
-
-                // when:
-                await expect(metaverseAdditionFacet
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers))
-                    .to.be.revertedWith(expectedRevertMessage);
-            });
-
             it('should revert when registry is 0x0', async () => {
                 // given:
                 const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
@@ -4411,11 +4400,32 @@ describe('LandWorks', function () {
                     .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, []))
                     .to.be.revertedWith(expectedRevertMessage);
                 // and:
-                // when:
                 await expect(metaverseAdditionFacet
                     .connect(nonOwner)
                     .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, [], allInOneAdministrativeConsumers))
                     .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when metaverse name is already set', async () => {
+                // given:
+                const expectedRevertMessage = 'metaverse name already set';
+                await landWorks.setMetaverseName(allInOneMetaverseId, metaverseName);
+
+                // when:
+                await expect(metaverseAdditionFacet
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                ).to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when metaverse registries already exist', async () => {
+                // given:
+                const expectedRevertMessage = 'metaverse registries already exist';
+                await landWorks.setRegistry(allInOneMetaverseId, administrativeConsumer.address, true);
+
+                // when:
+                await expect(metaverseAdditionFacet
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                ).to.be.revertedWith(expectedRevertMessage);
             });
         });
     });
