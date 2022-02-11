@@ -36,9 +36,26 @@ task('addMarketplaceDCLFacets', 'Deploys MarketplaceFacet & DecentralandFacet an
 task('addConsumableAdapterFacet', 'Deploys MetaverseConsumableAdapterFacet and adds it to Diamond')
     .addParam('diamond', 'The address of the Diamond Contract')
     .setAction(async (taskArgs) => {
+        console.log(taskArgs);
         const addConsumableAdapterFacet = require('./scripts/add-consumable-adapter-facet');
         await addConsumableAdapterFacet(taskArgs.diamond);
-    })
+    });
+
+task('replaceMarketplaceFacet', 'Deploys MetaverseFacet & replaces all the function signatures of the previous')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const replaceMarketplaceFacet = require('./scripts/replace-marketplace-facet');
+        await replaceMarketplaceFacet(taskArgs.diamond);
+    });
+
+task('addMetaverseAdditionFacet', 'Deploys MetaverseAdditionFacet & adds it to the Diamond Contract')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const addMetaverseAdditionFacet = require('./scripts/add-metaverse-addition-facet');
+        await addMetaverseAdditionFacet(taskArgs.diamond);
+    });
 
 module.exports = {
     solidity: {

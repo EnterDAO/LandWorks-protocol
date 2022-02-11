@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { Diamond } from '../utils/diamond';
 import {
     EstateRegistry,
@@ -377,7 +377,7 @@ describe('LandWorks', function () {
             });
 
             it('should revert when registry is 0x0', async () => {
-                const expectedRevertMessage = '_registy must not be 0x0';
+                const expectedRevertMessage = '_registry must not be 0x0';
                 // when:
                 await expect(landWorks.setRegistry(metaverseId, ethers.constants.AddressZero, true))
                     .to.be.revertedWith(expectedRevertMessage);
@@ -4072,9 +4072,363 @@ describe('LandWorks', function () {
                         .to.be.reverted;
                 });
             });
+
+            describe('delist', async () => {
+                it('should successfully delist with withdraw', async () => {
+                    // when:
+                    await landWorks.delist(assetId);
+
+                    // then:
+                    expect(await mockERC721Registry.ownerOf(tokenID)).to.equal(owner.address);
+                    await expect(landWorks.ownerOf(assetId))
+                        .to.be.revertedWith('ERC721: owner query for nonexistent token');
+                    // and:
+                    const asset = await landWorks.assetAt(assetId);
+                    expect(asset.metaverseId).to.equal(0);
+                    expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
+                    expect(asset.metaverseAssetId).to.equal(0);
+                    expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                    expect(asset.minPeriod).to.equal(0);
+                    expect(asset.maxPeriod).to.equal(0);
+                    expect(asset.maxFutureTime).to.equal(0);
+                    expect(asset.pricePerSecond).equal(0);
+                    expect(asset.status).to.equal(0);
+                    expect(asset.totalRents).to.equal(0);
+                    expect(await landWorks.totalSupply()).to.equal(0);
+                    await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
+                    // and:
+                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                });
+
+                it('should emit events with args', async () => {
+                    // when:
+                    await expect(landWorks
+                        .delist(assetId))
+                        .to.emit(landWorks, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(landWorks, 'Delist')
+                        .withArgs(assetId, owner.address)
+                        .to.emit(landWorks, 'Transfer')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(mockERC721Registry, 'Transfer')
+                        .withArgs(landWorks.address, owner.address, tokenID)
+                        .to.emit(landWorks, 'Withdraw')
+                        .withArgs(assetId, owner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
+                        .withArgs(tokenID, ethers.constants.AddressZero);
+                });
+
+                it('should revert when adapter does not implement setConsumer', async () => {
+                    // given:
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
+
+                    // when:
+                    await expect(landWorks.delist(assetId))
+                        .to.be.reverted;
+                });
+            });
+
+            describe('withdraw', async () => {
+                const period = 2;
+                const amount = pricePerSecond * period;
+
+                beforeEach(async () => {
+                    // given:
+                    await landWorks.connect(nonOwner).rentWithConsumer(assetId, period, owner.address, ADDRESS_ONE, amount, { value: amount });
+                });
+
+                it('should withdraw successfully', async () => {
+                    // given:
+                    await landWorks.delist(assetId);
+
+                    // when:
+                    await landWorks.withdraw(assetId);
+
+                    // then:
+                    expect(await mockERC721Registry.ownerOf(tokenID)).to.equal(owner.address);
+                    await expect(landWorks.ownerOf(assetId))
+                        .to.be.revertedWith('ERC721: owner query for nonexistent token');
+                    // and:
+                    const asset = await landWorks.assetAt(assetId);
+                    expect(asset.metaverseId).to.equal(0);
+                    expect(asset.metaverseRegistry).to.equal(ethers.constants.AddressZero);
+                    expect(asset.metaverseAssetId).to.equal(0);
+                    expect(asset.paymentToken).to.equal(ethers.constants.AddressZero);
+                    expect(asset.minPeriod).to.equal(0);
+                    expect(asset.maxPeriod).to.equal(0);
+                    expect(asset.maxFutureTime).to.equal(0);
+                    expect(asset.pricePerSecond).equal(0);
+                    expect(asset.status).to.equal(0);
+                    expect(asset.totalRents).to.equal(0);
+                    expect(await landWorks.totalSupply()).to.equal(0);
+                    await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
+                    await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
+                    // and:
+                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                });
+
+                it('should emit events with args', async () => {
+                    // given:
+                    await landWorks.delist(assetId);
+
+                    // when:
+                    await expect(landWorks
+                        .withdraw(assetId))
+                        .to.emit(landWorks, 'ConsumerChanged')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(landWorks, 'Transfer')
+                        .withArgs(owner.address, ethers.constants.AddressZero, assetId)
+                        .to.emit(landWorks, 'ClaimRentFee')
+                        .withArgs(assetId, ADDRESS_ONE, owner.address, amount - Math.floor((amount * FEE_PERCENTAGE) / FEE_PRECISION))
+                        .to.emit(mockERC721Registry, 'Transfer')
+                        .withArgs(landWorks.address, owner.address, tokenID)
+                        .to.emit(landWorks, 'Withdraw')
+                        .withArgs(assetId, owner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
+                        .withArgs(tokenID, ethers.constants.AddressZero);
+                });
+
+                it('should revert when adapter does not implement setConsumer', async () => {
+                    // given:
+                    await landWorks.connect(nonOwner).rentWithConsumer(assetId, 1, owner.address, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, mockERC721Registry.address);
+
+                    // when:
+                    await expect(landWorks.withdraw(assetId))
+                        .to.be.reverted;
+                });
+            });
+        });
+
+        describe('Diamond cut MetaverseAdditionFacet', async () => {
+            let metaverseAdditionFacet: Contract;
+            let metaverseAdditionFacetAddress: string;
+
+            const allInOneMetaverseId = 5;
+            const allInOneMetaverseName = 'All in one';
+            let allInOneMetaverseRegistries: any[] = [];
+            let allInOneAdministrativeConsumers: any[] = [];
+
+            beforeEach(async () => {
+                const facet = await Deployer.deployContract('MetaverseAdditionFacet');
+                metaverseAdditionFacetAddress = facet.address;
+
+                const diamondAddFacet = [
+                    {
+                        facetAddress: facet.address,
+                        action: FacetCutAction.Add,
+                        functionSelectors: Diamond.getSelectorsFor(facet)
+                    }
+                ];
+
+                const signers = await ethers.getSigners();
+                allInOneMetaverseRegistries = [signers[6].address, signers[7].address];
+                allInOneAdministrativeConsumers = [signers[8].address, signers[9].address];
+
+                await landWorks.diamondCut(diamondAddFacet, ethers.constants.AddressZero, "0x");
+                metaverseAdditionFacet = await ethers.getContractAt('MetaverseAdditionFacet', landWorks.address);
+            });
+
+            it('should have 9 facets', async () => {
+                const actualFacets = await landWorks.facetAddresses();
+                expect(actualFacets.length).to.be.equal(9);
+                expect(actualFacets).to.eql([cut.address, loupe.address, ownership.address, marketplace.address, fee.address, erc721.address, decentraland.address, metaverseConsumableAdapterFacet.address, metaverseAdditionFacetAddress]);
+            });
+
+            it('should have correct function selectors linked to facet', async function () {
+                const actualCutSelectors: Array<string> = Diamond.getSelectorsFor(cut);
+                expect(await landWorks.facetFunctionSelectors(cut.address)).to.deep.equal(actualCutSelectors);
+
+                const actualLoupeSelectors = Diamond.getSelectorsFor(loupe);
+                expect(await landWorks.facetFunctionSelectors(loupe.address)).to.deep.equal(actualLoupeSelectors);
+
+                const actualOwnerSelectors = Diamond.getSelectorsFor(ownership);
+                expect(await landWorks.facetFunctionSelectors(ownership.address)).to.deep.equal(actualOwnerSelectors);
+
+                const actualMarketplaceSelectors = Diamond.getSelectorsFor(marketplace);
+                expect(await landWorks.facetFunctionSelectors(marketplace.address)).to.deep.equal(actualMarketplaceSelectors);
+
+                const actualFeeSelectors = Diamond.getSelectorsFor(fee);
+                expect(await landWorks.facetFunctionSelectors(fee.address)).to.deep.equal(actualFeeSelectors);
+
+                const actualErc721Selectors = Diamond.getSelectorsFor(erc721);
+                expect(await landWorks.facetFunctionSelectors(erc721.address)).to.deep.equal(actualErc721Selectors);
+
+                const actualDecentralandFacetSelectors = Diamond.getSelectorsFor(decentraland);
+                expect(await landWorks.facetFunctionSelectors(decentraland.address)).to.deep.equal(actualDecentralandFacetSelectors);
+
+                const actualMetaverseConsumableAdapterFacetSelectors = Diamond.getSelectorsFor(metaverseConsumableAdapterFacet);
+                expect(await landWorks.facetFunctionSelectors(metaverseConsumableAdapterFacet.address)).to.deep.equal(actualMetaverseConsumableAdapterFacetSelectors);
+
+                const actualMetaverseAdditionFacetAddresses = Diamond.getSelectorsFor(metaverseAdditionFacet);
+                expect(await landWorks.facetFunctionSelectors(metaverseAdditionFacetAddress)).to.deep.equal(actualMetaverseAdditionFacetAddresses);
+            });
+
+            it('should associate selectors correctly to facets', async function () {
+                for (const sel of Diamond.getSelectorsFor(loupe)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(loupe.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(cut)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(cut.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(ownership)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(ownership.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(marketplace)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(marketplace.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(fee)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(fee.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(erc721)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(erc721.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(decentraland)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(decentraland.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(metaverseConsumableAdapterFacet)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(metaverseConsumableAdapterFacet.address);
+                }
+
+                for (const sel of Diamond.getSelectorsFor(metaverseAdditionFacet)) {
+                    expect(await landWorks.facetAddress(sel)).to.be.equal(metaverseAdditionFacetAddress);
+                }
+            });
+
+            it('should return correct response when facets() is called', async function () {
+                const facets = await landWorks.facets();
+
+                expect(facets[0].facetAddress).to.equal(cut.address);
+                expect(facets[0].functionSelectors).to.eql(Diamond.getSelectorsFor(cut));
+
+                expect(facets[1].facetAddress).to.equal(loupe.address);
+                expect(facets[1].functionSelectors).to.eql(Diamond.getSelectorsFor(loupe));
+
+                expect(facets[2].facetAddress).to.equal(ownership.address);
+                expect(facets[2].functionSelectors).to.eql(Diamond.getSelectorsFor(ownership));
+
+                expect(facets[3].facetAddress).to.equal(marketplace.address);
+                expect(facets[3].functionSelectors).to.eql(Diamond.getSelectorsFor(marketplace));
+
+                expect(facets[4].facetAddress).to.equal(fee.address);
+                expect(facets[4].functionSelectors).to.eql(Diamond.getSelectorsFor(fee));
+
+                expect(facets[5].facetAddress).to.equal(erc721.address);
+                expect(facets[5].functionSelectors).to.eql(Diamond.getSelectorsFor(erc721));
+
+                expect(facets[6].facetAddress).to.equal(decentraland.address);
+                expect(facets[6].functionSelectors).to.eql(Diamond.getSelectorsFor(decentraland));
+
+                expect(facets[7].facetAddress).to.equal(metaverseConsumableAdapterFacet.address);
+                expect(facets[7].functionSelectors).to.eql(Diamond.getSelectorsFor(metaverseConsumableAdapterFacet));
+
+                expect(facets[8].facetAddress).to.equal(metaverseAdditionFacetAddress);
+                expect(facets[8].functionSelectors).to.eql(Diamond.getSelectorsFor(metaverseAdditionFacet));
+            });
+
+            it('should successfully add metaverse through MetaverseAdditionFacet', async () => {
+                // when:
+                await metaverseAdditionFacet.addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
+                // then:
+                expect(await landWorks.metaverseName(allInOneMetaverseId)).to.equal(allInOneMetaverseName);
+                expect(await landWorks.totalRegistries(allInOneMetaverseId)).to.equal(allInOneMetaverseRegistries.length);
+                for (let i = 0; i < allInOneMetaverseRegistries.length; i++) {
+                    expect(await landWorks.registryAt(allInOneMetaverseId, i)).to.equal(allInOneMetaverseRegistries[i]);
+                    expect(await landWorks.administrativeConsumer(allInOneMetaverseRegistries[i])).to.equal(allInOneAdministrativeConsumers[i]);
+
+                    const consumableAdapter = await landWorks.consumableAdapter(allInOneMetaverseRegistries[i]);
+                    const adapter = await ethers.getContractAt('ConsumableAdapterV1', consumableAdapter);
+
+                    expect(await adapter.landworks()).to.equal(landWorks.address);
+                    expect(await adapter.token()).to.equal(allInOneMetaverseRegistries[i]);
+                }
+            });
+
+            it('should emit events with args', async () => {
+                // when:
+                const tx = await metaverseAdditionFacet.addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
+
+                await expect(tx)
+                    .to.emit(landWorks, 'SetMetaverseName')
+                    .withArgs(allInOneMetaverseId, allInOneMetaverseName)
+                    .to.emit(landWorks, 'SetRegistry')
+                    .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[0], true)
+                    .to.emit(landWorks, 'ConsumableAdapterUpdated')
+                    .to.emit(landWorks, 'AdministrativeConsumerUpdated')
+                    .withArgs(allInOneMetaverseRegistries[0], allInOneAdministrativeConsumers[0])
+                    .to.emit(landWorks, 'SetRegistry')
+                    .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[1], true)
+                    .to.emit(landWorks, 'ConsumableAdapterUpdated')
+                    .to.emit(landWorks, 'AdministrativeConsumerUpdated')
+                    .withArgs(allInOneMetaverseRegistries[1], allInOneAdministrativeConsumers[1])
+            });
+
+            it('should revert when caller is not owner', async () => {
+                const expectedRevertMessage = 'Must be contract owner';
+                // when:
+                await expect(metaverseAdditionFacet
+                    .connect(nonOwner)
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when registry is 0x0', async () => {
+                // given:
+                const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+
+                // when:
+                await expect(metaverseAdditionFacet
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, [...allInOneMetaverseRegistries, ethers.constants.AddressZero], [...allInOneAdministrativeConsumers, ethers.constants.AddressZero]))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when registries and administrative consumers mismatch', async () => {
+                const expectedRevertMessage = 'invalid metaverse registries and operators length';
+                await landWorks.setRegistry(allInOneMetaverseId, allInOneMetaverseRegistries[0], true);
+
+                // when:
+                await expect(metaverseAdditionFacet
+                    .connect(nonOwner)
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, []))
+                    .to.be.revertedWith(expectedRevertMessage);
+                // and:
+                await expect(metaverseAdditionFacet
+                    .connect(nonOwner)
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, [], allInOneAdministrativeConsumers))
+                    .to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when metaverse name is already set', async () => {
+                // given:
+                const expectedRevertMessage = 'metaverse name already set';
+                await landWorks.setMetaverseName(allInOneMetaverseId, metaverseName);
+
+                // when:
+                await expect(metaverseAdditionFacet
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                ).to.be.revertedWith(expectedRevertMessage);
+            });
+
+            it('should revert when metaverse registries already exist', async () => {
+                // given:
+                const expectedRevertMessage = 'metaverse registries already exist';
+                await landWorks.setRegistry(allInOneMetaverseId, administrativeConsumer.address, true);
+
+                // when:
+                await expect(metaverseAdditionFacet
+                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                ).to.be.revertedWith(expectedRevertMessage);
+            });
         });
     });
-
     /**
      * The diamond example comes with 8 function selectors
      * [cut, loupe, loupe, loupe, loupe, erc165, transferOwnership, owner]
