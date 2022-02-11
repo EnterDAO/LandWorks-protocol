@@ -37,7 +37,7 @@ task('addConsumableAdapterFacet', 'Deploys MetaverseConsumableAdapterFacet and a
     .addParam('diamond', 'The address of the Diamond Contract')
     .setAction(async (taskArgs) => {
         console.log(taskArgs);
-        const addConsumableAdapterFacet = require('./scripts/add-consumable-adapter-facet');
+        const addConsumableAdapterFacet = require('./scripts/add-metaverse-consumable-adapter-facet');
         await addConsumableAdapterFacet(taskArgs.diamond);
     });
 
