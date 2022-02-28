@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import "../adapters/IConsumableAdapterV1.sol";
+import "../interfaces/IERC721Consumable.sol";
 import "../interfaces/IMetaverseConsumableAdapterFacet.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibMetaverseConsumableAdapter.sol";
@@ -50,7 +50,9 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
         LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()
-            .administrativeConsumers[_metaverseRegistry] = _administrativeConsumer;
+            .administrativeConsumers[
+                _metaverseRegistry
+            ] = _administrativeConsumer;
 
         emit AdministrativeConsumerUpdated(
             _metaverseRegistry,
@@ -175,20 +177,14 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             asset.metaverseRegistry
         ];
 
-        address adapter = mcas.consumableAdapters[
-            asset.metaverseRegistry
-        ];
+        address adapter = mcas.consumableAdapters[asset.metaverseRegistry];
 
-        IConsumableAdapterV1(adapter).setConsumer(
-            asset.metaverseAssetId,
-            consumer
+        IERC721Consumable(adapter).changeConsumer(
+            consumer,
+            asset.metaverseAssetId
         );
 
-        emit UpdateAdapterAdministrativeConsumer(
-            _assetId,
-            adapter,
-            consumer
-        );
+        emit UpdateAdapterAdministrativeConsumer(_assetId, adapter, consumer);
     }
 
     /// @dev Updates the metaverse consumable adapter for the asset's metaverse tokenId
@@ -208,17 +204,12 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             .metaverseConsumableAdapterStorage()
             .consumableAdapters[asset.metaverseRegistry];
 
-        IConsumableAdapterV1(adapter).setConsumer(
-            asset.metaverseAssetId,
-            _consumer
+        IERC721Consumable(adapter).changeConsumer(
+            _consumer,
+            asset.metaverseAssetId
         );
 
-        emit UpdateAdapterConsumer(
-            _assetId,
-            _rentId,
-            adapter,
-            _consumer
-        );
+        emit UpdateAdapterConsumer(_assetId, _rentId, adapter, _consumer);
     }
 
     /// @notice Gets the consumer of the rent for the asset

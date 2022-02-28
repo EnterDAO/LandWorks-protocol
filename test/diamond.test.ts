@@ -3627,8 +3627,8 @@ describe('LandWorks', function () {
                         .withArgs(assetId, rentId, nonOwner.address)
                         .to.emit(landWorks, 'UpdateAdapterConsumer')
                         .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
-                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
-                        .withArgs(tokenID, nonOwner.address);
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
                 });
 
                 it('should not update adapter when rent does not begin in execution', async () => {
@@ -3654,8 +3654,8 @@ describe('LandWorks', function () {
                         .withArgs(assetId, secondRentId, artificialRegistry.address)
                         .to.not.emit(landWorks, 'UpdateAdapterConsumer')
                         .withArgs(assetId, secondRentId, artificialRegistry.address)
-                        .to.not.emit(metaverseAdapter, 'ConsumerUpdated')
-                        .withArgs(tokenID, nonOwner.address);
+                        .to.not.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
                     // and:
                     expect(await metaverseAdapter.consumers(tokenID)).to.equal(nonOwner.address);
                 });
@@ -3840,8 +3840,8 @@ describe('LandWorks', function () {
                     await expect(landWorks.updateAdapterState(assetId, rentId))
                         .to.emit(landWorks, 'UpdateAdapterConsumer')
                         .withArgs(assetId, rentId, metaverseAdapter.address, artificialRegistry.address)
-                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
-                        .withArgs(tokenID, artificialRegistry.address);
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, artificialRegistry.address, tokenID);
                 });
 
                 it('should revert if asset does not exist', async () => {
@@ -3956,7 +3956,7 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'UpdateRentConsumer')
                         .withArgs(assetId, rentId, artificialRegistry.address)
                         .to.not.emit(landWorks, 'UpdateAdapterConsumer')
-                        .to.not.emit(metaverseAdapter, 'ConsumerUpdated');
+                        .to.not.emit(metaverseAdapter, 'ConsumerChanged');
                 });
 
                 it('should revert when consumer is 0x0', async () => {
@@ -4010,8 +4010,8 @@ describe('LandWorks', function () {
                         .updateAdapterAdministrativeState(assetId))
                         .to.emit(landWorks, 'UpdateAdapterAdministrativeConsumer')
                         .withArgs(assetId, metaverseAdapter.address, administrativeConsumer.address)
-                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
-                        .withArgs(tokenID, administrativeConsumer.address);
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, administrativeConsumer.address, tokenID);
                 });
 
                 it('should revert if asset does not exist', async () => {
@@ -4115,8 +4115,8 @@ describe('LandWorks', function () {
                         .withArgs(landWorks.address, owner.address, tokenID)
                         .to.emit(landWorks, 'Withdraw')
                         .withArgs(assetId, owner.address)
-                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
-                        .withArgs(tokenID, ethers.constants.AddressZero);
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, ethers.constants.AddressZero, tokenID);
                 });
 
                 it('should revert when adapter does not implement setConsumer', async () => {
@@ -4185,8 +4185,8 @@ describe('LandWorks', function () {
                         .withArgs(landWorks.address, owner.address, tokenID)
                         .to.emit(landWorks, 'Withdraw')
                         .withArgs(assetId, owner.address)
-                        .to.emit(metaverseAdapter, 'ConsumerUpdated')
-                        .withArgs(tokenID, ethers.constants.AddressZero);
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, ethers.constants.AddressZero, tokenID);
                 });
 
                 it('should revert when adapter does not implement setConsumer', async () => {
@@ -4334,98 +4334,193 @@ describe('LandWorks', function () {
                 expect(facets[8].functionSelectors).to.eql(Diamond.getSelectorsFor(metaverseAdditionFacet));
             });
 
-            it('should successfully add metaverse through MetaverseAdditionFacet', async () => {
-                // when:
-                await metaverseAdditionFacet.addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
-                // then:
-                expect(await landWorks.metaverseName(allInOneMetaverseId)).to.equal(allInOneMetaverseName);
-                expect(await landWorks.totalRegistries(allInOneMetaverseId)).to.equal(allInOneMetaverseRegistries.length);
-                for (let i = 0; i < allInOneMetaverseRegistries.length; i++) {
-                    expect(await landWorks.registryAt(allInOneMetaverseId, i)).to.equal(allInOneMetaverseRegistries[i]);
-                    expect(await landWorks.administrativeConsumer(allInOneMetaverseRegistries[i])).to.equal(allInOneAdministrativeConsumers[i]);
+            describe('addMetaverseWithAdapters', async () => {
+                it('should successfully add metaverse through MetaverseAdditionFacet', async () => {
+                    // when:
+                    await metaverseAdditionFacet.addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
+                    // then:
+                    expect(await landWorks.metaverseName(allInOneMetaverseId)).to.equal(allInOneMetaverseName);
+                    expect(await landWorks.totalRegistries(allInOneMetaverseId)).to.equal(allInOneMetaverseRegistries.length);
+                    for (let i = 0; i < allInOneMetaverseRegistries.length; i++) {
+                        expect(await landWorks.registryAt(allInOneMetaverseId, i)).to.equal(allInOneMetaverseRegistries[i]);
+                        expect(await landWorks.administrativeConsumer(allInOneMetaverseRegistries[i])).to.equal(allInOneAdministrativeConsumers[i]);
 
-                    const consumableAdapter = await landWorks.consumableAdapter(allInOneMetaverseRegistries[i]);
-                    const adapter = await ethers.getContractAt('ConsumableAdapterV1', consumableAdapter);
+                        const consumableAdapter = await landWorks.consumableAdapter(allInOneMetaverseRegistries[i]);
+                        const adapter = await ethers.getContractAt('ConsumableAdapterV1', consumableAdapter);
 
-                    expect(await adapter.landworks()).to.equal(landWorks.address);
-                    expect(await adapter.token()).to.equal(allInOneMetaverseRegistries[i]);
-                }
+                        expect(await adapter.landworks()).to.equal(landWorks.address);
+                        expect(await adapter.token()).to.equal(allInOneMetaverseRegistries[i]);
+                    }
+                });
+
+                it('should emit events with args', async () => {
+                    // when:
+                    const tx = await metaverseAdditionFacet.addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
+
+                    await expect(tx)
+                        .to.emit(landWorks, 'SetMetaverseName')
+                        .withArgs(allInOneMetaverseId, allInOneMetaverseName)
+                        .to.emit(landWorks, 'SetRegistry')
+                        .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[0], true)
+                        .to.emit(landWorks, 'ConsumableAdapterUpdated')
+                        .to.emit(landWorks, 'AdministrativeConsumerUpdated')
+                        .withArgs(allInOneMetaverseRegistries[0], allInOneAdministrativeConsumers[0])
+                        .to.emit(landWorks, 'SetRegistry')
+                        .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[1], true)
+                        .to.emit(landWorks, 'ConsumableAdapterUpdated')
+                        .to.emit(landWorks, 'AdministrativeConsumerUpdated')
+                        .withArgs(allInOneMetaverseRegistries[1], allInOneAdministrativeConsumers[1])
+                });
+
+                it('should revert when caller is not owner', async () => {
+                    const expectedRevertMessage = 'Must be contract owner';
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .connect(nonOwner)
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when registry is 0x0', async () => {
+                    // given:
+                    const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, [...allInOneMetaverseRegistries, ethers.constants.AddressZero], [...allInOneAdministrativeConsumers, ethers.constants.AddressZero]))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when registries and administrative consumers mismatch', async () => {
+                    const expectedRevertMessage = 'invalid metaverse registries and operators length';
+                    await landWorks.setRegistry(allInOneMetaverseId, allInOneMetaverseRegistries[0], true);
+
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .connect(nonOwner)
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, []))
+                        .to.be.revertedWith(expectedRevertMessage);
+                    // and:
+                    await expect(metaverseAdditionFacet
+                        .connect(nonOwner)
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, [], allInOneAdministrativeConsumers))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when metaverse name is already set', async () => {
+                    // given:
+                    const expectedRevertMessage = 'metaverse name already set';
+                    await landWorks.setMetaverseName(allInOneMetaverseId, metaverseName);
+
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                    ).to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should revert when metaverse registries already exist', async () => {
+                    // given:
+                    const expectedRevertMessage = 'metaverse registries already exist';
+                    await landWorks.setRegistry(allInOneMetaverseId, administrativeConsumer.address, true);
+
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                    ).to.be.revertedWith(expectedRevertMessage);
+                });
             });
 
-            it('should emit events with args', async () => {
-                // when:
-                const tx = await metaverseAdditionFacet.addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
+            describe('addMetaverseWithoutAdapters', async () => {
+                it('should successfully add metaverse without adapters through MetaverseAdditionFacet', async () => {
+                    // when:
+                    await metaverseAdditionFacet.addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
+                    // then:
+                    expect(await landWorks.metaverseName(allInOneMetaverseId)).to.equal(allInOneMetaverseName);
+                    expect(await landWorks.totalRegistries(allInOneMetaverseId)).to.equal(allInOneMetaverseRegistries.length);
+                    for (let i = 0; i < allInOneMetaverseRegistries.length; i++) {
+                        expect(await landWorks.registryAt(allInOneMetaverseId, i)).to.equal(allInOneMetaverseRegistries[i]);
+                        expect(await landWorks.administrativeConsumer(allInOneMetaverseRegistries[i])).to.equal(allInOneAdministrativeConsumers[i]);
+                        expect(await landWorks.consumableAdapter(allInOneMetaverseRegistries[i])).to.equal(allInOneMetaverseRegistries[i]);
+                    }
+                });
 
-                await expect(tx)
-                    .to.emit(landWorks, 'SetMetaverseName')
-                    .withArgs(allInOneMetaverseId, allInOneMetaverseName)
-                    .to.emit(landWorks, 'SetRegistry')
-                    .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[0], true)
-                    .to.emit(landWorks, 'ConsumableAdapterUpdated')
-                    .to.emit(landWorks, 'AdministrativeConsumerUpdated')
-                    .withArgs(allInOneMetaverseRegistries[0], allInOneAdministrativeConsumers[0])
-                    .to.emit(landWorks, 'SetRegistry')
-                    .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[1], true)
-                    .to.emit(landWorks, 'ConsumableAdapterUpdated')
-                    .to.emit(landWorks, 'AdministrativeConsumerUpdated')
-                    .withArgs(allInOneMetaverseRegistries[1], allInOneAdministrativeConsumers[1])
-            });
+                it('should emit events with args', async () => {
+                    // when:
+                    const tx = await metaverseAdditionFacet.addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers);
 
-            it('should revert when caller is not owner', async () => {
-                const expectedRevertMessage = 'Must be contract owner';
-                // when:
-                await expect(metaverseAdditionFacet
-                    .connect(nonOwner)
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers))
-                    .to.be.revertedWith(expectedRevertMessage);
-            });
+                    await expect(tx)
+                        .to.emit(landWorks, 'SetMetaverseName')
+                        .withArgs(allInOneMetaverseId, allInOneMetaverseName)
+                        .to.emit(landWorks, 'SetRegistry')
+                        .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[0], true)
+                        .to.emit(landWorks, 'ConsumableAdapterUpdated')
+                        .withArgs(allInOneMetaverseRegistries[0], allInOneMetaverseRegistries[0])
+                        .to.emit(landWorks, 'AdministrativeConsumerUpdated')
+                        .withArgs(allInOneMetaverseRegistries[0], allInOneAdministrativeConsumers[0])
+                        .to.emit(landWorks, 'SetRegistry')
+                        .withArgs(allInOneMetaverseId, allInOneMetaverseRegistries[1], true)
+                        .to.emit(landWorks, 'ConsumableAdapterUpdated')
+                        .withArgs(allInOneMetaverseRegistries[1], allInOneMetaverseRegistries[1])
+                        .to.emit(landWorks, 'AdministrativeConsumerUpdated')
+                        .withArgs(allInOneMetaverseRegistries[1], allInOneAdministrativeConsumers[1])
+                });
 
-            it('should revert when registry is 0x0', async () => {
-                // given:
-                const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
+                it('should revert when caller is not owner', async () => {
+                    const expectedRevertMessage = 'Must be contract owner';
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .connect(nonOwner)
+                        .addMetaverseWithAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
 
-                // when:
-                await expect(metaverseAdditionFacet
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, [...allInOneMetaverseRegistries, ethers.constants.AddressZero], [...allInOneAdministrativeConsumers, ethers.constants.AddressZero]))
-                    .to.be.revertedWith(expectedRevertMessage);
-            });
+                it('should revert when registry is 0x0', async () => {
+                    // given:
+                    const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
 
-            it('should revert when registries and administrative consumers mismatch', async () => {
-                const expectedRevertMessage = 'invalid metaverse registries and operators length';
-                await landWorks.setRegistry(allInOneMetaverseId, allInOneMetaverseRegistries[0], true);
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, [...allInOneMetaverseRegistries, ethers.constants.AddressZero], [...allInOneAdministrativeConsumers, ethers.constants.AddressZero]))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
 
-                // when:
-                await expect(metaverseAdditionFacet
-                    .connect(nonOwner)
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, []))
-                    .to.be.revertedWith(expectedRevertMessage);
-                // and:
-                await expect(metaverseAdditionFacet
-                    .connect(nonOwner)
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, [], allInOneAdministrativeConsumers))
-                    .to.be.revertedWith(expectedRevertMessage);
-            });
+                it('should revert when registries and administrative consumers mismatch', async () => {
+                    const expectedRevertMessage = 'invalid metaverse registries and operators length';
+                    await landWorks.setRegistry(allInOneMetaverseId, allInOneMetaverseRegistries[0], true);
 
-            it('should revert when metaverse name is already set', async () => {
-                // given:
-                const expectedRevertMessage = 'metaverse name already set';
-                await landWorks.setMetaverseName(allInOneMetaverseId, metaverseName);
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .connect(nonOwner)
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, []))
+                        .to.be.revertedWith(expectedRevertMessage);
+                    // and:
+                    await expect(metaverseAdditionFacet
+                        .connect(nonOwner)
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, [], allInOneAdministrativeConsumers))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
 
-                // when:
-                await expect(metaverseAdditionFacet
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
-                ).to.be.revertedWith(expectedRevertMessage);
-            });
+                it('should revert when metaverse name is already set', async () => {
+                    // given:
+                    const expectedRevertMessage = 'metaverse name already set';
+                    await landWorks.setMetaverseName(allInOneMetaverseId, metaverseName);
 
-            it('should revert when metaverse registries already exist', async () => {
-                // given:
-                const expectedRevertMessage = 'metaverse registries already exist';
-                await landWorks.setRegistry(allInOneMetaverseId, administrativeConsumer.address, true);
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                    ).to.be.revertedWith(expectedRevertMessage);
+                });
 
-                // when:
-                await expect(metaverseAdditionFacet
-                    .addMetaverse(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
-                ).to.be.revertedWith(expectedRevertMessage);
+                it('should revert when metaverse registries already exist', async () => {
+                    // given:
+                    const expectedRevertMessage = 'metaverse registries already exist';
+                    await landWorks.setRegistry(allInOneMetaverseId, administrativeConsumer.address, true);
+
+                    // when:
+                    await expect(metaverseAdditionFacet
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
+                    ).to.be.revertedWith(expectedRevertMessage);
+                });
             });
         });
     });

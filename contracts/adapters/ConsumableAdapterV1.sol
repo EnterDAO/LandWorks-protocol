@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import "./IConsumableAdapterV1.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
+import "../interfaces/IERC721Consumable.sol";
 
 /// @title Version 1 adapter for metaverse integrations
 /// @author Daniel K Ivanov
 /// @notice Adapter for metaverses that lack the necessary consumer role required to be integrated into LandWorks
 /// For reference see https://eips.ethereum.org/EIPS/eip-4400
-contract ConsumableAdapterV1 is IConsumableAdapterV1 {
+contract ConsumableAdapterV1 is IERC165, IERC721Consumable {
     /// @notice LandWorks address
     address public immutable landworks;
     /// @notice NFT Token address
@@ -22,8 +24,13 @@ contract ConsumableAdapterV1 is IConsumableAdapterV1 {
         token = IERC721(_token);
     }
 
-    /// @dev See {IConsumableAdapterV1-setConsumer}
-    function setConsumer(uint256 tokenId, address consumer) external {
+    /// @dev See {IERC721Consumable-consumerOf}
+    function consumerOf(uint256 tokenId) public view returns (address) {
+        return consumers[tokenId];
+    }
+
+    /// @dev See {IERC721Consumable-changeConsumer}
+    function changeConsumer(address consumer, uint256 tokenId) public {
         require(
             msg.sender == landworks,
             "ConsumableAdapter: sender is not LandWorks"
@@ -34,6 +41,18 @@ contract ConsumableAdapterV1 is IConsumableAdapterV1 {
         );
 
         consumers[tokenId] = consumer;
-        emit ConsumerUpdated(tokenId, consumer);
+        emit ConsumerChanged(msg.sender, consumer, tokenId);
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        returns (bool)
+    {
+        return interfaceId == type(IERC721Consumable).interfaceId;
     }
 }
