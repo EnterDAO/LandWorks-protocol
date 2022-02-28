@@ -23,58 +23,17 @@ contract MetaverseAdditionFacet is IMetaverseAdditionFacet {
         address[] calldata _metaverseRegistries,
         address[] calldata _administrativeConsumers
     ) public {
-        require(
-            _metaverseRegistries.length == _administrativeConsumers.length,
-            "invalid metaverse registries and operators length"
+        addMetaverse(
+            _metaverseId,
+            _name,
+            _metaverseRegistries,
+            _administrativeConsumers,
+            true
         );
-        require(
-            bytes(LibMarketplace.metaverseName(_metaverseId)).length == 0,
-            "metaverse name already set"
-        );
-        require(
-            LibMarketplace.totalRegistries(_metaverseId) == 0,
-            "metaverse registries already exist"
-        );
-        LibOwnership.enforceIsContractOwner();
-
-        LibMarketplace.setMetaverseName(_metaverseId, _name);
-        emit SetMetaverseName(_metaverseId, _name);
-
-        for (uint256 i = 0; i < _metaverseRegistries.length; i++) {
-            address metaverseRegistry = _metaverseRegistries[i];
-            address administrativeConsumer = _administrativeConsumers[i];
-
-            require(
-                metaverseRegistry != address(0),
-                "_metaverseRegistry must not be 0x0"
-            );
-            LibMarketplace.setRegistry(_metaverseId, metaverseRegistry, true);
-            emit SetRegistry(_metaverseId, metaverseRegistry, true);
-
-            address adapter = address(
-                new ConsumableAdapterV1(address(this), metaverseRegistry)
-            );
-
-            LibMetaverseConsumableAdapter
-                .metaverseConsumableAdapterStorage()
-                .consumableAdapters[metaverseRegistry] = adapter;
-            emit ConsumableAdapterUpdated(metaverseRegistry, adapter);
-
-            LibMetaverseConsumableAdapter
-                .metaverseConsumableAdapterStorage()
-                .administrativeConsumers[
-                    metaverseRegistry
-                ] = administrativeConsumer;
-
-            emit AdministrativeConsumerUpdated(
-                metaverseRegistry,
-                administrativeConsumer
-            );
-        }
     }
 
     /// @notice Adds a Metaverse to LandWorks.
-    /// @dev Sets the metaverse registries as consumable adapters
+    /// @dev Sets the metaverse registries as consumable adapters.
     /// @param _metaverseId The id of the metaverse
     /// @param _name Name of the metaverse
     /// @param _metaverseRegistries A list of metaverse registries, that will be
@@ -88,6 +47,22 @@ contract MetaverseAdditionFacet is IMetaverseAdditionFacet {
         address[] calldata _metaverseRegistries,
         address[] calldata _administrativeConsumers
     ) public {
+        addMetaverse(
+            _metaverseId,
+            _name,
+            _metaverseRegistries,
+            _administrativeConsumers,
+            false
+        );
+    }
+
+    function addMetaverse(
+        uint256 _metaverseId,
+        string calldata _name,
+        address[] calldata _metaverseRegistries,
+        address[] calldata _administrativeConsumers,
+        bool withAdapters
+    ) internal {
         require(
             _metaverseRegistries.length == _administrativeConsumers.length,
             "invalid metaverse registries and operators length"
@@ -116,10 +91,17 @@ contract MetaverseAdditionFacet is IMetaverseAdditionFacet {
             LibMarketplace.setRegistry(_metaverseId, metaverseRegistry, true);
             emit SetRegistry(_metaverseId, metaverseRegistry, true);
 
+            address adapter = metaverseRegistry;
+            if (withAdapters) {
+                adapter = address(
+                    new ConsumableAdapterV1(address(this), metaverseRegistry)
+                );
+            }
+
             LibMetaverseConsumableAdapter
                 .metaverseConsumableAdapterStorage()
-                .consumableAdapters[metaverseRegistry] = metaverseRegistry;
-            emit ConsumableAdapterUpdated(metaverseRegistry, metaverseRegistry);
+                .consumableAdapters[metaverseRegistry] = adapter;
+            emit ConsumableAdapterUpdated(metaverseRegistry, adapter);
 
             LibMetaverseConsumableAdapter
                 .metaverseConsumableAdapterStorage()
