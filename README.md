@@ -22,6 +22,16 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `DecentralandFacet`: `0xdd65d876f00a4203dc9be33b2728852d3bd7e61c`
 - `LandWorks (Diamond)`: `0x678D837fA15eba2B59f6CD5F9F4C580AC2Dfc269`
 
+**Testnet Rinkeby Deployment Addresses**
+- `DiamondCutFacet`: `0xd8Db904252480915Ef2619851C0Ea51437c96f73`
+- `DiamondLoupeFacet`: `0x5D875Da9C052Cb92119AF4a359C97F3364DDaFB6`
+- `OwnershipFacet`: `0x2d82c46e1CfD3fa98770e6c15D65FE3D08290DDe`
+- `FeeFacet`: `0x2aCaEcDea5BbC47D943359E17E3a30757aD3C93D`
+- `ERC-721Facet`: `0xB770E9ca6cFAe93fA0adC0E5e1157A6D6D9f2674`
+- `MarketplaceFacet`: `0x50137Dc06e255Be69a1B08864f17A235A942f2D7`
+- `DecentralandFacet`: `0xD0e091d5401d5Eff1d22436B05175F1076349b24`
+- `LandWorks (Diamond)`: `0x1B39D334302e1F077442516488300a860C8cfC14`
+
 ## Development
 
 [hardhat](https://hardhat.org/) - framework used for the development and testing of the contracts
