@@ -20,7 +20,14 @@ interface IMetaverseAdditionFacet {
         address indexed _administrativeConsumer
     );
 
-    function addMetaverse(
+    function addMetaverseWithAdapters(
+        uint256 _metaverseId,
+        string calldata _name,
+        address[] calldata _metaverseRegistries,
+        address[] calldata _administrativeConsumers
+    ) external;
+
+    function addMetaverseWithoutAdapters(
         uint256 _metaverseId,
         string calldata _name,
         address[] calldata _metaverseRegistries,

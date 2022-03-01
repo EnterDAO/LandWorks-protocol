@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "../adapters/IConsumableAdapterV1.sol";
+import "../interfaces/IERC721Consumable.sol";
 import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibERC721.sol";
 import "../libraries/LibTransfer.sol";
@@ -337,9 +337,9 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             .consumableAdapters[asset.metaverseRegistry];
 
         if (adapter != address(0)) {
-            IConsumableAdapterV1(adapter).setConsumer(
-                asset.metaverseAssetId,
-                address(0)
+            IERC721Consumable(adapter).changeConsumer(
+                address(0),
+                asset.metaverseAssetId
             );
         }
     }
