@@ -4521,6 +4521,26 @@ describe('LandWorks', function () {
                         .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, allInOneMetaverseRegistries, allInOneAdministrativeConsumers)
                     ).to.be.revertedWith(expectedRevertMessage);
                 });
+
+                it('should be able to change the consumer of a metaverse registry which implements ERC721Consumable', async () => {
+                    // given:
+                    const metaverseRegistry = await Deployer.deployContract('ERC721Consumable');
+                    // and:
+                    await metaverseAdditionFacet
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, [metaverseRegistry.address], [administrativeConsumer.address]);
+                    // and:
+                    await metaverseRegistry.mint();
+                    // and:
+                    await metaverseRegistry.approve(landWorks.address, 1);
+                    await landWorks.list(allInOneMetaverseId, metaverseRegistry.address, 1, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
+
+                    // when:
+                    await landWorks.connect(nonOwner).rentWithConsumer(1, maxPeriod, nonOwner.address, ADDRESS_ONE, pricePerSecond * maxPeriod, { value: pricePerSecond * maxPeriod });
+
+                    // then:
+                    expect(await landWorks.consumableAdapter(metaverseRegistry.address)).to.equal(metaverseRegistry.address);
+                    expect(await metaverseRegistry.consumerOf(1)).to.equal(nonOwner.address);
+                });
             });
         });
     });
