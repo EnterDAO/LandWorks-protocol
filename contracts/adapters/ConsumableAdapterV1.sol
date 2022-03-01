@@ -17,7 +17,7 @@ contract ConsumableAdapterV1 is IERC165, IERC721Consumable {
     IERC721 public immutable token;
 
     /// @notice mapping of authorised consumer addresses
-    mapping(uint256 => address) public consumers;
+    mapping(uint256 => address) private consumers;
 
     constructor(address _landworks, address _token) {
         landworks = _landworks;

@@ -3607,7 +3607,7 @@ describe('LandWorks', function () {
                     expect(consumer).to.equal(nonOwner.address);
                     // and:
                     const tokenId = (await landWorks.assetAt(assetId)).metaverseAssetId;
-                    expect(await metaverseAdapter.consumers(tokenId)).to.equal(nonOwner.address);
+                    expect(await metaverseAdapter.consumerOf(tokenId)).to.equal(nonOwner.address);
                 });
 
                 it('should emit event with args', async () => {
@@ -3657,7 +3657,7 @@ describe('LandWorks', function () {
                         .to.not.emit(metaverseAdapter, 'ConsumerChanged')
                         .withArgs(landWorks.address, nonOwner.address, tokenID);
                     // and:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(nonOwner.address);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(nonOwner.address);
                 });
 
                 it('should revert when consumer is 0x0', async () => {
@@ -3815,7 +3815,7 @@ describe('LandWorks', function () {
                         .connect(nonOwner)
                         .rentWithConsumer(assetId, 5, nonOwner.address, ADDRESS_ONE, 5 * value, { value: 5 * value });
                     // and:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(nonOwner.address);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(nonOwner.address);
                     // and:
                     await landWorks.connect(nonOwner).updateConsumer(assetId, rentId, artificialRegistry.address);
 
@@ -3823,7 +3823,7 @@ describe('LandWorks', function () {
                     await landWorks.updateAdapterState(assetId, rentId);
 
                     // then:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(artificialRegistry.address);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(artificialRegistry.address);
                 });
 
                 it('should emit events with args', async () => {
@@ -3832,7 +3832,7 @@ describe('LandWorks', function () {
                         .connect(nonOwner)
                         .rentWithConsumer(assetId, 5, nonOwner.address, ADDRESS_ONE, 5 * value, { value: 5 * value });
                     // and:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(nonOwner.address);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(nonOwner.address);
                     // and:
                     await landWorks.connect(nonOwner).updateConsumer(assetId, rentId, artificialRegistry.address);
 
@@ -3941,7 +3941,7 @@ describe('LandWorks', function () {
                     // then:
                     expect(await landWorks.rentConsumer(assetId, rentId)).to.equal(artificialRegistry.address);
                     // and:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(nonOwner.address);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(nonOwner.address);
                 });
 
                 it('should emit event with args', async () => {
@@ -3994,13 +3994,13 @@ describe('LandWorks', function () {
 
                 it('should successfully update adapter with administrative consumer', async () => {
                     // given:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
 
                     // when:
                     await landWorks.updateAdapterAdministrativeState(assetId);
 
                     // then:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(administrativeConsumer.address);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(administrativeConsumer.address);
                 });
 
                 it('should emit events with args', async () => {
@@ -4098,7 +4098,7 @@ describe('LandWorks', function () {
                     await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
                     await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
                     // and:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 });
 
                 it('should emit events with args', async () => {
@@ -4165,7 +4165,7 @@ describe('LandWorks', function () {
                     await expect(landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.be.revertedWith('ERC721Enumerable: owner index out of bounds');
                     await expect(landWorks.tokenByIndex(0)).to.be.revertedWith('ERC721Enumerable: global index out of bounds');
                     // and:
-                    expect(await metaverseAdapter.consumers(tokenID)).to.equal(ethers.constants.AddressZero);
+                    expect(await metaverseAdapter.consumerOf(tokenID)).to.equal(ethers.constants.AddressZero);
                 });
 
                 it('should emit events with args', async () => {
@@ -4540,6 +4540,31 @@ describe('LandWorks', function () {
                     // then:
                     expect(await landWorks.consumableAdapter(metaverseRegistry.address)).to.equal(metaverseRegistry.address);
                     expect(await metaverseRegistry.consumerOf(1)).to.equal(nonOwner.address);
+                });
+
+                it('should clear the consumer of a metaverse registry which implements ERC721Consumable upon withdraw', async () => {
+                    // given:
+                    const metaverseRegistry = await Deployer.deployContract('ERC721Consumable');
+                    // and:
+                    await metaverseAdditionFacet
+                        .addMetaverseWithoutAdapters(allInOneMetaverseId, allInOneMetaverseName, [metaverseRegistry.address], [administrativeConsumer.address]);
+                    // and:
+                    await metaverseRegistry.mint();
+                    // and:
+                    await metaverseRegistry.approve(landWorks.address, 1);
+                    await landWorks.list(allInOneMetaverseId, metaverseRegistry.address, 1, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
+                    // and:
+                    await landWorks.connect(nonOwner).rentWithConsumer(1, minPeriod, nonOwner.address, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
+                    // and:
+                    expect(await landWorks.consumableAdapter(metaverseRegistry.address)).to.equal(metaverseRegistry.address);
+                    expect(await metaverseRegistry.consumerOf(1)).to.equal(nonOwner.address);
+
+                    // when:
+                    // delist does withdraw in itself
+                    await landWorks.delist(1);
+
+                    // then:
+                    expect(await metaverseRegistry.consumerOf(1)).to.equal(ethers.constants.AddressZero);
                 });
             });
         });

@@ -48,7 +48,6 @@ describe('Consumable Adapter V1', function () {
 		// when
 		await adapter.connect(landworks).changeConsumer(consumer, ERC721_ID);
 		// then
-		expect(await adapter.consumers(ERC721_ID)).to.equal(consumer);
 		expect(await adapter.consumerOf(ERC721_ID)).to.equal(consumer);
 	});
 
