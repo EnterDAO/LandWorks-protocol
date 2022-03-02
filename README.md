@@ -3,7 +3,7 @@
 # LandWorks Contracts
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test](https://github.com/EnterDAO/LandWorks-contracts/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/EnterDAO/LandWorks-contracts/actions/workflows/test.yml)
+[![Unit Tests](https://github.com/EnterDAO/LandWorks-protocol/actions/workflows/test.yml/badge.svg)](https://github.com/EnterDAO/LandWorks-protocol/actions/workflows/test.yml)
 
 </div>
 
