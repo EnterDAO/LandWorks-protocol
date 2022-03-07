@@ -31,6 +31,15 @@ task('addFacets', 'Deploys MarketplaceFacet & DecentralandFacet and Adds them to
         await addFacets(taskArgs.diamond);
     });
 
+task('setDCLAdminOperator', 'Updates the Decentraland Admin Operator')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .addParam('adminOperator', 'The address of the Administrative Operator')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const updateAdminOperator = require('./scripts/set-DCL-admin-operator');
+        await updateAdminOperator(taskArgs.diamond, taskArgs.adminOperator);
+    })
+
 module.exports = {
     solidity: {
         compilers: [
