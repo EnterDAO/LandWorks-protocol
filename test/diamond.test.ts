@@ -3165,6 +3165,22 @@ describe('LandWorks', function () {
                     .updateAdministrativeState(secondAssetId))
                     .to.be.reverted;
             });
+
+            it('should update the administrative state using external contract', async () => {
+                // given:
+                const updater = await Deployer.deployContract('DecentralandAdminOperatorUpdater');
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
+
+                // when:
+                await expect(updater.updateAssetsAdministrativeState(landWorks.address, [assetId]))
+                    .to.emit(landWorks, 'UpdateAdministrativeState')
+                    .withArgs(assetId, administrativeOperator.address)
+                    .to.emit(landRegistry, 'UpdateOperator')
+                    .withArgs(landId, administrativeOperator.address)
+
+                // then:
+                expect(await landRegistry.updateOperator(landId)).to.equal(administrativeOperator.address);
+            });
         });
 
         describe('updateOperator', async () => {

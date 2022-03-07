@@ -57,6 +57,22 @@ task('addMetaverseAdditionFacet', 'Deploys MetaverseAdditionFacet & adds it to t
         await addMetaverseAdditionFacet(taskArgs.diamond);
     });
 
+task('updateDecentralandAssetsWithAdministrativeOperators', 'Updates the Decentraland Assets with the Administrative Operator')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .addParam('updater', 'The address of the Updater Contract')
+    .addParam('metaverseId', 'The MetaverseID of Decentraland in LandWorks')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const decentralandUpdateAssetsWithAdminOperators = require('./scripts/decentraland-update-admin-operators');
+        await decentralandUpdateAssetsWithAdminOperators(taskArgs.diamond, taskArgs.updater, taskArgs.metaverseId);
+    });
+
+task('deployDecentralandAdminUpdater', 'Deploys DecentralandAdminOperatorUpdater')
+    .setAction(async () => {
+        const deployDecentralandAdminOperatorUpdater = require('./scripts/deploy-decentraland-admin-operator-updater');
+        await deployDecentralandAdminOperatorUpdater();
+    });
+
 module.exports = {
     solidity: {
         compilers: [
