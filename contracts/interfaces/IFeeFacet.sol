@@ -2,18 +2,29 @@
 pragma solidity 0.8.10;
 
 interface IFeeFacet {
-
-    event ClaimProtocolFee(address indexed _token, address indexed _recipient, uint256 _amount);
+    event ClaimProtocolFee(
+        address indexed _token,
+        address indexed _recipient,
+        uint256 _amount
+    );
     event SetFee(address indexed _token, uint256 _fee);
     event SetTokenPayment(address indexed _token, bool _status);
 
-    /// @notice Claims unclaimed rent fees for a given asset to asset owner
+    /// @notice Claims unclaimed rent fees for a given asset to receiver
     /// @param _assetId The target asset
-    function claimRentFee(uint256 _assetId) external;
+    /// @param _receiver The target receiver
+    // Returns the asset's payment token and unclaimed amount
+    function claimRentFee(uint256 _assetId, address _receiver)
+        external
+        returns (address, uint256);
 
-    /// @notice Claims unclaimed rent fees for a set of assets to assets' owners
+    /// @notice Claims unclaimed rent fees for a set of assets to receivers
     /// @param _assetIds The array of assets
-    function claimMultipleRentFees(uint256[] calldata _assetIds) external;
+    /// @param _receivers The address of the receivers
+    function claimMultipleRentFees(
+        uint256[] calldata _assetIds,
+        address[] calldata _receivers
+    ) external;
 
     /// @notice Claims protocol fees of a given payment token to contract owner
     /// Provide 0x0000000000000000000000000000000000000001 for ETH

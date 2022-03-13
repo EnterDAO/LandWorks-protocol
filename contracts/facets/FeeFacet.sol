@@ -33,23 +33,32 @@ contract FeeFacet is IFeeFacet, RentPayout {
         }
     }
 
-    /// @notice Claims unclaimed rent fees for a given asset to asset owner
+    /// @notice Claims unclaimed rent fees for a given asset to receiver
     /// @param _assetId The target asset
-    function claimRentFee(uint256 _assetId) public {
+    /// @param _receiver The target receiver
+    // Returns the asset's payment token and unclaimed amount
+    function claimRentFee(uint256 _assetId, address _receiver)
+        public
+        returns (address, uint256)
+    {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
                 LibERC721.isConsumerOf(msg.sender, _assetId),
             "caller must be consumer, approved or owner of asset"
         );
 
-        payoutRent(_assetId);
+        return payoutRent(_assetId, _receiver);
     }
 
-    /// @notice Claims unclaimed rent fees for a set of assets to assets' owners
+    /// @notice Claims unclaimed rent fees for a set of assets to receivers
     /// @param _assetIds The array of assets
-    function claimMultipleRentFees(uint256[] calldata _assetIds) public {
+    /// @param _receivers The address of the receivers
+    function claimMultipleRentFees(
+        uint256[] calldata _assetIds,
+        address[] calldata _receivers
+    ) public {
         for (uint256 i = 0; i < _assetIds.length; i++) {
-            claimRentFee(_assetIds[i]);
+            claimRentFee(_assetIds[i], _receivers[i]);
         }
     }
 

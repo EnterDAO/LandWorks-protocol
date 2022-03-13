@@ -8,29 +8,30 @@ import "../libraries/marketplace/LibMarketplace.sol";
 import "../interfaces/IRentPayout.sol";
 
 contract RentPayout is IRentPayout {
-    modifier payout(uint256 tokenId) {
-        payoutRent(tokenId);
+    modifier payout(uint256 tokenId, address _receiver) {
+        payoutRent(tokenId, _receiver);
         _;
     }
 
     /// @dev Pays out the accumulated rent for a given tokenId
-    /// Rent is paid out to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
-    function payoutRent(uint256 tokenId) internal {
+    /// Rent is paid out to receiver address.
+    /// Returns the payment token and amount.
+    function payoutRent(uint256 tokenId, address receiver)
+        internal
+        returns (address, uint256)
+    {
         address paymentToken = LibMarketplace
             .marketplaceStorage()
             .assets[tokenId]
             .paymentToken;
         uint256 amount = LibFee.clearAccumulatedRent(tokenId, paymentToken);
         if (amount == 0) {
-            return;
-        }
-
-        address receiver = LibERC721.consumerOf(tokenId);
-        if (receiver == address(0)) {
-            receiver = LibERC721.ownerOf(tokenId);
+            return (paymentToken, amount);
         }
 
         LibTransfer.safeTransfer(paymentToken, receiver, amount);
         emit ClaimRentFee(tokenId, paymentToken, receiver, amount);
+
+        return (paymentToken, amount);
     }
 }

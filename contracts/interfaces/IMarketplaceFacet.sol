@@ -58,7 +58,7 @@ interface IMarketplaceFacet is IRentable {
     ) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.
-    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
+    /// Pays out any unclaimed rent to the specified payout address
     /// Updated conditions apply the next time the asset is rented.
     /// Does not affect previous and queued rents.
     /// If any of the old conditions do not want to be modified, the old ones must be provided.
@@ -66,6 +66,7 @@ interface IMarketplaceFacet is IRentable {
     /// @param _minPeriod The minimum number in seconds the asset can be rented
     /// @param _maxPeriod The maximum number in seconds the asset can be rented
     /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
+    /// @param _payoutAddress Address that will receive the unclaimed rent
     /// the asset to be rented at an any given moment.
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH
@@ -76,21 +77,24 @@ interface IMarketplaceFacet is IRentable {
         uint256 _maxPeriod,
         uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerSecond
+        uint256 _pricePerSecond,
+        address _payoutAddress
     ) external;
 
     /// @notice Delists the asset from the marketplace.
     /// If there are no active rents:
     /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
-    /// Pays out the current unclaimed rent fees to the asset owner.
+    /// Pays out the current rent to the specified payout address.
     /// @param _assetId The target asset
-    function delist(uint256 _assetId) external;
+    /// @param _payoutAddress The target address that will receive the unclaimed rent
+    function delist(uint256 _assetId, address _payoutAddress) external;
 
     /// @notice Withdraws the already delisted from marketplace asset.
     /// Burns the asset and transfers the original metaverse asset represented by the asset to the asset owner.
-    /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
+    /// Pays out any unclaimed rent to the payout address provided.
     /// @param _assetId The target _assetId
-    function withdraw(uint256 _assetId) external;
+    /// @param _payoutAddress The target address that will receive the unclaimed rent
+    function withdraw(uint256 _assetId, address _payoutAddress) external;
 
     /// @notice Rents an asset for a given period.
     /// Charges user for the rent upfront. Rent starts from the last rented timestamp

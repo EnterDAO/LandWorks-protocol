@@ -192,7 +192,7 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable, RentPayout {
         address from,
         address to,
         uint256 tokenId
-    ) public payout(tokenId) {
+    ) public {
         //solhint-disable-next-line max-line-length
         require(
             LibERC721.isApprovedOrOwner(msg.sender, tokenId),
@@ -221,7 +221,7 @@ contract ERC721Facet is IERC721Facet, IERC721Consumable, RentPayout {
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) public payout(tokenId) {
+    ) public {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
