@@ -20,6 +20,7 @@ contract RentPayout is IRentPayout {
         internal
         returns (address, uint256)
     {
+        require(receiver != address(0), "receiver cannot be 0x0");
         address paymentToken = LibMarketplace
             .marketplaceStorage()
             .assets[tokenId]
