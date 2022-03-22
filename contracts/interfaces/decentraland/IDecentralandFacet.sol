@@ -23,12 +23,14 @@ interface IDecentralandFacet is IRentable {
     /// @notice Rents Decentraland Estate/LAND.
     /// @param _assetId The target asset
     /// @param _period The target period of the rental
+    /// @param _maxRentStart The maximum rent start allowed for the given rent
     /// @param _operator The target operator, which will be set as operator once the rent is active
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
+        uint256 _maxRentStart,
         address _operator,
         address _paymentToken,
         uint256 _amount
