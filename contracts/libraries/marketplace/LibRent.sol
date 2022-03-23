@@ -75,7 +75,7 @@ library LibRent {
         }
         require(
             rentStart <= rentParams._maxRentStart,
-            "rent start exceeds maxRentStart provided"
+            "rent start exceeds maxRentStart"
         );
 
         uint256 rentEnd = rentStart + rentParams._period;
