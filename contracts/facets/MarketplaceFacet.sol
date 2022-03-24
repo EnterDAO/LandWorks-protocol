@@ -111,6 +111,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH
     /// @param _pricePerSecond The price for rental per second
+    /// @return The newly created asset id.
     function updateConditions(
         uint256 _assetId,
         uint256 _minPeriod,
