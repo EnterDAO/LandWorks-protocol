@@ -29,7 +29,7 @@ interface IMarketplaceFacet is IRentable {
     event SetMetaverseName(uint256 indexed _metaverseId, string _name);
     event SetRegistry(
         uint256 indexed _metaverseId,
-        address _registry,
+        address indexed _registry,
         bool _status
     );
 

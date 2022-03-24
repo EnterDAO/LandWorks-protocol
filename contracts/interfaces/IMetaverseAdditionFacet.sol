@@ -6,7 +6,7 @@ interface IMetaverseAdditionFacet {
 
     event SetRegistry(
         uint256 indexed _metaverseId,
-        address _registry,
+        address indexed _registry,
         bool _status
     );
 
