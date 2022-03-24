@@ -7,7 +7,11 @@
 
 </div>
 
-LandWorks is a protocol, developed by [EnterDao](https://enterdao.xyz). Detailed information and description can be found in the [Whitepaper](./Whitepaper.md).
+LandWorks is a protocol, developed by [EnterDao](https://enterdao.xyz).
+
+Detailed information and description can be found [here](https://docs.landworks.xyz/). 
+
+Initial [Whitepaper](./Whitepaper.md).
 
 Audits on the LandWorks Protocol and Yield Farming contracts:
 - [Omega](audits/2021-12-Omega.pdf)

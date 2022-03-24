@@ -242,7 +242,7 @@ library LibERC721 {
     /**
      * @dev Mints `tokenId` and transfers it to `to`.
      *
-     * WARNING: Usage of this method is discouraged, use {_safeMint} whenever possible
+     * WARNING: Usage of this method is discouraged, use {safeMint} whenever possible
      *
      * Requirements:
      *
