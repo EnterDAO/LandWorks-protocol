@@ -64,7 +64,8 @@ contract FeeFacet is IFeeFacet, RentPayout {
     /// @notice Sets status of token payment (accepted or not) and its fee
     /// @param _token The target token
     /// @param _feePercentage The fee percentage, charged on every rent
-    /// @param _status Whether the token will be approved or not
+    /// @param _status Whether the token will be added or removed from the
+    /// supported token payments list
     function setTokenPayment(
         address _token,
         uint256 _feePercentage,
