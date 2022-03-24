@@ -13,6 +13,8 @@ import "../shared/RentPayout.sol";
 contract FeeFacet is IFeeFacet, RentPayout {
     /// @notice Claims protocol fees of a given payment token to contract owner
     /// Provide 0x0000000000000000000000000000000000000001 for ETH
+    /// Can be called by any address. If owner EOA or contract has any issue with
+    /// ETH processing or token withdrawals, the amount sent can be lost.
     /// @param _token The target token
     function claimProtocolFee(address _token) public {
         uint256 protocolFee = LibFee.clearAccumulatedProtocolFee(_token);
@@ -26,6 +28,9 @@ contract FeeFacet is IFeeFacet, RentPayout {
     }
 
     /// @notice Claims protocol fees for a set of tokens to contract owner
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
+    /// Can be called by any address. If owner EOA or contract has any issue with
+    /// ETH processing or token withdrawals, the amount sent can be lost.
     /// @param _tokens The array of tokens
     function claimProtocolFees(address[] calldata _tokens) public {
         for (uint256 i = 0; i < _tokens.length; i++) {
