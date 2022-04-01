@@ -57,6 +57,15 @@ task('addMetaverseAdditionFacet', 'Deploys MetaverseAdditionFacet & adds it to t
         await addMetaverseAdditionFacet(taskArgs.diamond);
     });
 
+task('transferOwnership', 'Transfers Ownership of the Diamond Contract')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .addParam('newOwner', 'The address of the new owner.')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const transferOwnership = require('./scripts/transfer-ownership');
+        await transferOwnership(taskArgs.diamond, taskArgs.newOwner);
+    });
+
 module.exports = {
     solidity: {
         compilers: [
