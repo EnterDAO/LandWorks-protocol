@@ -5,12 +5,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import "../interfaces/IERC721Consumable.sol";
 import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibERC721.sol";
 import "../libraries/LibTransfer.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
+import "../libraries/marketplace/LibMetaverseConsumableAdapter.sol";
 import "../libraries/marketplace/LibRent.sol";
 import "../shared/RentPayout.sol";
 
@@ -28,6 +30,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
+    /// @return The newly created asset id.
     function list(
         uint256 _metaverseId,
         address _metaverseRegistry,
@@ -197,6 +200,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             block.timestamp >= ms.rents[_assetId][asset.totalRents].end,
             "_assetId has an active rent"
         );
+        clearConsumer(asset);
 
         delete LibMarketplace.marketplaceStorage().assets[_assetId];
         address owner = LibERC721.ownerOf(_assetId);
@@ -217,11 +221,13 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
+    /// @param _maxRentStart The maximum rent start allowed for the given rent
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     function rent(
         uint256 _assetId,
         uint256 _period,
+        uint256 _maxRentStart,
         address _paymentToken,
         uint256 _amount
     ) external payable returns (uint256, bool) {
@@ -229,6 +235,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             LibRent.RentParams({
                 _assetId: _assetId,
                 _period: _period,
+                _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
                 _amount: _amount
             })
@@ -257,7 +264,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         address _registry,
         bool _status
     ) external {
-        require(_registry != address(0), "_registy must not be 0x0");
+        require(_registry != address(0), "_registry must not be 0x0");
         LibOwnership.enforceIsContractOwner();
 
         LibMarketplace.setRegistry(_metaverseId, _registry, _status);
@@ -326,5 +333,18 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         returns (LibMarketplace.Rent memory)
     {
         return LibMarketplace.rentAt(_assetId, _rentId);
+    }
+
+    function clearConsumer(LibMarketplace.Asset memory asset) internal {
+        address adapter = LibMetaverseConsumableAdapter
+            .metaverseConsumableAdapterStorage()
+            .consumableAdapters[asset.metaverseRegistry];
+
+        if (adapter != address(0)) {
+            IERC721Consumable(adapter).changeConsumer(
+                address(0),
+                asset.metaverseAssetId
+            );
+        }
     }
 }

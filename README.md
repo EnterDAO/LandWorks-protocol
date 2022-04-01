@@ -7,10 +7,15 @@
 
 </div>
 
-LandWorks is a protocol, developed by [EnterDao](https://enterdao.xyz). Detailed information and description can be found in the [Whitepaper](./Whitepaper.md).
+LandWorks is a protocol, developed by [EnterDao](https://enterdao.xyz).
+
+Detailed information and description can be found [here](https://docs.landworks.xyz/). 
+
+Initial [Whitepaper](./Whitepaper.md).
 
 Audits on the LandWorks Protocol and Yield Farming contracts:
 - [Omega](audits/2021-12-Omega.pdf)
+- [Quantstamp](audits/2022-03-Quantstamp.pdf)
 
 **Mainnet Deployment Addresses**
 - `DiamondCutFacet`: `0xd86a91c5a96adede0d79ae11c63541f336d48a08`
@@ -18,8 +23,10 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `OwnershipFacet`: `0x620d20a801c4e3c3d83a88354cc57b904998d137`
 - `FeeFacet`: `0x6c567026f5a1cd09313170ec77adbbf08fa7f409`
 - `ERC-721Facet`: `0x4e0ea52c528647cec98e78cfc1770f9e4e814204`
-- `MarketplaceFacet`: `0xF74dECe647bF75e86c0c78486F228a7C5475c652`
-- `DecentralandFacet`: `0xdd65d876f00a4203dc9be33b2728852d3bd7e61c`
+- `MarketplaceFacet`: `0xfc4F61e2B432deBe686b9B5Dd079a9CC8aA4b688`
+- `DecentralandFacet`: `0xaF0F14a7c001c77cf8FBA1f3ED68A14ae2Cf5aa8`
+- `MetaverseAdditionFacet`: `0x8fb39Bb931AC9C124c068050087d54A551fca23b`
+- `MetaverseConsumableAdapterFacet`: `0x1d5f19451F230D47988546e181a7C3E34cf8AC67`
 - `LandWorks (Diamond)`: `0x678D837fA15eba2B59f6CD5F9F4C580AC2Dfc269`
 
 **Testnet Rinkeby Deployment Addresses**
@@ -28,8 +35,10 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `OwnershipFacet`: `0x2d82c46e1CfD3fa98770e6c15D65FE3D08290DDe`
 - `FeeFacet`: `0x2aCaEcDea5BbC47D943359E17E3a30757aD3C93D`
 - `ERC-721Facet`: `0xB770E9ca6cFAe93fA0adC0E5e1157A6D6D9f2674`
-- `MarketplaceFacet`: `0x50137Dc06e255Be69a1B08864f17A235A942f2D7`
-- `DecentralandFacet`: `0xD0e091d5401d5Eff1d22436B05175F1076349b24`
+- `MarketplaceFacet`: `0x9cF9E2aDEA5d16e33b1647e43Ac269Cc3818a890`
+- `DecentralandFacet`: `0x8741924fc203097DCf75E0d274E1fE47c5FCe174`
+- `MetaverseAdditionFacet`: `0xaF6Af20D8F7Ae54Dab7570486220ecA94024f06d`
+- `MetaverseConsumableAdapterFacet`: `0x3Fa5a843e79Eb7d9413c753A62a8Da38b4Abcad6`
 - `LandWorks (Diamond)`: `0x1B39D334302e1F077442516488300a860C8cfC14`
 
 ## Development

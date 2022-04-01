@@ -17,10 +17,15 @@ interface IFeeFacet {
 
     /// @notice Claims protocol fees of a given payment token to contract owner
     /// Provide 0x0000000000000000000000000000000000000001 for ETH
+    /// Can be called by any address. If owner EOA or contract has any issue with
+    /// ETH processing or token withdrawals, the amount sent can be lost.
     /// @param _token The target token
     function claimProtocolFee(address _token) external;
 
     /// @notice Claims protocol fees for a set of tokens to contract owner
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH
+    /// Can be called by any address. If owner EOA or contract has any issue with
+    /// ETH processing or token withdrawals, the amount sent can be lost.
     /// @param _tokens The array of tokens
     function claimProtocolFees(address[] calldata _tokens) external;
 
@@ -32,7 +37,8 @@ interface IFeeFacet {
     /// @notice Sets status of token payment (accepted or not) and its fee
     /// @param _token The target token
     /// @param _feePercentage The fee percentage, charged on every rent
-    /// @param _status Whether the token will be approved or not
+    /// @param _status Whether the token will be added or removed from the
+    /// supported token payments list
     function setTokenPayment(
         address _token,
         uint256 _feePercentage,

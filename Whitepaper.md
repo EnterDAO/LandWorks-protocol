@@ -187,7 +187,7 @@ are the same as the one specified on `list` transactions:
 - `maxFutureTime` - the block delta after which the protocol will not allow for the land to be rented. Example: If 
   `maxFutureTime=100_000`, the land will be rented at most 100_000 seconds in the future. This is needed in order to 
   enable the lender to balance between land usage optimisation and their own perceived rate of the land price increase. It is advised for them to set it to the minimum period they feel that the land will noticeably appreciate therefore the rent should be increased.
-- `paymentToken` - the token which will be accepted as a form of payment. Provide 0x0 for ETH
+- `paymentToken` - the token which will be accepted as a form of payment. Provide 0x0000000000000000000000000000000000000001 for ETH
 - `pricePerSecond` - the price of the rental per second
 
 

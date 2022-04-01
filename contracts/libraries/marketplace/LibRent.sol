@@ -29,6 +29,7 @@ library LibRent {
     struct RentParams {
         uint256 _assetId;
         uint256 _period;
+        uint256 _maxRentStart;
         address _paymentToken;
         uint256 _amount;
     }
@@ -72,6 +73,10 @@ library LibRent {
             rentStart = lastRentEnd;
             rentStartsNow = false;
         }
+        require(
+            rentStart <= rentParams._maxRentStart,
+            "rent start exceeds maxRentStart"
+        );
 
         uint256 rentEnd = rentStart + rentParams._period;
         require(

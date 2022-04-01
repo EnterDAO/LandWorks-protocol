@@ -46,6 +46,7 @@ interface IMarketplaceFacet is IRentable {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
+    /// @return The newly created asset id.
     function list(
         uint256 _metaverseId,
         address _metaverseRegistry,
@@ -97,11 +98,13 @@ interface IMarketplaceFacet is IRentable {
     /// or from the current timestamp of the transaction.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
+    /// @param _maxRentStart The maximum rent start allowed for the given rent
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     function rent(
         uint256 _assetId,
         uint256 _period,
+        uint256 _maxRentStart,
         address _paymentToken,
         uint256 _amount
     ) external payable returns (uint256, bool);

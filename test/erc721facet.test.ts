@@ -1286,9 +1286,10 @@ describe('ERC721Facet', function () {
     describe('payouts', async () => {
 
         before(async () => {
+            const MAX_RENT_START = Date.now(); // This is in milliseconds
             await erc721Facet.approve(approved.address, tokenID);
             await erc721Facet.setApprovalForAll(operator.address, true);
-            await marketplaceFacet.connect(other).rent(tokenID, 1, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
+            await marketplaceFacet.connect(other).rent(tokenID, 1, MAX_RENT_START, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
         });
 
         describe('transferFrom', async () => {
