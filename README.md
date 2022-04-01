@@ -15,6 +15,7 @@ Initial [Whitepaper](./Whitepaper.md).
 
 Audits on the LandWorks Protocol and Yield Farming contracts:
 - [Omega](audits/2021-12-Omega.pdf)
+- [Quantstamp](audits/2022-03-Quantstamp.pdf)
 
 **Mainnet Deployment Addresses**
 - `DiamondCutFacet`: `0xd86a91c5a96adede0d79ae11c63541f336d48a08`
