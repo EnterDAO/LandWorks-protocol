@@ -6,9 +6,9 @@ async function transferOwnership(diamondAddress: string, newOwner: string) {
 
   const diamond = await ethers.getContractAt("ILandWorks", diamondAddress);
 
-  const diamondTransferOwnersihp = await diamond.transferOwnership(newOwner);
-  console.log(`Transfer Ownership [${diamondTransferOwnersihp.hash}] submitted, waiting to be mined...`);
-  await diamondTransferOwnersihp.wait();
+  const diamondTransferOwnership = await diamond.transferOwnership(newOwner);
+  console.log(`Transfer Ownership [${diamondTransferOwnership.hash}] submitted, waiting to be mined...`);
+  await diamondTransferOwnership.wait();
 }
 
 module.exports = transferOwnership;
