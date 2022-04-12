@@ -13,7 +13,7 @@ async function addERC721OldHolder(diamondAddress: string) {
   const erc721OldHolderFacet = await Deployer.deployContract('ERC721OldHolder');
   console.log(`ERC-721 Old Holder Facet deployed to: ${erc721OldHolderFacet.address}`);
 
-  const diamondAddFacets = [
+  const diamondAddFacet = [
     {
       facetAddress: erc721OldHolderFacet.address,
       action: FacetCutAction.Add,
@@ -21,11 +21,11 @@ async function addERC721OldHolder(diamondAddress: string) {
     },
   ];
 
-  const diamondAddFacetsTx = await landWorks.diamondCut(diamondAddFacets, ethers.constants.AddressZero, "0x");
-  console.log(`Diamond Cut Add ERC-721 Old Holder Facet [${diamondAddFacetsTx.hash}] submitted, waiting to be mined...`);
-  await diamondAddFacetsTx.wait(5);
+  const diamondAddFacetTx = await landWorks.diamondCut(diamondAddFacet, ethers.constants.AddressZero, "0x");
+  console.log(`Diamond Cut Add ERC-721 Old Holder Facet [${diamondAddFacetTx.hash}] submitted, waiting to be mined...`);
+  await diamondAddFacetTx.wait(5);
 
-  console.log('Verifying MarketplaceFacet on Etherscan...');
+  console.log('Verifying ERC-721 Old Holder Facet on Etherscan...');
   await hardhat.run('verify:verify', {
     address: erc721OldHolderFacet.address,
     constructorArguments: []
