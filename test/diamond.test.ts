@@ -4607,6 +4607,70 @@ describe('LandWorks', function () {
             });
         });
     });
+
+    describe('Diamond Cut ERC-721 Old Receiver facet', async () => {
+        let erc721OldHolder: Contract;
+
+        let mockERC721Registry: Contract;
+        let metaverseAdapter: Contract;
+        const tokenID = 1;
+        const metaverseID = 1;
+        const metaverseName = 'NoConsumer';
+        const minPeriod = 1;
+        const maxPeriod = 100;
+        const maxFutureTime = 120;
+        const pricePerSecond = 1337;
+
+        before(async () => {
+            erc721OldHolder = await Deployer.deployContract('ERC721OldHolder');
+
+            const diamondAddFacet = [
+                {
+                    facetAddress: erc721OldHolder.address,
+                    action: FacetCutAction.Add,
+                    functionSelectors: Diamond.getSelectorsFor(erc721OldHolder)
+                }
+            ];
+
+            await landWorks.diamondCut(diamondAddFacet, ethers.constants.AddressZero, "0x");
+
+            mockERC721Registry = await Deployer.deployContract('ERC721OldMock');
+            await mockERC721Registry.mint(owner.address, tokenID);
+            metaverseAdapter = await Deployer.deployContract('ConsumableAdapterV1', undefined, [landWorks.address, mockERC721Registry.address]);
+
+            await landWorks.setMetaverseName(metaverseID, metaverseName);
+            await landWorks.setRegistry(metaverseID, mockERC721Registry.address, true);
+
+            await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
+        });
+
+        it('should list ERC-721, which implements old onERC721Received', async () => {
+            // given:
+            await mockERC721Registry.approve(landWorks.address, tokenID);
+
+            // when:
+            await landWorks.list(metaverseID, mockERC721Registry.address, tokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond);
+
+            // then:
+            expect(await mockERC721Registry.ownerOf(tokenID)).to.equal(landWorks.address);
+            expect(await landWorks.ownerOf(assetId)).to.equal(owner.address);
+            // and:
+            const asset = await landWorks.assetAt(assetId);
+            expect(asset.metaverseId).to.equal(metaverseID);
+            expect(asset.metaverseRegistry).to.equal(mockERC721Registry.address);
+            expect(asset.metaverseAssetId).to.equal(tokenID);
+            expect(asset.paymentToken).to.equal(ADDRESS_ONE);
+            expect(asset.minPeriod).to.equal(minPeriod);
+            expect(asset.maxPeriod).to.equal(maxPeriod);
+            expect(asset.maxFutureTime).to.equal(maxFutureTime);
+            expect(asset.pricePerSecond).equal(pricePerSecond);
+            expect(asset.status).to.equal(0); // Listed
+            expect(asset.totalRents).to.equal(0);
+            expect(await landWorks.totalSupply()).to.equal(1);
+            expect(await landWorks.tokenOfOwnerByIndex(owner.address, assetId)).to.equal(assetId);
+            expect(await landWorks.tokenByIndex(assetId)).to.equal(assetId);
+        });
+    });
     /**
      * The diamond example comes with 8 function selectors
      * [cut, loupe, loupe, loupe, loupe, erc165, transferOwnership, owner]

@@ -27,6 +27,7 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `DecentralandFacet`: `0xaF0F14a7c001c77cf8FBA1f3ED68A14ae2Cf5aa8`
 - `MetaverseAdditionFacet`: `0x8fb39Bb931AC9C124c068050087d54A551fca23b`
 - `MetaverseConsumableAdapterFacet`: `0x1d5f19451F230D47988546e181a7C3E34cf8AC67`
+- `ERC721OldHolder`: `0x4a2B97c0f81B55C9bAFa6266E191B9B04741EA97`
 - `LandWorks (Diamond)`: `0x678D837fA15eba2B59f6CD5F9F4C580AC2Dfc269`
 
 **Testnet Rinkeby Deployment Addresses**
@@ -39,6 +40,7 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `DecentralandFacet`: `0x8741924fc203097DCf75E0d274E1fE47c5FCe174`
 - `MetaverseAdditionFacet`: `0xaF6Af20D8F7Ae54Dab7570486220ecA94024f06d`
 - `MetaverseConsumableAdapterFacet`: `0x3Fa5a843e79Eb7d9413c753A62a8Da38b4Abcad6`
+- `ERC721OldHolder`: `0x3a754461f1b447a81D486B6d91821cbD983d86D5`
 - `LandWorks (Diamond)`: `0x1B39D334302e1F077442516488300a860C8cfC14`
 
 ## Development

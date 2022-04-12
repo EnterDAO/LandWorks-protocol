@@ -75,6 +75,14 @@ task('setDCLAdminOperator', 'Updates the Decentraland Admin Operator')
         await updateAdminOperator(taskArgs.diamond, taskArgs.adminOperator);
     })
 
+task('addERC721OldHolder', 'Updates LW to support old ERC-721 onERC721Received')
+    .addParam('diamond', 'The address of the Diamond Contract')
+    .setAction(async (taskArgs) => {
+        console.log(taskArgs);
+        const addERC721OldHolder = require('./scripts/add-erc721-old-receiver-facet');
+        await addERC721OldHolder(taskArgs.diamond);
+    });
+
 module.exports = {
     solidity: {
         compilers: [
