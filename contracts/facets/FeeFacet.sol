@@ -40,9 +40,9 @@ contract FeeFacet is IFeeFacet, RentPayout {
 
     /// @notice Claims unclaimed rent fees for a given asset to asset owner
     /// @param _assetId The target asset
-    /// @return _paymentToken The current asset payment token
-    /// @return _rentFee The payment token rent fee amount
-    function claimRentFee(uint256 _assetId) public returns (address _paymentToken, uint256 _rentFee) {
+    /// @return paymentToken_ The current asset payment token
+    /// @return rentFee_ The rent fee amount in the current payment token
+    function claimRentFee(uint256 _assetId) public returns (address paymentToken_, uint256 rentFee_) {
         require(
             LibERC721.isApprovedOrOwner(msg.sender, _assetId) ||
                 LibERC721.isConsumerOf(msg.sender, _assetId),
