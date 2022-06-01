@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 interface IFeeFacet {
+
     event ClaimProtocolFee(address indexed _token, address indexed _recipient, uint256 _amount);
     event SetFee(address indexed _token, uint256 _fee);
     event SetTokenPayment(address indexed _token, bool _status);
