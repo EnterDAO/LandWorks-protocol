@@ -15,14 +15,14 @@ contract RentPayout is IRentPayout {
 
     /// @dev Pays out the accumulated rent for a given tokenId
     /// Rent is paid out to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
-    function payoutRent(uint256 tokenId) internal {
+    function payoutRent(uint256 tokenId) internal returns (address, uint256) {
         address paymentToken = LibMarketplace
             .marketplaceStorage()
             .assets[tokenId]
             .paymentToken;
         uint256 amount = LibFee.clearAccumulatedRent(tokenId, paymentToken);
         if (amount == 0) {
-            return;
+            return (paymentToken, amount);
         }
 
         address receiver = LibERC721.consumerOf(tokenId);
@@ -32,5 +32,7 @@ contract RentPayout is IRentPayout {
 
         LibTransfer.safeTransfer(paymentToken, receiver, amount);
         emit ClaimRentFee(tokenId, paymentToken, receiver, amount);
+
+        return (paymentToken, amount);
     }
 }

@@ -2228,10 +2228,14 @@ describe('LandWorks', function () {
                     const beforeMarketplaceBalance = await ethers.provider.getBalance(landWorks.address);
 
                     // when:
+                    const [callStaticPaymentToken, callStaticRentFee] = await landWorks.callStatic.claimRentFee(assetId);
                     const tx = await landWorks.claimRentFee(assetId);
                     const receipt = await tx.wait();
 
                     // then:
+                    expect(callStaticPaymentToken).to.equal(ADDRESS_ONE);
+                    expect(callStaticRentFee).to.equal(expectedRentFee);
+                    // and:
                     const txFee = receipt.effectiveGasPrice.mul(receipt.gasUsed);
                     const afterBalance = await owner.getBalance();
                     expect(afterBalance).to.equal(beforeBalance.sub(txFee).add(expectedRentFee));
@@ -2255,9 +2259,13 @@ describe('LandWorks', function () {
                     const beforeMarketplaceBalance = await mockERC20Registry.balanceOf(landWorks.address);
 
                     // when:
+                    const [callStaticPaymentToken, callStaticRentFee] = await landWorks.callStatic.claimRentFee(assetId);
                     await landWorks.claimRentFee(assetId);
 
                     // then:
+                    expect(callStaticPaymentToken).to.equal(mockERC20Registry.address);
+                    expect(callStaticRentFee).to.equal(expectedRentFee);
+                    // and:
                     const afterBalance = await mockERC20Registry.balanceOf(owner.address);
                     expect(afterBalance).to.be.equal(beforeBalance + expectedRentFee);
                     // and:
