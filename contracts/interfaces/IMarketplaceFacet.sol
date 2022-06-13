@@ -98,24 +98,6 @@ interface IMarketplaceFacet is IRentable {
     /// @param _assetId The target _assetId
     function withdraw(uint256 _assetId) external;
 
-    /// @notice Rents an asset for a given period.
-    /// Charges user for the rent upfront. Rent starts from the last rented timestamp
-    /// or from the current timestamp of the transaction.
-    /// @param _assetId The target asset
-    /// @param _period The target rental period (in seconds)
-    /// @param _maxRentStart The maximum rent start allowed for the given rent
-    /// @param _paymentToken The current payment token for the asset
-    /// @param _amount The target amount to be paid for the rent
-    // TODO:
-    function rent(
-        uint256 _assetId,
-        uint256 _period,
-        uint256 _maxRentStart,
-        address _paymentToken,
-        uint256 _amount,
-        address _referral
-    ) external payable returns (uint256, bool);
-
     /// @notice Sets name for a given Metaverse.
     /// @param _metaverseId The target metaverse
     /// @param _name Name of the metaverse
