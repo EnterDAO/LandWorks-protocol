@@ -63,13 +63,15 @@ interface IMetaverseConsumableAdapterFacet {
     /// consumable adapter once the rent is active
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
+    //TODO:
     function rentWithConsumer(
         uint256 _assetId,
         uint256 _period,
         uint256 _maxRentStart,
         address _consumer,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referral
     ) external payable;
 
     /// @notice Updates the consumer for the given rent of an asset

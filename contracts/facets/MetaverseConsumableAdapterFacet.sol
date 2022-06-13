@@ -81,7 +81,8 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         uint256 _maxRentStart,
         address _consumer,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referral
     ) public payable {
         require(_consumer != address(0), "_consumer must not be 0x0");
 
@@ -91,7 +92,8 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
                 _period: _period,
                 _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
-                _amount: _amount
+                _amount: _amount,
+                _referral: _referral
             })
         );
 

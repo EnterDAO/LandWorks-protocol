@@ -11,6 +11,7 @@ import "../libraries/LibERC721.sol";
 import "../libraries/LibTransfer.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibOwnership.sol";
+import "../libraries/LibReferral.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibMetaverseConsumableAdapter.sol";
 import "../libraries/marketplace/LibRent.sol";
@@ -30,72 +31,80 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
+    // TODO:
     /// @return The newly created asset id.
-    function list(
-        uint256 _metaverseId,
-        address _metaverseRegistry,
-        uint256 _metaverseAssetId,
-        uint256 _minPeriod,
-        uint256 _maxPeriod,
-        uint256 _maxFutureTime,
-        address _paymentToken,
-        uint256 _pricePerSecond
-    ) external returns (uint256) {
+    function list(ListParams memory listParams) external returns (uint256) {
         require(
-            _metaverseRegistry != address(0),
+            listParams._metaverseRegistry != address(0),
             "_metaverseRegistry must not be 0x0"
         );
         require(
-            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
+            LibMarketplace.supportsRegistry(
+                listParams._metaverseId,
+                listParams._metaverseRegistry
+            ),
             "_registry not supported"
         );
-        require(_minPeriod != 0, "_minPeriod must not be 0");
-        require(_maxPeriod != 0, "_maxPeriod must not be 0");
-        require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
+        require(listParams._minPeriod != 0, "_minPeriod must not be 0");
+        require(listParams._maxPeriod != 0, "_maxPeriod must not be 0");
         require(
-            _maxPeriod <= _maxFutureTime,
+            listParams._minPeriod <= listParams._maxPeriod,
+            "_minPeriod more than _maxPeriod"
+        );
+        require(
+            listParams._maxPeriod <= listParams._maxFutureTime,
             "_maxPeriod more than _maxFutureTime"
         );
         require(
-            LibFee.supportsTokenPayment(_paymentToken),
+            LibFee.supportsTokenPayment(listParams._paymentToken),
             "payment type not supported"
         );
+        if (listParams._referral != address(0)) {
+            (uint256 referralPercentage, ) = LibReferral
+                .referralStorage()
+                .referralAdapter
+                .referralPercentage(listParams._referral);
+            require(referralPercentage > 0, "_referral not whitelisted");
+        }
 
         uint256 asset = LibERC721.safeMint(msg.sender);
 
         LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
             .marketplaceStorage();
         ms.assets[asset] = LibMarketplace.Asset({
-            metaverseId: _metaverseId,
-            metaverseRegistry: _metaverseRegistry,
-            metaverseAssetId: _metaverseAssetId,
-            paymentToken: _paymentToken,
-            minPeriod: _minPeriod,
-            maxPeriod: _maxPeriod,
-            maxFutureTime: _maxFutureTime,
-            pricePerSecond: _pricePerSecond,
+            metaverseId: listParams._metaverseId,
+            metaverseRegistry: listParams._metaverseRegistry,
+            metaverseAssetId: listParams._metaverseAssetId,
+            paymentToken: listParams._paymentToken,
+            minPeriod: listParams._minPeriod,
+            maxPeriod: listParams._maxPeriod,
+            maxFutureTime: listParams._maxFutureTime,
+            pricePerSecond: listParams._pricePerSecond,
             status: LibMarketplace.AssetStatus.Listed,
             totalRents: 0
         });
+        LibReferral.referralStorage().listingReferrals[asset] = listParams
+            ._referral;
 
         LibTransfer.erc721SafeTransferFrom(
-            _metaverseRegistry,
+            listParams._metaverseRegistry,
             msg.sender,
             address(this),
-            _metaverseAssetId
+            listParams._metaverseAssetId
         );
 
         emit List(
             asset,
-            _metaverseId,
-            _metaverseRegistry,
-            _metaverseAssetId,
-            _minPeriod,
-            _maxPeriod,
-            _maxFutureTime,
-            _paymentToken,
-            _pricePerSecond
+            listParams._metaverseId,
+            listParams._metaverseRegistry,
+            listParams._metaverseAssetId,
+            listParams._minPeriod,
+            listParams._maxPeriod,
+            listParams._maxFutureTime,
+            listParams._paymentToken,
+            listParams._pricePerSecond
         );
+        emit AssetReferral(asset, listParams._referral);
         return asset;
     }
 
@@ -203,6 +212,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         clearConsumer(asset);
 
         delete LibMarketplace.marketplaceStorage().assets[_assetId];
+        delete LibReferral.referralStorage().listingReferrals[_assetId];
         address owner = LibERC721.ownerOf(_assetId);
         LibERC721.burn(_assetId);
 
@@ -229,7 +239,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         uint256 _period,
         uint256 _maxRentStart,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referral
     ) external payable returns (uint256, bool) {
         (uint256 rentId, bool rentStartsNow) = LibRent.rent(
             LibRent.RentParams({
@@ -237,7 +248,8 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
                 _period: _period,
                 _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
-                _amount: _amount
+                _amount: _amount,
+                _referral: _referral
             })
         );
         return (rentId, rentStartsNow);
@@ -333,6 +345,47 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         returns (LibMarketplace.Rent memory)
     {
         return LibMarketplace.rentAt(_assetId, _rentId);
+    }
+
+    function calculateRentFee(
+        uint256 _assetId,
+        uint256 _period,
+        address _referral
+    ) external view returns (uint256) {
+        require(LibERC721.exists(_assetId), "_assetId not found");
+
+        LibMarketplace.Asset memory asset = LibMarketplace.assetAt(_assetId);
+        uint256 amount = _period * asset.pricePerSecond;
+        uint256 protocolFee = (amount *
+            LibFee.feeStorage().feePercentages[asset.paymentToken]) /
+            LibFee.FEE_PRECISION;
+
+        (, uint256 metaversePercentage) = LibReferral
+            .referralStorage()
+            .referralAdapter
+            .metaverseRegistryReferral(asset.metaverseRegistry);
+
+        // take out metaverse registry fee
+        uint256 metaverseReferralAmount = (protocolFee * metaversePercentage) /
+            10_000;
+        uint256 referralsFeeLeft = protocolFee - metaverseReferralAmount;
+
+        if (_referral != address(0)) {
+            (
+                uint256 rentReferralPercentage,
+                uint256 rentUserReferralPercentage
+            ) = LibReferral
+                    .referralStorage()
+                    .referralAdapter
+                    .referralPercentage(_referral);
+            uint256 rentReferralFee = (referralsFeeLeft *
+                rentReferralPercentage) / 10_000;
+
+            uint256 renterDiscount = (rentReferralFee *
+                rentUserReferralPercentage) / 10_000;
+            return referralsFeeLeft - renterDiscount;
+        }
+        return amount;
     }
 
     function clearConsumer(LibMarketplace.Asset memory asset) internal {

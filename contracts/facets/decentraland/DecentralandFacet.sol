@@ -21,7 +21,8 @@ contract DecentralandFacet is IDecentralandFacet {
         uint256 _maxRentStart,
         address _operator,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referral
     ) external payable {
         require(_operator != address(0), "_operator must not be 0x0");
 
@@ -31,7 +32,8 @@ contract DecentralandFacet is IDecentralandFacet {
                 _period: _period,
                 _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
-                _amount: _amount
+                _amount: _amount,
+                _referral: _referral
             })
         );
         LibDecentraland.setOperator(_assetId, rentId, _operator);

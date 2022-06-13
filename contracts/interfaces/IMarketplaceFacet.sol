@@ -16,6 +16,7 @@ interface IMarketplaceFacet is IRentable {
         address indexed _paymentToken,
         uint256 _pricePerSecond
     );
+    event AssetReferral(uint256 indexed _assetId, address indexed _referral);
     event UpdateConditions(
         uint256 indexed _assetId,
         uint256 _minPeriod,
@@ -33,6 +34,18 @@ interface IMarketplaceFacet is IRentable {
         bool _status
     );
 
+    struct ListParams {
+        uint256 _metaverseId;
+        address _metaverseRegistry;
+        uint256 _metaverseAssetId;
+        uint256 _minPeriod;
+        uint256 _maxPeriod;
+        uint256 _maxFutureTime;
+        address _paymentToken;
+        uint256 _pricePerSecond;
+        address _referral;
+    }
+
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
     /// and mints an asset, representing the locked asset.
@@ -46,17 +59,9 @@ interface IMarketplaceFacet is IRentable {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
+    // TODO:
     /// @return The newly created asset id.
-    function list(
-        uint256 _metaverseId,
-        address _metaverseRegistry,
-        uint256 _metaverseAssetId,
-        uint256 _minPeriod,
-        uint256 _maxPeriod,
-        uint256 _maxFutureTime,
-        address _paymentToken,
-        uint256 _pricePerSecond
-    ) external returns (uint256);
+    function list(ListParams memory listParams) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.
     /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT
@@ -101,12 +106,14 @@ interface IMarketplaceFacet is IRentable {
     /// @param _maxRentStart The maximum rent start allowed for the given rent
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
+    // TODO:
     function rent(
         uint256 _assetId,
         uint256 _period,
         uint256 _maxRentStart,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referral
     ) external payable returns (uint256, bool);
 
     /// @notice Sets name for a given Metaverse.

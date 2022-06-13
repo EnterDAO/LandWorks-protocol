@@ -33,7 +33,8 @@ interface IDecentralandFacet is IRentable {
         uint256 _maxRentStart,
         address _operator,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referral
     ) external payable;
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.
