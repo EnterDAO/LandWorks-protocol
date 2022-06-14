@@ -10,6 +10,8 @@ import "./interfaces/IFeeFacet.sol";
 import "./interfaces/decentraland/IDecentralandFacet.sol";
 import "./interfaces/IMarketplaceFacet.sol";
 import "./interfaces/IMetaverseConsumableAdapterFacet.sol";
+import "./interfaces/IReferralFacet.sol";
+import "./interfaces/IRentFacet.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "./interfaces/IRentPayout.sol";
 
@@ -25,7 +27,9 @@ interface ILandWorks is
     IMarketplaceFacet,
     IDecentralandFacet,
     IRentPayout,
-    IMetaverseConsumableAdapterFacet
+    IMetaverseConsumableAdapterFacet,
+    IReferralFacet,
+    IRentFacet
 {
     /// @notice Initialises the ERC721's name, symbol and base URI.
     /// @param _name The target name

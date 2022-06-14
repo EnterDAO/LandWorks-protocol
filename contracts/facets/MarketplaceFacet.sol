@@ -308,17 +308,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         return LibMarketplace.assetAt(_assetId);
     }
 
-    /// @notice Gets all data for a specific rent of an asset
-    /// @param _assetId The taget asset
-    /// @param _rentId The target rent
-    function rentAt(uint256 _assetId, uint256 _rentId)
-        external
-        view
-        returns (LibMarketplace.Rent memory)
-    {
-        return LibMarketplace.rentAt(_assetId, _rentId);
-    }
-
     function clearConsumer(LibMarketplace.Asset memory asset) internal {
         address adapter = LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()

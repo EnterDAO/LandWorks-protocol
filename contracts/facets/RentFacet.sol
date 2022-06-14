@@ -38,6 +38,17 @@ contract RentFacet is IRentFacet {
         return (rentId, rentStartsNow);
     }
 
+    /// @notice Gets all data for a specific rent of an asset
+    /// @param _assetId The taget asset
+    /// @param _rentId The target rent
+    function rentAt(uint256 _assetId, uint256 _rentId)
+        external
+        view
+        returns (LibMarketplace.Rent memory)
+    {
+        return LibMarketplace.rentAt(_assetId, _rentId);
+    }
+
     /// @notice Returns an asset rent fee based on period and referral
     /// Calculates the rent fee based on asset, period and referral.
     /// Depending on the referral discounts, it calculates whether

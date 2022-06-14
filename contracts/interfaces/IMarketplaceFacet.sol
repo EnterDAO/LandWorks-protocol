@@ -148,12 +148,4 @@ interface IMarketplaceFacet is IRentable {
         external
         view
         returns (LibMarketplace.Asset memory);
-
-    /// @notice Gets all data for a specific rent of an asset
-    /// @param _assetId The taget asset
-    /// @param _rentId The target rent
-    function rentAt(uint256 _assetId, uint256 _rentId)
-        external
-        view
-        returns (LibMarketplace.Rent memory);
 }
