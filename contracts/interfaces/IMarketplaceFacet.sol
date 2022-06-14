@@ -34,18 +34,6 @@ interface IMarketplaceFacet is IRentable {
         bool _status
     );
 
-    struct ListParams {
-        uint256 _metaverseId;
-        address _metaverseRegistry;
-        uint256 _metaverseAssetId;
-        uint256 _minPeriod;
-        uint256 _maxPeriod;
-        uint256 _maxFutureTime;
-        address _paymentToken;
-        uint256 _pricePerSecond;
-        address _referral;
-    }
-
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
     /// and mints an asset, representing the locked asset.
@@ -61,7 +49,17 @@ interface IMarketplaceFacet is IRentable {
     /// @param _pricePerSecond The price for rental per second
     // TODO:
     /// @return The newly created asset id.
-    function list(ListParams memory listParams) external returns (uint256);
+    function list(
+        uint256 _metaverseId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId,
+        uint256 _minPeriod,
+        uint256 _maxPeriod,
+        uint256 _maxFutureTime,
+        address _paymentToken,
+        uint256 _pricePerSecond,
+        address _referral
+    ) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.
     /// Pays out any unclaimed rent to consumer if set, otherwise it is paid to the owner of the LandWorks NFT

@@ -32,77 +32,80 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @param _pricePerSecond The price for rental per second
     // TODO:
     /// @return The newly created asset id.
-    function list(ListParams memory listParams) external returns (uint256) {
+    function list(
+        uint256 _metaverseId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId,
+        uint256 _minPeriod,
+        uint256 _maxPeriod,
+        uint256 _maxFutureTime,
+        address _paymentToken,
+        uint256 _pricePerSecond,
+        address _referral
+    ) external returns (uint256) {
         require(
-            listParams._metaverseRegistry != address(0),
+            _metaverseRegistry != address(0),
             "_metaverseRegistry must not be 0x0"
         );
         require(
-            LibMarketplace.supportsRegistry(
-                listParams._metaverseId,
-                listParams._metaverseRegistry
-            ),
+            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
             "_registry not supported"
         );
-        require(listParams._minPeriod != 0, "_minPeriod must not be 0");
-        require(listParams._maxPeriod != 0, "_maxPeriod must not be 0");
+        require(_minPeriod != 0, "_minPeriod must not be 0");
+        require(_maxPeriod != 0, "_maxPeriod must not be 0");
+        require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
         require(
-            listParams._minPeriod <= listParams._maxPeriod,
-            "_minPeriod more than _maxPeriod"
-        );
-        require(
-            listParams._maxPeriod <= listParams._maxFutureTime,
+            _maxPeriod <= _maxFutureTime,
             "_maxPeriod more than _maxFutureTime"
         );
         require(
-            LibFee.supportsTokenPayment(listParams._paymentToken),
+            LibFee.supportsTokenPayment(_paymentToken),
             "payment type not supported"
         );
-        if (listParams._referral != address(0)) {
+        if (_referral != address(0)) {
             LibReferral.ReferralPercentage memory rp = LibReferral
                 .referralStorage()
-                .referralPercentage[listParams._referral];
+                .referralPercentage[_referral];
             require(rp.mainPercentage > 0, "_referral not whitelisted");
         }
 
         uint256 asset = LibERC721.safeMint(msg.sender);
+        {
+            LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
+                .marketplaceStorage();
+            ms.assets[asset] = LibMarketplace.Asset({
+                metaverseId: _metaverseId,
+                metaverseRegistry: _metaverseRegistry,
+                metaverseAssetId: _metaverseAssetId,
+                paymentToken: _paymentToken,
+                minPeriod: _minPeriod,
+                maxPeriod: _maxPeriod,
+                maxFutureTime: _maxFutureTime,
+                pricePerSecond: _pricePerSecond,
+                status: LibMarketplace.AssetStatus.Listed,
+                totalRents: 0
+            });
+            LibReferral.referralStorage().listingReferrals[asset] = _referral;
 
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
-        ms.assets[asset] = LibMarketplace.Asset({
-            metaverseId: listParams._metaverseId,
-            metaverseRegistry: listParams._metaverseRegistry,
-            metaverseAssetId: listParams._metaverseAssetId,
-            paymentToken: listParams._paymentToken,
-            minPeriod: listParams._minPeriod,
-            maxPeriod: listParams._maxPeriod,
-            maxFutureTime: listParams._maxFutureTime,
-            pricePerSecond: listParams._pricePerSecond,
-            status: LibMarketplace.AssetStatus.Listed,
-            totalRents: 0
-        });
-        LibReferral.referralStorage().listingReferrals[asset] = listParams
-            ._referral;
-
-        LibTransfer.erc721SafeTransferFrom(
-            listParams._metaverseRegistry,
-            msg.sender,
-            address(this),
-            listParams._metaverseAssetId
-        );
-
+            LibTransfer.erc721SafeTransferFrom(
+                _metaverseRegistry,
+                msg.sender,
+                address(this),
+                _metaverseAssetId
+            );
+        }
         emit List(
             asset,
-            listParams._metaverseId,
-            listParams._metaverseRegistry,
-            listParams._metaverseAssetId,
-            listParams._minPeriod,
-            listParams._maxPeriod,
-            listParams._maxFutureTime,
-            listParams._paymentToken,
-            listParams._pricePerSecond
+            _metaverseId,
+            _metaverseRegistry,
+            _metaverseAssetId,
+            _minPeriod,
+            _maxPeriod,
+            _maxFutureTime,
+            _paymentToken,
+            _pricePerSecond
         );
-        emit AssetReferral(asset, listParams._referral);
+        emit AssetReferral(asset, _referral);
         return asset;
     }
 
