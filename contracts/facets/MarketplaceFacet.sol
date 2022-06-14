@@ -59,11 +59,10 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             "payment type not supported"
         );
         if (listParams._referral != address(0)) {
-            (uint256 referralPercentage, ) = LibReferral
+            LibReferral.ReferralPercentage memory rp = LibReferral
                 .referralStorage()
-                .referralAdapter
-                .referralPercentage(listParams._referral);
-            require(referralPercentage > 0, "_referral not whitelisted");
+                .referralPercentage[listParams._referral];
+            require(rp.mainPercentage > 0, "_referral not whitelisted");
         }
 
         uint256 asset = LibERC721.safeMint(msg.sender);

@@ -58,29 +58,24 @@ contract RentFacet is IRentFacet {
             LibFee.feeStorage().feePercentages[asset.paymentToken]) /
             LibFee.FEE_PRECISION;
 
-        (, uint256 metaversePercentage) = LibReferral
+        LibReferral.MetaverseRegistryReferral memory mrr = LibReferral
             .referralStorage()
-            .referralAdapter
-            .metaverseRegistryReferral(asset.metaverseRegistry);
+            .metaverseRegistryReferral[asset.metaverseRegistry];
 
         // take out metaverse registry fee
-        uint256 metaverseReferralAmount = (protocolFee * metaversePercentage) /
-            10_000;
+        uint256 metaverseReferralAmount = (protocolFee * mrr.percentage) /
+            100_000;
         uint256 referralsFeeLeft = protocolFee - metaverseReferralAmount;
 
         if (_referral != address(0)) {
-            (
-                uint256 rentReferralPercentage,
-                uint256 rentUserReferralPercentage
-            ) = LibReferral
-                    .referralStorage()
-                    .referralAdapter
-                    .referralPercentage(_referral);
-            uint256 rentReferralFee = (referralsFeeLeft *
-                rentReferralPercentage) / 10_000;
+            LibReferral.ReferralPercentage memory rp = LibReferral
+                .referralStorage()
+                .referralPercentage[_referral];
+            uint256 rentReferralFee = (referralsFeeLeft * rp.mainPercentage) /
+                100_000;
 
-            uint256 renterDiscount = (rentReferralFee *
-                rentUserReferralPercentage) / 10_000;
+            uint256 renterDiscount = (rentReferralFee * rp.userPercentage) /
+                100_000;
             return referralsFeeLeft - renterDiscount;
         }
         return amount;

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+import "../libraries/LibReferral.sol";
+
 interface IReferralFacet {
-    event SetReferralAdapter(address indexed _referralAdapter);
     event ClaimReferralFee(
         address indexed _claimer,
         address indexed _token,
         uint256 _amount
     );
-
-    function setReferralAdapter(address _referralAdapter) external;
 
     function claimReferralFee(address _token)
         external
@@ -21,4 +20,14 @@ interface IReferralFacet {
         external
         view
         returns (uint256 amount_);
+
+    function metaverseRegistryReferral(address _metaverseRegistry)
+        external
+        view
+        returns (LibReferral.MetaverseRegistryReferral memory);
+
+    function referralPercentage(address _referral)
+        external
+        view
+        returns (LibReferral.ReferralPercentage memory);
 }

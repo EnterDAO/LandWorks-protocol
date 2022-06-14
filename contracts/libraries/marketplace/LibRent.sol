@@ -72,11 +72,10 @@ library LibRent {
             "invalid _paymentToken"
         );
         if (rentParams._referral != address(0)) {
-            (uint256 rentReferralPercentage, ) = LibReferral
+            LibReferral.ReferralPercentage memory rp = LibReferral
                 .referralStorage()
-                .referralAdapter
-                .referralPercentage(rentParams._referral);
-            require(rentReferralPercentage > 0, "_referral not whitelisted");
+                .referralPercentage[rentParams._referral];
+            require(rp.mainPercentage > 0, "_referral not whitelisted");
         }
 
         bool rentStartsNow = true;
@@ -208,15 +207,12 @@ library LibRent {
         uint256 pFee,
         LibReferral.ReferralStorage storage rs
     ) internal returns (uint256) {
-        (address metaverseRegistryReferral, uint256 metaversePercentage) = rs
-            .referralAdapter
-            .metaverseRegistryReferral(metaverseRegistry);
+        LibReferral.MetaverseRegistryReferral memory mrr = rs
+            .metaverseRegistryReferral[metaverseRegistry];
 
         // take out metaverse registry fee
-        uint256 metaverseReferralAmount = (pFee * metaversePercentage) / 10_000;
-        rs.referralFees[metaverseRegistryReferral][
-            paymentToken
-        ] += metaverseReferralAmount;
+        uint256 metaverseReferralAmount = (pFee * mrr.percentage) / 100_000;
+        rs.referralFees[mrr.referral][paymentToken] += metaverseReferralAmount;
 
         return pFee - metaverseReferralAmount;
     }
@@ -229,17 +225,15 @@ library LibRent {
         LibReferral.ReferralStorage storage rs,
         RentDistribution memory rds
     ) internal returns (uint256, RentDistribution memory) {
-        (
-            uint256 listReferralPercetange,
-            uint256 listUserReferralPercentage
-        ) = rs.referralAdapter.referralPercentage(listingReferral);
+        LibReferral.ReferralPercentage memory rp = rs.referralPercentage[
+            listingReferral
+        ];
 
-        uint256 listingReferralFee = (referralsFeeLeft *
-            listReferralPercetange) / 10_000;
+        uint256 listingReferralFee = (referralsFeeLeft * rp.mainPercentage) /
+            100_000;
         protocolFeeLeft -= listingReferralFee;
 
-        uint256 listerFee = (listingReferralFee * listUserReferralPercentage) /
-            10_000;
+        uint256 listerFee = (listingReferralFee * rp.userPercentage) / 100_000;
         rds.protocolFee -= listerFee;
         rds.rentReward += listerFee;
         rs.referralFees[listingReferral][paymentToken] += (listingReferralFee -
@@ -256,16 +250,15 @@ library LibRent {
         RentDistribution memory rds,
         LibReferral.ReferralStorage storage rs
     ) internal returns (uint256, RentDistribution memory) {
-        (
-            uint256 rentReferralPercentage,
-            uint256 rentUserReferralPercentage
-        ) = rs.referralAdapter.referralPercentage(rentReferral);
-        uint256 rentReferralFee = (referralsFeeLeft * rentReferralPercentage) /
-            10_000;
+        LibReferral.ReferralPercentage memory rp = rs.referralPercentage[
+            rentReferral
+        ];
+        uint256 rentReferralFee = (referralsFeeLeft * rp.mainPercentage) /
+            100_000;
         protocolFeeLeft -= rentReferralFee;
 
-        uint256 renterDiscount = (rentReferralFee *
-            rentUserReferralPercentage) / 10_000;
+        uint256 renterDiscount = (rentReferralFee * rp.userPercentage) /
+            100_000;
         rds.rentFee -= renterDiscount;
         rs.referralFees[rentReferral][paymentToken] += (rentReferralFee -
             renterDiscount);

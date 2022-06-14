@@ -1,26 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import "../interfaces/IReferralAdapterV1.sol";
 import "../interfaces/IReferralFacet.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibReferral.sol";
 import "../libraries/LibTransfer.sol";
 
 contract ReferralFacet is IReferralFacet {
-    function setReferralAdapter(address _referralAdapter) external {
-        require(
-            _referralAdapter != address(0),
-            "_referralAdapter must not be 0x0"
-        );
-        LibOwnership.enforceIsContractOwner();
-        LibReferral.referralStorage().referralAdapter = IReferralAdapterV1(
-            _referralAdapter
-        );
-
-        emit SetReferralAdapter(_referralAdapter);
-    }
-
     function claimReferralFee(address _paymentToken)
         public
         returns (address token_, uint256 amount_)
@@ -49,5 +35,24 @@ contract ReferralFacet is IReferralFacet {
         returns (uint256 amount_)
     {
         return LibReferral.referralStorage().referralFees[_referrer][_token];
+    }
+
+    function metaverseRegistryReferral(address _metaverseRegistry)
+        external
+        view
+        returns (LibReferral.MetaverseRegistryReferral memory)
+    {
+        return
+            LibReferral.referralStorage().metaverseRegistryReferral[
+                _metaverseRegistry
+            ];
+    }
+
+    function referralPercentage(address _referral)
+        external
+        view
+        returns (LibReferral.ReferralPercentage memory)
+    {
+        return LibReferral.referralStorage().referralPercentage[_referral];
     }
 }
