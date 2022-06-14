@@ -106,12 +106,6 @@ library LibRent {
             rentPayment,
             rentParams._referral
         );
-        uint256 rentId = LibMarketplace.addRent(
-            rentParams._assetId,
-            msg.sender,
-            rentStart,
-            rentEnd
-        );
 
         require(rentParams._amount == rds.rentFee, "invalid _amount");
         if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
@@ -119,6 +113,13 @@ library LibRent {
         } else {
             require(msg.value == 0, "invalid token msg.value");
         }
+
+        uint256 rentId = LibMarketplace.addRent(
+            rentParams._assetId,
+            msg.sender,
+            rentStart,
+            rentEnd
+        );
 
         if (asset.paymentToken != ETHEREUM_PAYMENT_TOKEN) {
             LibTransfer.safeTransferFrom(
@@ -157,7 +158,7 @@ library LibRent {
             (rentPayment * fs.feePercentages[token]) /
             LibFee.FEE_PRECISION;
         rds.rentReward = rentPayment - rds.protocolFee;
-        rds.rentFee = rds.rentReward;
+        rds.rentFee = rentPayment;
 
         // used to calculate the split of the total protocol fee to the different actors
         uint256 pFee = rds.protocolFee;
