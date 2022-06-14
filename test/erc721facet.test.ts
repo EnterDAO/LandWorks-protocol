@@ -2,13 +2,13 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { Contract } from 'ethers';
 import { Diamond } from '../utils/diamond';
-import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, FeeFacet, MarketplaceFacet, OwnershipFacet } from '../typechain';
+import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, FeeFacet, MarketplaceFacet, OwnershipFacet, RentFacet } from '../typechain';
 import { Deployer } from "../utils/deployer";
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('ERC721Facet', function () {
-    let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, fee: Contract, erc721: Contract, decentraland: Contract, diamond: Contract;
-    let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
+    let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, rent: Contract, fee: Contract, erc721: Contract, decentraland: Contract, diamond: Contract;
+    let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, rentFacet: RentFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
     let owner: SignerWithAddress, newOwner, approved: SignerWithAddress, anotherApproved: SignerWithAddress, operator: SignerWithAddress, consumer: SignerWithAddress, other: SignerWithAddress;
     let snapshotId: any;
     let mockERC721Registry: Contract;
@@ -47,6 +47,7 @@ describe('ERC721Facet', function () {
         loupe = await Deployer.deployContract('DiamondLoupeFacet');
         ownership = await Deployer.deployContract('OwnershipFacet');
         marketplace = await Deployer.deployContract('MarketplaceFacet');
+        rent = await Deployer.deployContract('RentFacet');
         fee = await Deployer.deployContract('FeeFacet');
         decentraland = await Deployer.deployContract('DecentralandFacet');
 
@@ -54,7 +55,7 @@ describe('ERC721Facet', function () {
 
         diamond = await Deployer.deployDiamond(
             'LandWorks',
-            [cut, loupe, ownership, marketplace, fee, erc721, decentraland],
+            [cut, loupe, ownership, marketplace, rent, fee, erc721, decentraland],
             owner.address,
         );
 
@@ -62,6 +63,7 @@ describe('ERC721Facet', function () {
         cutFacet = (await Diamond.asFacet(diamond, 'DiamondCutFacet')) as DiamondCutFacet;
         ownershipFacet = (await Diamond.asFacet(diamond, 'OwnershipFacet')) as OwnershipFacet;
         marketplaceFacet = (await Diamond.asFacet(diamond, 'MarketplaceFacet')) as MarketplaceFacet;
+        rentFacet = (await Diamond.asFacet(diamond, 'RentFacet')) as RentFacet;
         feeFacet = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
         erc721Facet = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
         decentralandFacet = (await Diamond.asFacet(diamond, 'DecentralandFacet')) as DecentralandFacet;
@@ -86,7 +88,8 @@ describe('ERC721Facet', function () {
             maxPeriod,
             maxFutureTime,
             ADDRESS_ONE,
-            pricePerSecond);
+            pricePerSecond,
+            ethers.constants.AddressZero);
     });
 
     beforeEach(async function () {
@@ -1289,7 +1292,7 @@ describe('ERC721Facet', function () {
             const MAX_RENT_START = Date.now(); // This is in milliseconds
             await erc721Facet.approve(approved.address, tokenID);
             await erc721Facet.setApprovalForAll(operator.address, true);
-            await marketplaceFacet.connect(other).rent(tokenID, 1, MAX_RENT_START, ADDRESS_ONE, pricePerSecond, { value: pricePerSecond });
+            await rentFacet.connect(other).rent(tokenID, 1, MAX_RENT_START, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero, { value: pricePerSecond });
         });
 
         describe('transferFrom', async () => {
@@ -1425,7 +1428,8 @@ describe('ERC721Facet', function () {
                     maxPeriod,
                     maxFutureTime,
                     ADDRESS_ONE,
-                    pricePerSecond);
+                    pricePerSecond,
+                    ethers.constants.AddressZero);
             }
             expect(await erc721Facet.totalSupply()).to.equal(4);
             // and:
@@ -1481,7 +1485,8 @@ describe('ERC721Facet', function () {
                     maxPeriod,
                     maxFutureTime,
                     ADDRESS_ONE,
-                    pricePerSecond);
+                    pricePerSecond,
+                    ethers.constants.AddressZero);
             }
             expect(await erc721Facet.totalSupply()).to.equal(4);
             // and:
