@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+import "./IRentable.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 
-interface IRentFacet {
+interface IRentFacet is IRentable {
     /// @notice Rents an asset for a given period.
     /// Charges user for the rent upfront. Rent starts from the last rented timestamp
     /// or from the current timestamp of the transaction.

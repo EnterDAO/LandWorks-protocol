@@ -7,6 +7,70 @@ import "../libraries/LibReferral.sol";
 import "../libraries/LibTransfer.sol";
 
 contract ReferralFacet is IReferralFacet {
+    function setReferralAdmin(address _admin) external {
+        LibOwnership.enforceIsContractOwner();
+
+        LibReferral.referralStorage().admin = _admin;
+
+        emit SetReferralAdmin(_admin);
+    }
+
+    function setReferrals(
+        address[] memory _referrals,
+        uint256[] memory _percentages,
+        uint256[] memory _userPercentages
+    ) external {
+        LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
+        require(rs.admin == msg.sender, "caller is not admin");
+
+        for (uint256 i = 0; i < _referrals.length; i++) {
+            require(_referrals[i] != address(0), "_referral cannot be 0x0");
+            require(_percentages[i] <= 50_000, "_percentage cannot exceed 50");
+            require(
+                _userPercentages[i] <= 100_000,
+                "_userPercentage cannot exceed 100"
+            );
+
+            rs.referralPercentage[_referrals[i]] = LibReferral
+                .ReferralPercentage({
+                    mainPercentage: _percentages[i],
+                    userPercentage: _userPercentages[i]
+                });
+            emit SetReferral(
+                _referrals[i],
+                _percentages[i],
+                _userPercentages[i]
+            );
+        }
+    }
+
+    function setMetaverseRegistryReferral(
+        address[] memory _metaverseRegistries,
+        address[] memory _referrals,
+        uint256[] memory _percentages
+    ) external {
+        LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
+        require(rs.admin == msg.sender, "caller is not admin");
+
+        for (uint256 i = 0; i < _metaverseRegistries.length; i++) {
+            require(
+                _metaverseRegistries[i] != address(0),
+                "_metaverseRegistry cannot be 0x0"
+            );
+            require(_referrals[i] != address(0), "_referral cannot be 0x0");
+            require(
+                _percentages[i] <= 100_000,
+                "_referralPercentage exceeds maximum"
+            );
+
+            rs.metaverseRegistryReferral[_metaverseRegistries[i]] = LibReferral
+                .MetaverseRegistryReferral({
+                    referral: _referrals[i],
+                    percentage: _percentages[i]
+                });
+        }
+    }
+
     function claimReferralFee(address _paymentToken)
         public
         returns (address token_, uint256 amount_)

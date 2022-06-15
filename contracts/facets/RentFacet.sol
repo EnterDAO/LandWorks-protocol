@@ -87,8 +87,9 @@ contract RentFacet is IRentFacet {
 
             uint256 renterDiscount = (rentReferralFee * rp.userPercentage) /
                 100_000;
-            return referralsFeeLeft - renterDiscount;
+            return amount - renterDiscount;
         }
+
         return amount;
     }
 }

@@ -2,9 +2,8 @@
 pragma solidity 0.8.10;
 
 import "../libraries/marketplace/LibMarketplace.sol";
-import "./IRentable.sol";
 
-interface IMarketplaceFacet is IRentable {
+interface IMarketplaceFacet {
     event List(
         uint256 _assetId,
         uint256 _metaverseId,

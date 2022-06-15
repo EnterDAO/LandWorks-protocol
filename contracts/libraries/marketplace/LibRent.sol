@@ -27,6 +27,8 @@ library LibRent {
         uint256 _protocolFee
     );
 
+    event SetReferralFee(address indexed referral, uint256 amount);
+
     struct RentParams {
         uint256 _assetId;
         uint256 _period;
@@ -174,6 +176,8 @@ library LibRent {
                     100_000;
                 rs.referralFees[mrr.referral][token] += metaverseReferralAmount;
                 protocolFeeLeft = pFee - metaverseReferralAmount;
+
+                emit SetReferralFee(mrr.referral, metaverseReferralAmount);
             }
         }
 
@@ -198,6 +202,10 @@ library LibRent {
                     rs.referralFees[listingReferral][
                         token
                     ] += (listingReferralFee - listerFee);
+                    emit SetReferralFee(
+                        listingReferral,
+                        listingReferralFee - listerFee
+                    );
                 }
             }
         }
@@ -217,6 +225,11 @@ library LibRent {
                 rds.rentFee -= renterDiscount;
                 rs.referralFees[rentReferral][token] += (rentReferralFee -
                     renterDiscount);
+
+                emit SetReferralFee(
+                    rentReferral,
+                    rentReferralFee - renterDiscount
+                );
             }
         }
 

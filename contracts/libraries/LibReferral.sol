@@ -19,6 +19,7 @@ library LibReferral {
     event WhitelistedReferral(address indexed _referral, uint256 _percentage);
 
     struct ReferralStorage {
+        address admin;
         // Stores addresses of listing referrals
         mapping(uint256 => address) listingReferrals;
         // Referral fees address => paymentToken => amount
