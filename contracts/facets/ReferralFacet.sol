@@ -21,7 +21,11 @@ contract ReferralFacet is IReferralFacet {
         uint16[] memory _userPercentages
     ) external {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
-        require(rs.admin == msg.sender, "caller is not admin");
+        require(
+            msg.sender == rs.admin ||
+                msg.sender == LibDiamond.diamondStorage().contractOwner,
+            "caller is not admin or owner"
+        );
 
         for (uint256 i = 0; i < _referrals.length; i++) {
             require(_referrals[i] != address(0), "_referral cannot be 0x0");
@@ -50,7 +54,11 @@ contract ReferralFacet is IReferralFacet {
         uint16[] memory _percentages
     ) external {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
-        require(rs.admin == msg.sender, "caller is not admin");
+        require(
+            msg.sender == rs.admin ||
+                msg.sender == LibDiamond.diamondStorage().contractOwner,
+            "caller is not admin or owner"
+        );
 
         for (uint256 i = 0; i < _metaverseRegistries.length; i++) {
             require(
