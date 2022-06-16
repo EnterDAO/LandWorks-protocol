@@ -75,7 +75,7 @@ contract RentFacet is IRentFacet {
 
         // take out metaverse registry fee
         uint256 metaverseReferralAmount = (protocolFee * mrr.percentage) /
-            100_000;
+            10_000;
         uint256 referralsFeeLeft = protocolFee - metaverseReferralAmount;
 
         if (_referral != address(0)) {
@@ -83,10 +83,10 @@ contract RentFacet is IRentFacet {
                 .referralStorage()
                 .referralPercentage[_referral];
             uint256 rentReferralFee = (referralsFeeLeft * rp.mainPercentage) /
-                100_000;
+                10_000;
 
             uint256 renterDiscount = (rentReferralFee * rp.userPercentage) /
-                100_000;
+                10_000;
             return amount - renterDiscount;
         }
 

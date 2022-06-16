@@ -17,17 +17,17 @@ contract ReferralFacet is IReferralFacet {
 
     function setReferrals(
         address[] memory _referrals,
-        uint256[] memory _percentages,
-        uint256[] memory _userPercentages
+        uint16[] memory _percentages,
+        uint16[] memory _userPercentages
     ) external {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
         require(rs.admin == msg.sender, "caller is not admin");
 
         for (uint256 i = 0; i < _referrals.length; i++) {
             require(_referrals[i] != address(0), "_referral cannot be 0x0");
-            require(_percentages[i] <= 50_000, "_percentage cannot exceed 50");
+            require(_percentages[i] <= 5_000, "_percentage cannot exceed 50");
             require(
-                _userPercentages[i] <= 100_000,
+                _userPercentages[i] <= 10_000,
                 "_userPercentage cannot exceed 100"
             );
 
@@ -47,7 +47,7 @@ contract ReferralFacet is IReferralFacet {
     function setMetaverseRegistryReferral(
         address[] memory _metaverseRegistries,
         address[] memory _referrals,
-        uint256[] memory _percentages
+        uint16[] memory _percentages
     ) external {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
         require(rs.admin == msg.sender, "caller is not admin");
@@ -59,7 +59,7 @@ contract ReferralFacet is IReferralFacet {
             );
             require(_referrals[i] != address(0), "_referral cannot be 0x0");
             require(
-                _percentages[i] <= 100_000,
+                _percentages[i] <= 10_000,
                 "_referralPercentage exceeds maximum"
             );
 

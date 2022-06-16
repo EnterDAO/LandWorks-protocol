@@ -173,7 +173,7 @@ library LibRent {
             if (mrr.percentage > 0) {
                 // take out metaverse registry fee
                 uint256 metaverseReferralAmount = (pFee * mrr.percentage) /
-                    100_000;
+                    10_000;
                 rs.referralFees[mrr.referral][token] += metaverseReferralAmount;
                 protocolFeeLeft = pFee - metaverseReferralAmount;
 
@@ -192,11 +192,11 @@ library LibRent {
 
                 if (rp.mainPercentage > 0) {
                     uint256 listingReferralFee = (referralsFeeLeft *
-                        rp.mainPercentage) / 100_000;
+                        rp.mainPercentage) / 10_000;
                     protocolFeeLeft -= listingReferralFee;
 
                     uint256 listerFee = (listingReferralFee *
-                        rp.userPercentage) / 100_000;
+                        rp.userPercentage) / 10_000;
                     rds.protocolFee -= listerFee;
                     rds.rentReward += listerFee;
                     rs.referralFees[listingReferral][
@@ -217,11 +217,11 @@ library LibRent {
                     .referralPercentage[rentReferral];
 
                 uint256 rentReferralFee = (referralsFeeLeft *
-                    rp.mainPercentage) / 100_000;
+                    rp.mainPercentage) / 10_000;
                 protocolFeeLeft -= rentReferralFee;
 
                 uint256 renterDiscount = (rentReferralFee * rp.userPercentage) /
-                    100_000;
+                    10_000;
                 rds.rentFee -= renterDiscount;
                 rs.referralFees[rentReferral][token] += (rentReferralFee -
                     renterDiscount);

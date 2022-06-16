@@ -7,13 +7,13 @@ library LibReferral {
 
     struct MetaverseRegistryReferral {
         address referral;
-        uint256 percentage;
+        uint16 percentage;
     }
     struct ReferralPercentage {
         // Referral percentage
-        uint256 mainPercentage;
+        uint16 mainPercentage;
         // User percentage
-        uint256 userPercentage;
+        uint16 userPercentage;
     }
 
     event WhitelistedReferral(address indexed _referral, uint256 _percentage);

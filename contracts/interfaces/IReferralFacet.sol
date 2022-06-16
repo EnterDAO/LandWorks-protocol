@@ -14,27 +14,27 @@ interface IReferralFacet {
 
     event SetReferral(
         address indexed referral,
-        uint256 percentage,
-        uint256 userPercentage
+        uint16 percentage,
+        uint16 userPercentage
     );
     event SetMetaverseRegistryReferal(
         address indexed metaverseRegistry,
         address indexed referal,
-        uint256 percentage
+        uint16 percentage
     );
 
     function setReferralAdmin(address _admin) external;
 
     function setReferrals(
         address[] memory _referrals,
-        uint256[] memory _percentages,
-        uint256[] memory _userPercentages
+        uint16[] memory _percentages,
+        uint16[] memory _userPercentages
     ) external;
 
     function setMetaverseRegistryReferral(
         address[] memory _metaverseRegistries,
         address[] memory _referrals,
-        uint256[] memory _percentages
+        uint16[] memory _percentages
     ) external;
 
     function claimReferralFee(address _token)
