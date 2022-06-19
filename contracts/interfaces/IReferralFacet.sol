@@ -68,6 +68,9 @@ interface IReferralFacet {
     function claimMultipleReferrerFees(address[] memory _paymentTokens)
         external;
 
+    /// @notice Returns the referral admin
+    function referralAdmin() external view returns (address);
+
     /// @notice Returns the accrued referrer amount for a given payment token
     /// @param _referrer The address of the referrer
     /// @param _token The target payment token

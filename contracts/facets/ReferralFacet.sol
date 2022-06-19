@@ -31,7 +31,7 @@ contract ReferralFacet is IReferralFacet {
         require(
             msg.sender == rs.admin ||
                 msg.sender == LibDiamond.diamondStorage().contractOwner,
-            "caller is not admin or owner"
+            "caller is neither admin, nor owner"
         );
 
         for (uint256 i = 0; i < _referrers.length; i++) {
@@ -72,7 +72,7 @@ contract ReferralFacet is IReferralFacet {
         require(
             msg.sender == rs.admin ||
                 msg.sender == LibDiamond.diamondStorage().contractOwner,
-            "caller is not admin or owner"
+            "caller is neither admin, nor owner"
         );
 
         for (uint256 i = 0; i < _metaverseRegistries.length; i++) {
@@ -81,7 +81,7 @@ contract ReferralFacet is IReferralFacet {
                 "_metaverseRegistry cannot be 0x0"
             );
             require(_referrers[i] != address(0), "_referrer cannot be 0x0");
-            require(_percentages[i] <= 10_000, "_percentage exceeds maximum");
+            require(_percentages[i] <= 10_000, "_percentage cannot exceed 100");
 
             rs.metaverseRegistryReferrers[_metaverseRegistries[i]] = LibReferral
                 .MetaverseRegistryReferrer({
@@ -124,6 +124,11 @@ contract ReferralFacet is IReferralFacet {
         for (uint256 i = 0; i < _paymentTokens.length; i++) {
             claimReferrerFee(_paymentTokens[i]);
         }
+    }
+
+    /// @notice Returns the referral admin
+    function referralAdmin() external view returns (address) {
+        return LibReferral.referralStorage().admin;
     }
 
     /// @notice Returns the accrued referrer amount for a given payment token
