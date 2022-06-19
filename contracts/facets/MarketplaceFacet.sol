@@ -30,7 +30,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
-    // TODO:
+    /// @param _referrer The target referrer
     /// @return The newly created asset id.
     function list(
         uint256 _metaverseId,
@@ -41,7 +41,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond,
-        address _referral
+        address _referrer
     ) external returns (uint256) {
         require(
             _metaverseRegistry != address(0),
@@ -62,11 +62,11 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             LibFee.supportsTokenPayment(_paymentToken),
             "payment type not supported"
         );
-        if (_referral != address(0)) {
-            LibReferral.ReferralPercentage memory rp = LibReferral
+        if (_referrer != address(0)) {
+            LibReferral.ReferrerPercentage memory rp = LibReferral
                 .referralStorage()
-                .referralPercentage[_referral];
-            require(rp.mainPercentage > 0, "_referral not whitelisted");
+                .referrerPercentages[_referrer];
+            require(rp.mainPercentage > 0, "_referrer not whitelisted");
         }
 
         uint256 asset = LibERC721.safeMint(msg.sender);
@@ -85,7 +85,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
                 status: LibMarketplace.AssetStatus.Listed,
                 totalRents: 0
             });
-            LibReferral.referralStorage().listingReferrals[asset] = _referral;
+            LibReferral.referralStorage().listReferrer[asset] = _referrer;
 
             LibTransfer.erc721SafeTransferFrom(
                 _metaverseRegistry,
@@ -105,7 +105,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             _paymentToken,
             _pricePerSecond
         );
-        emit AssetReferral(asset, _referral);
+        emit ListReferrer(asset, _referrer);
         return asset;
     }
 
@@ -213,7 +213,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         clearConsumer(asset);
 
         delete LibMarketplace.marketplaceStorage().assets[_assetId];
-        delete LibReferral.referralStorage().listingReferrals[_assetId];
+        delete LibReferral.referralStorage().listReferrer[_assetId];
         address owner = LibERC721.ownerOf(_assetId);
         LibERC721.burn(_assetId);
 

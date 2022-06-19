@@ -15,7 +15,7 @@ interface IMarketplaceFacet {
         address indexed _paymentToken,
         uint256 _pricePerSecond
     );
-    event AssetReferral(uint256 indexed _assetId, address indexed _referral);
+    event ListReferrer(uint256 indexed _assetId, address indexed _referrer);
     event UpdateConditions(
         uint256 indexed _assetId,
         uint256 _minPeriod,
@@ -46,7 +46,7 @@ interface IMarketplaceFacet {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
-    // TODO:
+    /// @param _referrer The target referrer
     /// @return The newly created asset id.
     function list(
         uint256 _metaverseId,
@@ -57,7 +57,7 @@ interface IMarketplaceFacet {
         uint256 _maxFutureTime,
         address _paymentToken,
         uint256 _pricePerSecond,
-        address _referral
+        address _referrer
     ) external returns (uint256);
 
     /// @notice Updates the lending conditions for a given asset.

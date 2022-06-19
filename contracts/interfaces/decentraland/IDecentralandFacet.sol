@@ -27,6 +27,7 @@ interface IDecentralandFacet is IRentable {
     /// @param _operator The target operator, which will be set as operator once the rent is active
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
+    /// @param _referrer The target referrer
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
@@ -34,7 +35,7 @@ interface IDecentralandFacet is IRentable {
         address _operator,
         address _paymentToken,
         uint256 _amount,
-        address _referral
+        address _referrer
     ) external payable;
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.

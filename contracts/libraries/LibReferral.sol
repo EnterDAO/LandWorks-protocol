@@ -5,27 +5,36 @@ library LibReferral {
     bytes32 constant REFERRAL_STORAGE_POSITION =
         keccak256("com.enterdao.landworks.referral");
 
-    struct MetaverseRegistryReferral {
-        address referral;
+    // Stores information about a metaverse registry's referrer and
+    // percentage, used to calculate the reward upon every rent.
+    struct MetaverseRegistryReferrer {
+        // address of the referrer
+        address referrer;
+        // percentage from the rent protocol fee, which will be
+        // accrued to the referrer
         uint16 percentage;
     }
-    struct ReferralPercentage {
-        // Referral percentage
+
+    struct ReferrerPercentage {
+        // Main referrer percentage, used as reward
+        // for referrers + referees.
         uint16 mainPercentage;
-        // User percentage
-        uint16 userPercentage;
+        // Secondary percentage, which is used to calculate
+        // the reward for a given referee.
+        uint16 secondaryPercentage;
     }
 
-    event WhitelistedReferral(address indexed _referral, uint256 _percentage);
-
     struct ReferralStorage {
+        // Sets referrers
         address admin;
-        // Stores addresses of listing referrals
-        mapping(uint256 => address) listingReferrals;
-        // Referral fees address => paymentToken => amount
-        mapping(address => mapping(address => uint256)) referralFees;
-        mapping(address => MetaverseRegistryReferral) metaverseRegistryReferral;
-        mapping(address => ReferralPercentage) referralPercentage;
+        // Stores addresses of listing referrer
+        mapping(uint256 => address) listReferrer;
+        // Accrued referrers fees address => paymentToken => amount
+        mapping(address => mapping(address => uint256)) referrerFees;
+        // Metaverse Registry referrers
+        mapping(address => MetaverseRegistryReferrer) metaverseRegistryReferrers;
+        // Referrers percentages
+        mapping(address => ReferrerPercentage) referrerPercentages;
     }
 
     function referralStorage()

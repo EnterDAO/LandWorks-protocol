@@ -17,13 +17,14 @@ contract RentFacet is IRentFacet {
     /// @param _maxRentStart The maximum rent start allowed for the given rent
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
+    /// @param _referrer The target referrer
     function rent(
         uint256 _assetId,
         uint256 _period,
         uint256 _maxRentStart,
         address _paymentToken,
         uint256 _amount,
-        address _referral
+        address _referrer
     ) external payable returns (uint256, bool) {
         (uint256 rentId, bool rentStartsNow) = LibRent.rent(
             LibRent.RentParams({
@@ -32,7 +33,7 @@ contract RentFacet is IRentFacet {
                 _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
                 _amount: _amount,
-                _referral: _referral
+                _referrer: _referrer
             })
         );
         return (rentId, rentStartsNow);
@@ -49,17 +50,22 @@ contract RentFacet is IRentFacet {
         return LibMarketplace.rentAt(_assetId, _rentId);
     }
 
-    /// @notice Returns an asset rent fee based on period and referral
-    /// Calculates the rent fee based on asset, period and referral.
-    /// Depending on the referral discounts, it calculates whether
-    /// a user discount might appear.
+    /// @notice Returns an asset rent fee based on period and referrer
+    /// Calculates the rent fee based on asset, period and referrer.
+    /// Depending on the referral discounts, it calculates the amount that
+    /// users have to provide upon rent.
+    /// @dev Reverts if the _referrer is not whitelisted.
+    /// Each referrer has main & secondary percentage.
+    /// Each rent referral gets a main percentage portion from the protocol fees.
+    /// The secondary percentage is used to calculate the discount for the renter from the dedicated rent portion,
+    /// and the leftovers are accrued to the rent referrer.
     /// @param _assetId The target asset
     /// @param _period The targe rental period (in seconds)
-    /// @param _referral The address of the referral
+    /// @param _referrer The address of the referrer
     function calculateRentFee(
         uint256 _assetId,
         uint256 _period,
-        address _referral
+        address _referrer
     ) external view returns (uint256) {
         require(LibERC721.exists(_assetId), "_assetId not found");
 
@@ -69,24 +75,26 @@ contract RentFacet is IRentFacet {
             LibFee.feeStorage().feePercentages[asset.paymentToken]) /
             LibFee.FEE_PRECISION;
 
-        LibReferral.MetaverseRegistryReferral memory mrr = LibReferral
+        LibReferral.MetaverseRegistryReferrer memory mrr = LibReferral
             .referralStorage()
-            .metaverseRegistryReferral[asset.metaverseRegistry];
+            .metaverseRegistryReferrers[asset.metaverseRegistry];
 
         // take out metaverse registry fee
         uint256 metaverseReferralAmount = (protocolFee * mrr.percentage) /
             10_000;
-        uint256 referralsFeeLeft = protocolFee - metaverseReferralAmount;
+        uint256 feesLeft = protocolFee - metaverseReferralAmount;
 
-        if (_referral != address(0)) {
-            LibReferral.ReferralPercentage memory rp = LibReferral
+        if (_referrer != address(0)) {
+            LibReferral.ReferrerPercentage memory rp = LibReferral
                 .referralStorage()
-                .referralPercentage[_referral];
-            uint256 rentReferralFee = (referralsFeeLeft * rp.mainPercentage) /
-                10_000;
+                .referrerPercentages[_referrer];
 
-            uint256 renterDiscount = (rentReferralFee * rp.userPercentage) /
-                10_000;
+            require(rp.mainPercentage > 0, "_referrer not whitelisted");
+
+            uint256 rentReferrerFee = (feesLeft * rp.mainPercentage) / 10_000;
+
+            uint256 renterDiscount = (rentReferrerFee *
+                rp.secondaryPercentage) / 10_000;
             return amount - renterDiscount;
         }
 

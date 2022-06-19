@@ -4,57 +4,90 @@ pragma solidity 0.8.10;
 import "../libraries/LibReferral.sol";
 
 interface IReferralFacet {
-    event ClaimReferralFee(
+    /// @notice Emitted once a given referrer fee has been claimed
+    event ClaimReferrerFee(
         address indexed _claimer,
         address indexed _token,
         uint256 _amount
     );
 
+    /// @notice Emitted once the referrals admin has been changed
     event SetReferralAdmin(address indexed _admin);
 
-    event SetReferral(
-        address indexed referral,
-        uint16 percentage,
-        uint16 userPercentage
+    /// @notice Emitted once a referrer has been updated
+    event SetReferrer(
+        address indexed _referrer,
+        uint16 _mainPercentage,
+        uint16 _secondaryPercentage
     );
-    event SetMetaverseRegistryReferal(
-        address indexed metaverseRegistry,
-        address indexed referal,
-        uint16 percentage
+    /// @notice Emitted once a metaverse registry referrer has been updated
+    event SetMetaverseRegistryReferrer(
+        address indexed _metaverseRegistry,
+        address indexed _referrer,
+        uint16 _percentage
     );
+    /// @notice Emitted once a referrer accrues referral fees
+    event AccrueReferralFee(address indexed _referrer, uint256 _fee);
 
+    /// @notice Sets a referral admin
+    /// @param _admin The address of the to-be-set admin
     function setReferralAdmin(address _admin) external;
 
-    function setReferrals(
-        address[] memory _referrals,
-        uint16[] memory _percentages,
-        uint16[] memory _userPercentages
+    /// @notice Sets an array of referrers
+    /// @dev Referrers and percentages are followed by array index.
+    /// @param _referrers The to-be-set referrers
+    /// @param _mainPercentages The to-be-set main percentages for referrers
+    /// @param _secondaryPercentages The to-be-set secondary percentages for referrers
+    function setReferrers(
+        address[] memory _referrers,
+        uint16[] memory _mainPercentages,
+        uint16[] memory _secondaryPercentages
     ) external;
 
-    function setMetaverseRegistryReferral(
+    /// @notice Sets an array of metaverse registry referrers
+    /// @dev Metaverse registries, referrers & percentages are followed by array index.
+    /// @param _metaverseRegistries The target metaverse registries
+    /// @param _referrers The to-be-set referrers for the metaverse registries
+    /// @param _percentages The to-be-set referrer percentages for the metaverse registries
+    function setMetaverseRegistryReferrers(
         address[] memory _metaverseRegistries,
-        address[] memory _referrals,
+        address[] memory _referrers,
         uint16[] memory _percentages
     ) external;
 
-    function claimReferralFee(address _token)
+    /// @notice Claims unclaimed referrer fees for a given payment token
+    /// @param _paymentToken The target payment token
+    /// @return paymentToken_ The target payment token
+    /// @return amount_ The claimed amount
+    function claimReferrerFee(address _paymentToken)
         external
-        returns (address token_, uint256 amount_);
+        returns (address paymentToken_, uint256 amount_);
 
-    function claimMultipleReferralFees(address[] memory _tokens) external;
+    /// @notice Claims unclaimed referrer fees
+    /// @param _paymentTokens The array of payment tokens
+    function claimMultipleReferrerFees(address[] memory _paymentTokens)
+        external;
 
-    function referralFee(address _referrer, address _token)
+    /// @notice Returns the accrued referrer amount for a given payment token
+    /// @param _referrer The address of the referrer
+    /// @param _token The target payment token
+    /// @return amount_ The accrued referrer amount
+    function referrerFee(address _referrer, address _token)
         external
         view
         returns (uint256 amount_);
 
-    function metaverseRegistryReferral(address _metaverseRegistry)
+    /// @notice Returns the referrer and percentage for a metaverse registry.
+    /// @param _metaverseRegistry The target metaverse registry
+    function metaverseRegistryReferrer(address _metaverseRegistry)
         external
         view
-        returns (LibReferral.MetaverseRegistryReferral memory);
+        returns (LibReferral.MetaverseRegistryReferrer memory);
 
-    function referralPercentage(address _referral)
+    /// @notice Returns the referrer main & secondary percentages
+    /// @param _referrer The target referrer
+    function referrerPercentage(address _referrer)
         external
         view
-        returns (LibReferral.ReferralPercentage memory);
+        returns (LibReferral.ReferrerPercentage memory);
 }
