@@ -26,8 +26,6 @@ interface IReferralFacet {
         address indexed _referrer,
         uint16 _percentage
     );
-    /// @notice Emitted once a referrer accrues referral fees
-    event AccrueReferralFee(address indexed _referrer, uint256 _fee);
 
     /// @notice Sets a referral admin
     /// @param _admin The address of the to-be-set admin

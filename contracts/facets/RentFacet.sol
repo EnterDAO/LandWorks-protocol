@@ -62,11 +62,13 @@ contract RentFacet is IRentFacet {
     /// @param _assetId The target asset
     /// @param _period The targe rental period (in seconds)
     /// @param _referrer The address of the referrer
+    /// @return paymentToken_ The target payment token
+    /// @return amount_ The amount that has to be paid
     function calculateRentFee(
         uint256 _assetId,
         uint256 _period,
         address _referrer
-    ) external view returns (uint256) {
+    ) external view returns (address paymentToken_, uint256 amount_) {
         require(LibERC721.exists(_assetId), "_assetId not found");
 
         LibMarketplace.Asset memory asset = LibMarketplace.assetAt(_assetId);
@@ -95,9 +97,9 @@ contract RentFacet is IRentFacet {
 
             uint256 renterDiscount = (rentReferrerFee *
                 rp.secondaryPercentage) / 10_000;
-            return amount - renterDiscount;
+            return (asset.paymentToken, amount - renterDiscount);
         }
 
-        return amount;
+        return (asset.paymentToken, amount);
     }
 }

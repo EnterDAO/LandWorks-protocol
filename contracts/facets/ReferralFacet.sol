@@ -106,7 +106,10 @@ contract ReferralFacet is IReferralFacet {
     {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
         uint256 amount = rs.referrerFees[msg.sender][_paymentToken];
-        require(amount > 0, "amount cannot be zero");
+        if (amount == 0) {
+            return (_paymentToken, amount);
+        }
+
         rs.referrerFees[msg.sender][_paymentToken] = 0;
 
         LibTransfer.safeTransfer(_paymentToken, msg.sender, amount);

@@ -2,6 +2,8 @@
 pragma solidity 0.8.10;
 
 interface IRentable {
+    /// @notice Emitted once a referrer accrues referral fees
+    event AccrueReferralFee(address indexed _referrer, uint256 _fee);
 
     /// @notice Emitted once a given asset has been rented
     event Rent(

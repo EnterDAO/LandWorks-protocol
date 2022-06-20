@@ -182,6 +182,8 @@ library LibRent {
 
         uint256 feesLeft = protocolFeeLeft;
 
+        // TODO: if no fees after metaverse registry accrual is left, do not do the below
+
         {
             address listReferrer = rs.listReferrer[assetId];
             // accrue listing referral fee

@@ -43,9 +43,11 @@ interface IRentFacet is IRentable {
     /// @param _assetId The target asset
     /// @param _period The targe rental period (in seconds)
     /// @param _referrer The target referrer
+    /// @return paymentToken_ The target payment token
+    /// @return amount_ The amount that has to be paid
     function calculateRentFee(
         uint256 _assetId,
         uint256 _period,
         address _referrer
-    ) external view returns (uint256);
+    ) external view returns (address paymentToken_, uint256 amount_);
 }
