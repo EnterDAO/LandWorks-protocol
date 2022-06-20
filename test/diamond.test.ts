@@ -4,10 +4,10 @@ import { BigNumber, Contract, Signer } from 'ethers';
 import { Diamond } from '../utils/diamond';
 import {
     EstateRegistry,
-    LandRegistry,
+    LANDRegistry,
     Test1Facet,
     Test2Facet
-} from '../typechain';
+} from '../typechain-types';
 import { Deployer } from "../utils/deployer";
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import FacetCutAction = Diamond.FacetCutAction;
@@ -17,7 +17,7 @@ describe('LandWorks', function () {
 
     let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, rent: Contract, fee: Contract, erc721: Contract,
         decentraland: Contract, diamond: Contract;
-    let landRegistry: LandRegistry;
+    let landRegistry: LANDRegistry;
     let estateRegistry: EstateRegistry;
 
     let owner: SignerWithAddress, nonOwner: SignerWithAddress, artificialRegistry: SignerWithAddress,
@@ -75,7 +75,7 @@ describe('LandWorks', function () {
 
         await decentralandProxy.upgrade(decentralandLandRegistry.address, owner.address);
 
-        landRegistry = (await ethers.getContractAt('LANDRegistryMock', decentralandProxy.address)) as LandRegistry;
+        landRegistry = (await ethers.getContractAt('LANDRegistryMock', decentralandProxy.address)) as LANDRegistry;
 
         estateRegistry = (await Deployer.deployContract('EstateRegistryMock')) as EstateRegistry;
 

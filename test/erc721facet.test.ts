@@ -2,13 +2,13 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { Contract } from 'ethers';
 import { Diamond } from '../utils/diamond';
-import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, Erc721Facet, FeeFacet, MarketplaceFacet, OwnershipFacet, RentFacet } from '../typechain';
+import { DecentralandFacet, DiamondCutFacet, DiamondLoupeFacet, ERC721Facet, FeeFacet, MarketplaceFacet, OwnershipFacet, RentFacet } from '../typechain-types';
 import { Deployer } from "../utils/deployer";
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('ERC721Facet', function () {
     let loupe: Contract, cut: Contract, ownership: Contract, marketplace: Contract, rent: Contract, fee: Contract, erc721: Contract, decentraland: Contract, diamond: Contract;
-    let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, rentFacet: RentFacet, feeFacet: FeeFacet, erc721Facet: Erc721Facet, decentralandFacet: DecentralandFacet;
+    let loupeFacet: DiamondLoupeFacet, cutFacet: DiamondCutFacet, ownershipFacet: OwnershipFacet, marketplaceFacet: MarketplaceFacet, rentFacet: RentFacet, feeFacet: FeeFacet, erc721Facet: ERC721Facet, decentralandFacet: DecentralandFacet;
     let owner: SignerWithAddress, newOwner, approved: SignerWithAddress, anotherApproved: SignerWithAddress, operator: SignerWithAddress, consumer: SignerWithAddress, other: SignerWithAddress;
     let snapshotId: any;
     let mockERC721Registry: Contract;
@@ -65,7 +65,7 @@ describe('ERC721Facet', function () {
         marketplaceFacet = (await Diamond.asFacet(diamond, 'MarketplaceFacet')) as MarketplaceFacet;
         rentFacet = (await Diamond.asFacet(diamond, 'RentFacet')) as RentFacet;
         feeFacet = (await Diamond.asFacet(diamond, 'FeeFacet')) as FeeFacet;
-        erc721Facet = (await Diamond.asFacet(diamond, 'ERC721Facet')) as Erc721Facet;
+        erc721Facet = (await Diamond.asFacet(diamond, 'ERC721Facet')) as ERC721Facet;
         decentralandFacet = (await Diamond.asFacet(diamond, 'DecentralandFacet')) as DecentralandFacet;
         // Enable ETH payments
         await feeFacet.setTokenPayment(ADDRESS_ONE, 0, true);
