@@ -174,10 +174,9 @@ library LibRent {
         rds.rentReward = rentPayment - rds.protocolFee;
         rds.rentFee = rentPayment;
 
-        // used to calculate the split of the total protocol fee to the different actors
         uint256 pFee = rds.protocolFee;
-
         uint256 protocolFeeLeft = pFee;
+
         {
             LibReferral.MetaverseRegistryReferrer memory mrr = rs
                 .metaverseRegistryReferrers[metaverseRegistry];
@@ -198,7 +197,6 @@ library LibRent {
         if (feesLeft > 0) {
             {
                 address listReferrer = rs.listReferrer[assetId];
-                // accrue listing referral fee
                 if (listReferrer != address(0)) {
                     LibReferral.ReferrerPercentage memory rp = rs
                         .referrerPercentages[listReferrer];
@@ -224,7 +222,6 @@ library LibRent {
             }
 
             {
-                // accrue rent referral fee
                 if (rentReferrer != address(0)) {
                     LibReferral.ReferrerPercentage memory rp = rs
                         .referrerPercentages[rentReferrer];

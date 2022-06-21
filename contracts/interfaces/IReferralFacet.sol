@@ -28,11 +28,18 @@ interface IReferralFacet {
     );
 
     /// @notice Sets a referral admin
+    /// Manages the addition/removal of referrers.
     /// @param _admin The address of the to-be-set admin
     function setReferralAdmin(address _admin) external;
 
     /// @notice Sets an array of referrers
+    /// Used as referrers upon listings and rents.
+    /// Referrers accrue part of the protocol fees upon each asset rent.
     /// @dev Referrers and percentages are followed by array index.
+    /// Percentages are passed in basis points.
+    /// Maximum `mainPercentage` is 5_000 (50%), as list and rent referrers
+    /// have equal split of the protocol fees.
+    /// 'secondaryPercentage` takes a percetange of the calculated `mainPercentage` fraction.
     /// @param _referrers The to-be-set referrers
     /// @param _mainPercentages The to-be-set main percentages for referrers
     /// @param _secondaryPercentages The to-be-set secondary percentages for referrers
@@ -43,7 +50,12 @@ interface IReferralFacet {
     ) external;
 
     /// @notice Sets an array of metaverse registry referrers
+    /// Adds a referrer to each metaverse registry.
+    /// Accrues part of the protocol fees upon each asset rent, which is from the
+    /// metaverse registry.
     /// @dev Metaverse registries, referrers & percentages are followed by array index.
+    /// Percentages are passed in basis points.
+    /// Maximum `percentage` is 10_000 (100%).
     /// @param _metaverseRegistries The target metaverse registries
     /// @param _referrers The to-be-set referrers for the metaverse registries
     /// @param _percentages The to-be-set referrer percentages for the metaverse registries
@@ -54,6 +66,7 @@ interface IReferralFacet {
     ) external;
 
     /// @notice Claims unclaimed referrer fees for a given payment token
+    /// @dev Does not emit event if amount is 0.
     /// @param _paymentToken The target payment token
     /// @return paymentToken_ The target payment token
     /// @return amount_ The claimed amount
@@ -62,6 +75,7 @@ interface IReferralFacet {
         returns (address paymentToken_, uint256 amount_);
 
     /// @notice Claims unclaimed referrer fees
+    /// @dev Does not emit event if amount is 0.
     /// @param _paymentTokens The array of payment tokens
     function claimMultipleReferrerFees(address[] memory _paymentTokens)
         external;
