@@ -182,54 +182,55 @@ library LibRent {
 
         uint256 feesLeft = protocolFeeLeft;
 
-        // TODO: if no fees after metaverse registry accrual is left, do not do the below
+        if (feesLeft > 0) {
+            {
+                address listReferrer = rs.listReferrer[assetId];
+                // accrue listing referral fee
+                if (listReferrer != address(0)) {
+                    LibReferral.ReferrerPercentage memory rp = rs
+                        .referrerPercentages[listReferrer];
 
-        {
-            address listReferrer = rs.listReferrer[assetId];
-            // accrue listing referral fee
-            if (listReferrer != address(0)) {
-                LibReferral.ReferrerPercentage memory rp = rs
-                    .referrerPercentages[listReferrer];
+                    if (rp.mainPercentage > 0) {
+                        uint256 listReferralFee = (feesLeft *
+                            rp.mainPercentage) / 10_000;
+                        protocolFeeLeft -= listReferralFee;
 
-                if (rp.mainPercentage > 0) {
-                    uint256 listReferralFee = (feesLeft * rp.mainPercentage) /
-                        10_000;
-                    protocolFeeLeft -= listReferralFee;
-
-                    uint256 listerFee = (listReferralFee *
-                        rp.secondaryPercentage) / 10_000;
-                    rds.protocolFee -= listerFee;
-                    rds.rentReward += listerFee;
-                    rs.referrerFees[listReferrer][token] += (listReferralFee -
-                        listerFee);
-                    emit AccrueReferralFee(
-                        listReferrer,
-                        listReferralFee - listerFee
-                    );
+                        uint256 listerFee = (listReferralFee *
+                            rp.secondaryPercentage) / 10_000;
+                        rds.protocolFee -= listerFee;
+                        rds.rentReward += listerFee;
+                        rs.referrerFees[listReferrer][
+                            token
+                        ] += (listReferralFee - listerFee);
+                        emit AccrueReferralFee(
+                            listReferrer,
+                            listReferralFee - listerFee
+                        );
+                    }
                 }
             }
-        }
 
-        {
-            // accrue rent referral fee
-            if (rentReferrer != address(0)) {
-                LibReferral.ReferrerPercentage memory rp = rs
-                    .referrerPercentages[rentReferrer];
+            {
+                // accrue rent referral fee
+                if (rentReferrer != address(0)) {
+                    LibReferral.ReferrerPercentage memory rp = rs
+                        .referrerPercentages[rentReferrer];
 
-                uint256 rentReferralFee = (feesLeft * rp.mainPercentage) /
-                    10_000;
-                protocolFeeLeft -= rentReferralFee;
+                    uint256 rentReferralFee = (feesLeft * rp.mainPercentage) /
+                        10_000;
+                    protocolFeeLeft -= rentReferralFee;
 
-                uint256 renterDiscount = (rentReferralFee *
-                    rp.secondaryPercentage) / 10_000;
-                rds.rentFee -= renterDiscount;
-                rs.referrerFees[rentReferrer][token] += (rentReferralFee -
-                    renterDiscount);
+                    uint256 renterDiscount = (rentReferralFee *
+                        rp.secondaryPercentage) / 10_000;
+                    rds.rentFee -= renterDiscount;
+                    rs.referrerFees[rentReferrer][token] += (rentReferralFee -
+                        renterDiscount);
 
-                emit AccrueReferralFee(
-                    rentReferrer,
-                    rentReferralFee - renterDiscount
-                );
+                    emit AccrueReferralFee(
+                        rentReferrer,
+                        rentReferralFee - renterDiscount
+                    );
+                }
             }
         }
 

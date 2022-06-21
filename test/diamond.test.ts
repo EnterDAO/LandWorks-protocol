@@ -5335,11 +5335,7 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, protocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(consumer.address, expectedMetaverseRegistryReferrerAmount)
-                        .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(listReferrer.address, 0)
-                        .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(rentReferrer.address, 0);
+                        .withArgs(consumer.address, expectedMetaverseRegistryReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
