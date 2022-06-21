@@ -47,6 +47,19 @@ library LibRent {
     /// Rent is added to the queue of pending rents.
     /// Rent start will begin from the last rented timestamp.
     /// If no active rents are found, rents starts from the current timestamp.
+    /// Protocol fee can be split into multiple referrals.
+    /// Priority is the following:
+    /// 1. Metaverse registry referrer: If the given asset metaverse registry has a metaverse
+    /// referrer, it accrues a percent of the protocol fees to that referrer.
+    /// 2.1. List referrer: Takes percentage of the leftovers based on `mainPercentage`.
+    /// `mainPercentage` has a maximum percentage of 50 due to rent referrer.
+    /// The lister itself might take percentage of the list referral based on `secondaryPercentage`,
+    /// adding an additional amount to the rent reward.
+    /// 2.2. Rent referrer: Takes percentage of the leftoveres based on `mainPercentage`.
+    /// `mainPercentage` has a maximum percentage of 50 due to list referrer.
+    /// The renter itself might take percentage of the rent referral based on `secondaryPerceange`,
+    /// having a discount to the initial rent amount.
+    /// 3. Protocol: Everything left is for the protocol.
     function rent(RentParams memory rentParams)
         internal
         returns (uint256, bool)
