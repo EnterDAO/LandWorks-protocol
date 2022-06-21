@@ -43,7 +43,7 @@ interface IRentFacet is IRentable {
     /// 2. Rent referrer: Takes percentage from (protocol fees - metaverse registry fee) based on `mainPercentage`.
     /// `mainPercentage` has a maximum percentage of 50 due to list referrer.
     /// The renter itself might take percentage of the rent referral based on `secondaryPerceange`,
-    /// having a discount to the initial rent amount.
+    /// which will serve as discount to the initial rent amount.
     /// @param _assetId The target asset
     /// @param _period The targe rental period (in seconds)
     /// @param _referrer The address of the referrer
