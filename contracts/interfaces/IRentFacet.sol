@@ -33,16 +33,20 @@ interface IRentFacet is IRentable {
 
     /// @notice Returns an asset rent fee based on period and referrer
     /// Calculates the rent fee based on asset, period and referrer.
-    /// Depending on the referral discounts, it calculates the amount that
-    /// users have to provide upon rent.
+    /// A rent fee discount might appear depending on referral
+    /// percentages.
     /// @dev Reverts if the _referrer is not whitelisted.
-    /// Each referrer has main & secondary percentage.
-    /// Each rent referrer gets a main percentage portion from the protocol fees.
-    /// The secondary percentage is used to calculate the discount for the renter from the dedicated rent portion,
-    /// and the leftovers are accrued to the rent referrer.
+    /// Portions of the protocol fee might be given as discount depending
+    /// referrals. Priority is the following:
+    /// 1. Metaverse registry referrer: If the given asset metaverse registry has a metaverse
+    /// referrer, it accrues a percent of the protocol fees to that referrer.
+    /// 2. Rent referrer: Takes percentage from (protocol fees - metaverse registry fee) based on `mainPercentage`.
+    /// `mainPercentage` has a maximum percentage of 50 due to list referrer.
+    /// The renter itself might take percentage of the rent referral based on `secondaryPerceange`,
+    /// having a discount to the initial rent amount.
     /// @param _assetId The target asset
     /// @param _period The targe rental period (in seconds)
-    /// @param _referrer The target referrer
+    /// @param _referrer The address of the referrer
     /// @return paymentToken_ The target payment token
     /// @return amount_ The amount that has to be paid
     function calculateRentFee(
