@@ -105,7 +105,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
             _paymentToken,
             _pricePerSecond
         );
-        emit ListReferrer(asset, _referrer);
         return asset;
     }
 

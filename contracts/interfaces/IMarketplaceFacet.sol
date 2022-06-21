@@ -15,7 +15,6 @@ interface IMarketplaceFacet {
         address indexed _paymentToken,
         uint256 _pricePerSecond
     );
-    event ListReferrer(uint256 indexed _assetId, address indexed _referrer);
     event UpdateConditions(
         uint256 indexed _assetId,
         uint256 _minPeriod,
