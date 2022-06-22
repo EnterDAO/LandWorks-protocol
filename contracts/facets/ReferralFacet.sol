@@ -22,7 +22,7 @@ contract ReferralFacet is IReferralFacet {
     /// Used as referrers upon listings and rents.
     /// Referrers accrue part of the protocol fees upon each asset rent.
     /// @dev Referrers and percentages are followed by array index.
-    /// Percentages are passed in basis points.
+    /// Percentages are in basis points.
     /// Maximum `mainPercentage` is 5_000 (50%), as list and rent referrers
     /// have equal split of the protocol fees.
     /// 'secondaryPercentage` takes a percetange of the calculated `mainPercentage` fraction.
@@ -70,7 +70,7 @@ contract ReferralFacet is IReferralFacet {
     /// Accrues part of the protocol fees upon each asset rent, which is from the
     /// metaverse registry.
     /// @dev Metaverse registries, referrers & percentages are followed by array index.
-    /// Percentagese are passed in basis points.
+    /// Percentages are in basis points.
     /// Maximum `percentage` is 10_000 (100%).
     /// @param _metaverseRegistries The target metaverse registries
     /// @param _referrers The to-be-set referrers for the metaverse registries
