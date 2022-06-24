@@ -55,9 +55,9 @@ library LibRent {
     /// `mainPercentage` has a maximum percentage of 50 due to rent referrer.
     /// The lister itself might take percentage of the list referral based on `secondaryPercentage`,
     /// adding an additional amount to the rent reward.
-    /// 2.2. Rent referrer: Takes percentage of the leftoveres based on `mainPercentage`.
+    /// 2.2. Rent referrer: Takes percentage of the leftovers based on `mainPercentage`.
     /// `mainPercentage` has a maximum percentage of 50 due to list referrer.
-    /// The renter itself might take percentage of the rent referral based on `secondaryPerceange`,
+    /// The renter itself might take percentage of the rent referral based on `secondaryPercentage`,
     /// which will serve as discount to the initial rent amount.
     /// 3. Protocol: Everything left is for the protocol.
     function rent(RentParams memory rentParams)
