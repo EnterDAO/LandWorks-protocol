@@ -5447,7 +5447,7 @@ describe('LandWorks', function () {
                 it('should successfully accrue all the protocol fees to list referrer if he matches rent and no metaverse registry referrer is found', async () => {
                     // Metaverse Registry - 0%
                     // List referrer - 50%, lister - 0%
-                    // Rent referrer == list refrrer - 50%, renter - 0%
+                    // Rent referrer == list refеrrer - 50%, renter - 0%
                     // given:
                     await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [0]);
                     // and:
