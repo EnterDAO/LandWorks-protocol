@@ -5768,7 +5768,318 @@ describe('LandWorks', function () {
                     expect(await landWorks.protocolFeeFor(ADDRESS_ONE)).to.equal(expectedProtocolFees);
                 });
             });
-            // TODO: rentWithConsumer
+
+            describe('rentWithConsumer', async () => {
+                const assetId = 1;
+                let metaverseConsumableAdapterFacet: Contract;
+
+                let mockERC721Registry: Contract;
+                let metaverseAdapter: Contract;
+
+                beforeEach(async () => {
+                    metaverseConsumableAdapterFacet = await Deployer.deployContract('MetaverseConsumableAdapterFacet');
+
+                    const diamondAddFacet = [
+                        {
+                            facetAddress: metaverseConsumableAdapterFacet.address,
+                            action: FacetCutAction.Add,
+                            functionSelectors: Diamond.getSelectorsFor(metaverseConsumableAdapterFacet)
+                        }
+                    ];
+
+                    await landWorks.diamondCut(diamondAddFacet, ethers.constants.AddressZero, "0x");
+
+                    mockERC721Registry = await Deployer.deployContract('ERC721Mock');
+                    await mockERC721Registry.mint(owner.address, tokenID);
+                    metaverseAdapter = await Deployer.deployContract('ConsumableAdapterV1', undefined, [landWorks.address, mockERC721Registry.address]);
+
+                    await landWorks.setMetaverseName(metaverseID, metaverseName);
+                    await landWorks.setRegistry(metaverseID, mockERC721Registry.address, true);
+
+                    await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
+                    await landWorks.setConsumableAdapter(mockERC721Registry.address, metaverseAdapter.address);
+
+                    // and:
+                    await mockERC721Registry.approve(landWorks.address, tokenID);
+
+                    await landWorks
+                        .list(
+                            metaverseID,
+                            mockERC721Registry.address,
+                            tokenID,
+                            minPeriod,
+                            maxPeriod,
+                            maxFutureTime,
+                            ADDRESS_ONE,
+                            pricePerSecond,
+                            listReferrer.address
+                        );
+                });
+
+                it('should revert when referrer is not whitelisted', async () => {
+                    const expectedRevertMessage = '_referrer not whitelisted';
+                    // when:
+                    await expect(landWorks.connect(nonOwner)
+                        .rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, value, consumer.address, { value: value }))
+                        .to.be.revertedWith(expectedRevertMessage);
+                });
+
+                it('should successfully rent with all referrers taking portions', async () => {
+                    // given:
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [1_000]);
+                    // and:
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
+                    const rentAmount = maxPeriod * pricePerSecond;
+                    const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 1_000) / 10_000);
+                    const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
+
+                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 10_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 10_000);
+                    const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 10_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 10_000);
+                    const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
+                    const expectedProtocolFees = listAndRentReferrers - listReferralAmount - rentReferralAmount;
+                    const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
+                    const expectedOwnerReward = rentAmount - protocolFees + expectedListerAmount;
+
+                    // when:
+                    const [paymentToken, rentFee] = await landWorks.calculateRentFee(assetId, maxPeriod, rentReferrer.address);
+                    const tx = await landWorks.connect(nonOwner)
+                        .rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, rentFee, rentReferrer.address, { value: rentFee });
+                    const receipt = await tx.wait();
+
+                    const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                    const end = start + maxPeriod;
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .to.emit(landWorks, 'UpdateRentConsumer')
+                        .withArgs(assetId, rentId, nonOwner.address)
+                        .to.emit(landWorks, 'UpdateAdapterConsumer')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
+                    // and:
+                    expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
+                    expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedListReferrerAmount);
+                    expect(await landWorks.referrerFee(rentReferrer.address, ADDRESS_ONE)).to.equal(expectedRentReferrerAmount);
+                    expect(await landWorks.referrerFee(nonOwner.address, ADDRESS_ONE)).to.equal(0);
+                    const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(assetRentFees).to.equal(expectedOwnerReward);
+                    // and:
+                    expect(await landWorks.protocolFeeFor(ADDRESS_ONE)).to.equal(expectedProtocolFees);
+                    // and:
+                    expect(rentAmount).to.equal(expectedOwnerReward + expectedTotalProtocolFees);
+                });
+
+                it('should rent successfully when metaverse registry referrer takes all even if referrers have percentages', async () => {
+                    // given:
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [10_000]);
+                    // and:
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
+                    const rentAmount = maxPeriod * pricePerSecond;
+                    const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 10_000);
+                    const expectedOwnerReward = rentAmount - protocolFees;
+
+                    // when:
+                    const [paymentToken, rentFee] = await landWorks.calculateRentFee(assetId, maxPeriod, rentReferrer.address);
+                    const tx = await landWorks.connect(nonOwner).rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, rentFee, rentReferrer.address, { value: rentFee });
+                    const receipt = await tx.wait();
+
+                    const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                    const end = start + maxPeriod;
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .to.emit(landWorks, 'UpdateRentConsumer')
+                        .withArgs(assetId, rentId, nonOwner.address)
+                        .to.emit(landWorks, 'UpdateAdapterConsumer')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
+                    // and:
+                    expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
+                    expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
+                    expect(await landWorks.referrerFee(rentReferrer.address, ADDRESS_ONE)).to.equal(0);
+                    expect(await landWorks.referrerFee(nonOwner.address, ADDRESS_ONE)).to.equal(0);
+                    const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(assetRentFees).to.equal(expectedOwnerReward);
+                    // and:
+                    expect(await landWorks.protocolFeeFor(ADDRESS_ONE)).to.equal(0);
+                });
+
+                it('should rent successfully when no protocol fees are left', async () => {
+                    // Metaverse Registry - 50%
+                    // List Referrer - 50%, Lister - 50%
+                    // Rent referrer - 50%, renter - 50%
+                    // given:
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [5_000]);
+                    // and:
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 5_000], [5_000, 5_000]);
+                    const rentAmount = maxPeriod * pricePerSecond;
+                    const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
+
+                    const listReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * 5_000) / 10_000);
+                    const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
+                    const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
+                    const expectedOwnerReward = rentAmount - protocolFees + expectedListerAmount;
+
+                    // when:
+                    const [paymentToken, rentFee] = await landWorks.calculateRentFee(assetId, maxPeriod, rentReferrer.address);
+                    const tx = await landWorks.connect(nonOwner).rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, rentFee, rentReferrer.address, { value: rentFee });
+                    const receipt = await tx.wait();
+
+                    const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                    const end = start + maxPeriod;
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .to.emit(landWorks, 'UpdateRentConsumer')
+                        .withArgs(assetId, rentId, nonOwner.address)
+                        .to.emit(landWorks, 'UpdateAdapterConsumer')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
+                    // and:
+                    expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
+                    expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedListReferrerAmount);
+                    expect(await landWorks.referrerFee(rentReferrer.address, ADDRESS_ONE)).to.equal(expectedRentReferrerAmount);
+                    expect(await landWorks.referrerFee(nonOwner.address, ADDRESS_ONE)).to.equal(0);
+                    const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(assetRentFees).to.equal(expectedOwnerReward);
+                    // and:
+                    expect(await landWorks.protocolFeeFor(ADDRESS_ONE)).to.equal(0);
+                });
+
+                it('should not accrue fees when to list referrer is set to 0', async () => {
+                    // Metaverse Registry - 50%
+                    // List Referrer - 0%, lister - 0%
+                    // Rent referrer - 50%, renter - 50%
+                    // given:
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [5_000]);
+                    // and:
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 5_000], [2_000, 5_000]);
+                    const rentAmount = maxPeriod * pricePerSecond;
+                    const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
+
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
+                    const expectedOwnerReward = rentAmount - protocolFees;
+                    const expectedProtocolFees = listAndRentReferrers - rentReferralAmount;
+
+                    // when:
+                    const [paymentToken, rentFee] = await landWorks.calculateRentFee(assetId, maxPeriod, rentReferrer.address);
+                    const tx = await landWorks.connect(nonOwner).rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, rentFee, rentReferrer.address, { value: rentFee });
+                    const receipt = await tx.wait();
+
+                    const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                    const end = start + maxPeriod;
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .to.emit(landWorks, 'UpdateRentConsumer')
+                        .withArgs(assetId, rentId, nonOwner.address)
+                        .to.emit(landWorks, 'UpdateAdapterConsumer')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
+                    // and:
+                    expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
+                    expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
+                    expect(await landWorks.referrerFee(rentReferrer.address, ADDRESS_ONE)).to.equal(expectedRentReferrerAmount);
+                    expect(await landWorks.referrerFee(nonOwner.address, ADDRESS_ONE)).to.equal(0);
+                    const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(assetRentFees).to.equal(expectedOwnerReward);
+                    // and:
+                    expect(await landWorks.protocolFeeFor(ADDRESS_ONE)).to.equal(expectedProtocolFees);
+                });
+
+                it('should successfully accrue all the protocol fees to list referrer if he matches rent and no metaverse registry referrer is found', async () => {
+                    // Metaverse Registry - 0%
+                    // List referrer - 50%, lister - 0%
+                    // Rent referrer == list refеrrer - 50%, renter - 0%
+                    // given:
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [0]);
+                    // and:
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 0], [0, 0]);
+                    const rentAmount = maxPeriod * pricePerSecond;
+                    const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
+
+                    const expectedlistReferralAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedOwnerReward = rentAmount - protocolFees;
+                    const expectedProtocolFees = protocolFees - expectedlistReferralAmount * 2; // potential leftovers
+
+                    // when:
+                    const [paymentToken, rentFee] = await landWorks.calculateRentFee(assetId, maxPeriod, listReferrer.address);
+                    const tx = await landWorks.connect(nonOwner).rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, rentFee, listReferrer.address, { value: rentFee });
+                    const receipt = await tx.wait();
+
+                    const start = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+                    const end = start + maxPeriod;
+
+                    // then:
+                    await expect(tx)
+                        .to.emit(landWorks, 'Rent')
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .to.emit(landWorks, 'AccrueReferralFee')
+                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .to.emit(landWorks, 'UpdateRentConsumer')
+                        .withArgs(assetId, rentId, nonOwner.address)
+                        .to.emit(landWorks, 'UpdateAdapterConsumer')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, nonOwner.address)
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, nonOwner.address, tokenID);
+                    // and:
+                    expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(0);
+                    expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedlistReferralAmount * 2);
+                    expect(await landWorks.referrerFee(nonOwner.address, ADDRESS_ONE)).to.equal(0);
+                    const assetRentFees = await landWorks.assetRentFeesFor(assetId, ADDRESS_ONE);
+                    expect(assetRentFees).to.equal(expectedOwnerReward);
+                    // and:
+                    expect(await landWorks.protocolFeeFor(ADDRESS_ONE)).to.equal(expectedProtocolFees);
+                });
+
+            });
         });
     });
 
