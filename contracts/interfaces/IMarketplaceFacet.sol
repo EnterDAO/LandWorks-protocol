@@ -35,6 +35,11 @@ interface IMarketplaceFacet {
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
     /// and mints an asset, representing the locked asset.
+    /// Listing with a referrer might lead to additional rewards upon rents.
+    /// Additional reward may vary depending on the referrer's requested portion for listers.
+    /// If the referrer is blacklisted after the listing,
+    /// listers will not receive additional rewards.
+    /// See {IReferralFacet-setMetaverseRegistryReferrers}, {IReferralFacet-setReferrers}.
     /// @param _metaverseId The id of the metaverse
     /// @param _metaverseRegistry The registry of the metaverse
     /// @param _metaverseAssetId The id from the metaverse registry

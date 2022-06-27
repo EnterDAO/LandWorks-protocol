@@ -8,6 +8,12 @@ interface IRentFacet is IRentable {
     /// @notice Rents an asset for a given period.
     /// Charges user for the rent upfront. Rent starts from the last rented timestamp
     /// or from the current timestamp of the transaction.
+    /// Protocol fee may be split into multiple referrals.
+    /// Discount from the initial rent amount may be found depending on the metaverse
+    /// registry and rent referrers.
+    /// See {IReferralFacet-setMetaverseRegistryReferrers}, {IReferralFacet-setReferrers}.
+    /// @dev Call {IRentFacet-calculateRentFee} to get the correct amount and payment token
+    /// required for the given period and referrer.
     /// @param _assetId The target asset
     /// @param _period The target rental period (in seconds)
     /// @param _maxRentStart The maximum rent start allowed for the given rent

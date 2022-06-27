@@ -32,30 +32,15 @@ interface IReferralFacet {
     /// @param _admin The address of the to-be-set admin
     function setReferralAdmin(address _admin) external;
 
-    /// @notice Sets an array of referrers
-    /// Used as referrers upon listings and rents.
-    /// Referrers accrue part of the protocol fees upon each asset rent.
-    /// @dev Referrers and percentages are followed by array index.
-    /// Percentages are in basis points.
-    /// Maximum `mainPercentage` is 5_000 (50%), as list and rent referrers
-    /// have equal split of the protocol fees.
-    /// 'secondaryPercentage` takes a percetange of the calculated `mainPercentage` fraction.
-    /// @param _referrers The to-be-set referrers
-    /// @param _mainPercentages The to-be-set main percentages for referrers
-    /// @param _secondaryPercentages The to-be-set secondary percentages for referrers
-    function setReferrers(
-        address[] memory _referrers,
-        uint16[] memory _mainPercentages,
-        uint16[] memory _secondaryPercentages
-    ) external;
-
     /// @notice Sets an array of metaverse registry referrers
     /// Adds a referrer to each metaverse registry.
     /// Accrues part of the protocol fees upon each asset rent, which is from the
-    /// metaverse registry.
+    /// given metaverse registry.
     /// @dev Metaverse registries, referrers & percentages are followed by array index.
     /// Percentages are in basis points.
     /// Maximum `percentage` is 10_000 (100%).
+    /// Setting the percentage to 0 will no longer accrue fees upon rents from metaverse
+    /// registries.
     /// @param _metaverseRegistries The target metaverse registries
     /// @param _referrers The to-be-set referrers for the metaverse registries
     /// @param _percentages The to-be-set referrer percentages for the metaverse registries
@@ -63,6 +48,34 @@ interface IReferralFacet {
         address[] memory _metaverseRegistries,
         address[] memory _referrers,
         uint16[] memory _percentages
+    ) external;
+
+    /// @notice Sets an array of referrers
+    /// Used as referrers upon listings and rents.
+    /// Referrers accrue part of the protocol fees upon each asset rent.
+    /// Refererrs may give portion of their part of the protocol fees
+    /// to listers/renters, which will serve as:
+    /// lister - additional reward upon each rent
+    /// renter - rent discount
+    /// Referrers can be blacklisted:
+    /// * past listings will no longer accrue part of the protocol fees.
+    /// * future listings/rents will no longer be allowed.
+    /// @dev Referrers and percentages are followed by array index.
+    /// Percentages are in basis points.
+    /// Maximum `mainPercentage` is 5_000 (50%), as list and rent referrers
+    /// have equal split of the protocol fees.
+    /// 'secondaryPercentage` takes a percetange of the calculated `mainPercentage` fraction.
+    /// Changing the percentages for a referrer will affect past listings and future listings/rents.
+    /// Setting `mainPercentage` to 0 (0%) blacklists the referrer, which does not allow future
+    /// listings and rents. All past listings with blacklisted referrer will no longer accrue
+    /// neither fees to the referrer, nor additional rewards to the lister.
+    /// @param _referrers The to-be-set referrers
+    /// @param _mainPercentages The to-be-set main percentages for referrers
+    /// @param _secondaryPercentages The to-be-set secondary percentages for referrers
+    function setReferrers(
+        address[] memory _referrers,
+        uint16[] memory _mainPercentages,
+        uint16[] memory _secondaryPercentages
     ) external;
 
     /// @notice Claims unclaimed referrer fees for a given payment token
