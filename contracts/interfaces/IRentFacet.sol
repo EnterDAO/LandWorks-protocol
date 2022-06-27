@@ -45,7 +45,7 @@ interface IRentFacet is IRentable {
     /// The renter itself might take percentage of the rent referral based on `secondaryPerceange`,
     /// which will serve as discount to the initial rent amount.
     /// @param _assetId The target asset
-    /// @param _period The targe rental period (in seconds)
+    /// @param _period The target rental period (in seconds)
     /// @param _referrer The address of the referrer
     /// @return paymentToken_ The target payment token
     /// @return amount_ The amount that has to be paid

@@ -64,7 +64,7 @@ contract RentFacet is IRentFacet {
     /// The renter itself might take percentage of the rent referral based on `secondaryPerceange`,
     /// which will serve as discount to the initial rent amount.
     /// @param _assetId The target asset
-    /// @param _period The targe rental period (in seconds)
+    /// @param _period The target rental period (in seconds)
     /// @param _referrer The address of the referrer
     /// @return paymentToken_ The target payment token
     /// @return amount_ The amount that has to be paid
@@ -77,6 +77,11 @@ contract RentFacet is IRentFacet {
 
         LibMarketplace.Asset memory asset = LibMarketplace.assetAt(_assetId);
         uint256 amount = _period * asset.pricePerSecond;
+
+        if (_referrer == address(0)) {
+            return (asset.paymentToken, amount);
+        }
+
         uint256 protocolFee = (amount *
             LibFee.feeStorage().feePercentages[asset.paymentToken]) /
             LibFee.FEE_PRECISION;
@@ -90,20 +95,16 @@ contract RentFacet is IRentFacet {
             10_000;
         uint256 feesLeft = protocolFee - metaverseReferralAmount;
 
-        if (_referrer != address(0)) {
-            LibReferral.ReferrerPercentage memory rp = LibReferral
-                .referralStorage()
-                .referrerPercentages[_referrer];
+        LibReferral.ReferrerPercentage memory rp = LibReferral
+            .referralStorage()
+            .referrerPercentages[_referrer];
 
-            require(rp.mainPercentage > 0, "_referrer not whitelisted");
+        require(rp.mainPercentage > 0, "_referrer not whitelisted");
 
-            uint256 rentReferrerFee = (feesLeft * rp.mainPercentage) / 10_000;
+        uint256 rentReferrerFee = (feesLeft * rp.mainPercentage) / 10_000;
 
-            uint256 renterDiscount = (rentReferrerFee *
-                rp.secondaryPercentage) / 10_000;
-            return (asset.paymentToken, amount - renterDiscount);
-        }
-
-        return (asset.paymentToken, amount);
+        uint256 renterDiscount = (rentReferrerFee * rp.secondaryPercentage) /
+            10_000;
+        return (asset.paymentToken, amount - renterDiscount);
     }
 }
