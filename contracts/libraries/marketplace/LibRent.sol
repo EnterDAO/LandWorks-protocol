@@ -38,8 +38,11 @@ library LibRent {
     }
 
     struct RentDistribution {
-        uint256 rentFee;
-        uint256 rentReward;
+        // The cost, which the renter has to send/approve
+        uint256 renterCost;
+        // The reward accrued to the lister
+        uint256 listerReward;
+        // The total protocol fee
         uint256 protocolFee;
     }
 
@@ -121,9 +124,9 @@ library LibRent {
             rentParams._referrer
         );
 
-        require(rentParams._amount == rds.rentFee, "invalid _amount");
+        require(rentParams._amount == rds.renterCost, "invalid _amount");
         if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
-            require(msg.value == rds.rentFee, "invalid msg.value");
+            require(msg.value == rds.renterCost, "invalid msg.value");
         } else {
             require(msg.value == 0, "invalid token msg.value");
         }
@@ -140,7 +143,7 @@ library LibRent {
                 asset.paymentToken,
                 msg.sender,
                 address(this),
-                rds.rentFee
+                rds.renterCost
             );
         }
 
@@ -151,7 +154,7 @@ library LibRent {
             rentStart,
             rentEnd,
             asset.paymentToken,
-            rds.rentReward,
+            rds.listerReward,
             rds.protocolFee
         );
 
@@ -171,8 +174,8 @@ library LibRent {
         rds.protocolFee =
             (rentPayment * fs.feePercentages[token]) /
             LibFee.FEE_PRECISION;
-        rds.rentReward = rentPayment - rds.protocolFee;
-        rds.rentFee = rentPayment;
+        rds.listerReward = rentPayment - rds.protocolFee;
+        rds.renterCost = rentPayment;
 
         uint256 protocolFeeLeft = rds.protocolFee;
         {
@@ -206,7 +209,7 @@ library LibRent {
                         uint256 listerFee = (totalReferralFee *
                             rp.secondaryPercentage) / 10_000;
                         rds.protocolFee -= listerFee;
-                        rds.rentReward += listerFee;
+                        rds.listerReward += listerFee;
 
                         uint256 referrerFee = totalReferralFee - listerFee;
 
@@ -227,7 +230,7 @@ library LibRent {
 
                     uint256 renterDiscount = (totalReferralFee *
                         rp.secondaryPercentage) / 10_000;
-                    rds.rentFee -= renterDiscount;
+                    rds.renterCost -= renterDiscount;
 
                     uint256 referrerFee = totalReferralFee - renterDiscount;
                     rs.referrerFees[rentReferrer][token] += referrerFee;
@@ -237,7 +240,7 @@ library LibRent {
             }
         }
 
-        fs.assetRentFees[assetId][token] += rds.rentReward;
+        fs.assetRentFees[assetId][token] += rds.listerReward;
         fs.protocolFees[token] += protocolFeeLeft;
 
         return rds;
