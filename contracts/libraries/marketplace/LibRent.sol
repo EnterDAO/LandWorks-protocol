@@ -26,7 +26,12 @@ library LibRent {
         uint256 _rent,
         uint256 _protocolFee
     );
-    event AccrueReferralFee(address indexed _referrer, uint256 _fee);
+    event AccrueReferralFee(
+        uint256 _assetId,
+        uint256 _rentId,
+        address indexed _referrer,
+        uint256 _fee
+    );
 
     struct RentParams {
         uint256 _assetId;
@@ -35,6 +40,15 @@ library LibRent {
         address _paymentToken;
         uint256 _amount;
         address _referrer;
+    }
+
+    struct DistributionParams {
+        uint256 assetId;
+        uint256 rentId;
+        address metaverseRegistry;
+        address paymentToken;
+        uint256 rentPayment;
+        address rentReferrer;
     }
 
     struct RentDistribution {
@@ -116,12 +130,22 @@ library LibRent {
         );
 
         uint256 rentPayment = rentParams._period * asset.pricePerSecond;
-        RentDistribution memory rds = distributeFees(
+
+        uint256 rentId = LibMarketplace.addRent(
             rentParams._assetId,
-            asset.metaverseRegistry,
-            asset.paymentToken,
-            rentPayment,
-            rentParams._referrer
+            msg.sender,
+            rentStart,
+            rentEnd
+        );
+        RentDistribution memory rds = distributeFees(
+            DistributionParams({
+                assetId: rentParams._assetId,
+                rentId: rentId,
+                metaverseRegistry: asset.metaverseRegistry,
+                paymentToken: asset.paymentToken,
+                rentPayment: rentPayment,
+                rentReferrer: rentParams._referrer
+            })
         );
 
         require(rentParams._amount == rds.renterCost, "invalid _amount");
@@ -130,13 +154,6 @@ library LibRent {
         } else {
             require(msg.value == 0, "invalid token msg.value");
         }
-
-        uint256 rentId = LibMarketplace.addRent(
-            rentParams._assetId,
-            msg.sender,
-            rentStart,
-            rentEnd
-        );
 
         if (asset.paymentToken != ETHEREUM_PAYMENT_TOKEN) {
             LibTransfer.safeTransferFrom(
@@ -161,42 +178,45 @@ library LibRent {
         return (rentId, rentStartsNow);
     }
 
-    function distributeFees(
-        uint256 assetId,
-        address metaverseRegistry,
-        address token,
-        uint256 rentPayment,
-        address rentReferrer
-    ) internal returns (RentDistribution memory rds) {
+    function distributeFees(DistributionParams memory params)
+        internal
+        returns (RentDistribution memory rds)
+    {
         LibFee.FeeStorage storage fs = LibFee.feeStorage();
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
 
         rds.protocolFee =
-            (rentPayment * fs.feePercentages[token]) /
+            (params.rentPayment * fs.feePercentages[params.paymentToken]) /
             LibFee.FEE_PRECISION;
-        rds.listerReward = rentPayment - rds.protocolFee;
-        rds.renterCost = rentPayment;
+        rds.listerReward = params.rentPayment - rds.protocolFee;
+        rds.renterCost = params.rentPayment;
 
-        uint256 protocolFeeLeft = rds.protocolFee;
         {
             LibReferral.MetaverseRegistryReferrer memory mrr = rs
-                .metaverseRegistryReferrers[metaverseRegistry];
+                .metaverseRegistryReferrers[params.metaverseRegistry];
 
             if (mrr.percentage > 0) {
-                uint256 metaverseReferralAmount = (protocolFeeLeft *
+                uint256 metaverseReferralAmount = (rds.protocolFee *
                     mrr.percentage) / 10_000;
-                rs.referrerFees[mrr.referrer][token] += metaverseReferralAmount;
-                protocolFeeLeft -= metaverseReferralAmount;
+                rs.referrerFees[mrr.referrer][
+                    params.paymentToken
+                ] += metaverseReferralAmount;
+                rds.protocolFee -= metaverseReferralAmount;
 
-                emit AccrueReferralFee(mrr.referrer, metaverseReferralAmount);
+                emit AccrueReferralFee(
+                    params.assetId,
+                    params.rentId,
+                    mrr.referrer,
+                    metaverseReferralAmount
+                );
             }
         }
 
-        uint256 referralFeesLeft = protocolFeeLeft;
+        uint256 referralFeesLeft = rds.protocolFee;
 
         if (referralFeesLeft > 0) {
             {
-                address listReferrer = rs.listReferrer[assetId];
+                address listReferrer = rs.listReferrer[params.assetId];
                 if (listReferrer != address(0)) {
                     LibReferral.ReferrerPercentage memory rp = rs
                         .referrerPercentages[listReferrer];
@@ -204,44 +224,58 @@ library LibRent {
                     if (rp.mainPercentage > 0) {
                         uint256 totalReferralFee = (referralFeesLeft *
                             rp.mainPercentage) / 10_000;
-                        protocolFeeLeft -= totalReferralFee;
+                        rds.protocolFee -= totalReferralFee;
 
                         uint256 listerFee = (totalReferralFee *
                             rp.secondaryPercentage) / 10_000;
-                        rds.protocolFee -= listerFee;
                         rds.listerReward += listerFee;
 
                         uint256 referrerFee = totalReferralFee - listerFee;
 
-                        rs.referrerFees[listReferrer][token] += referrerFee;
-                        emit AccrueReferralFee(listReferrer, referrerFee);
+                        rs.referrerFees[listReferrer][
+                            params.paymentToken
+                        ] += referrerFee;
+                        emit AccrueReferralFee(
+                            params.assetId,
+                            params.rentId,
+                            listReferrer,
+                            referrerFee
+                        );
                     }
                 }
             }
 
             {
-                if (rentReferrer != address(0)) {
+                if (params.rentReferrer != address(0)) {
                     LibReferral.ReferrerPercentage memory rp = rs
-                        .referrerPercentages[rentReferrer];
+                        .referrerPercentages[params.rentReferrer];
 
                     uint256 totalReferralFee = (referralFeesLeft *
                         rp.mainPercentage) / 10_000;
-                    protocolFeeLeft -= totalReferralFee;
+                    rds.protocolFee -= totalReferralFee;
 
                     uint256 renterDiscount = (totalReferralFee *
                         rp.secondaryPercentage) / 10_000;
                     rds.renterCost -= renterDiscount;
 
                     uint256 referrerFee = totalReferralFee - renterDiscount;
-                    rs.referrerFees[rentReferrer][token] += referrerFee;
+                    rs.referrerFees[params.rentReferrer][
+                        params.paymentToken
+                    ] += referrerFee;
 
-                    emit AccrueReferralFee(rentReferrer, referrerFee);
+                    emit AccrueReferralFee(
+                        params.assetId,
+                        params.rentId,
+                        params.rentReferrer,
+                        referrerFee
+                    );
                 }
             }
         }
 
-        fs.assetRentFees[assetId][token] += rds.listerReward;
-        fs.protocolFees[token] += protocolFeeLeft;
+        fs.assetRentFees[params.assetId][params.paymentToken] += rds
+            .listerReward;
+        fs.protocolFees[params.paymentToken] += rds.protocolFee;
 
         return rds;
     }

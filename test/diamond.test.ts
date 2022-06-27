@@ -5191,7 +5191,7 @@ describe('LandWorks', function () {
             });
         });
 
-        describe('rent', async () => {
+        describe('rents', async () => {
             beforeEach(async () => {
                 await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
                 // and:
@@ -5292,13 +5292,13 @@ describe('LandWorks', function () {
                     // then:
                     await expect(tx)
                         .to.emit(landWorks, 'Rent')
-                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedTotalProtocolFees)
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(rentReferrer.address, expectedRentReferrerAmount);
+                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedListReferrerAmount);
@@ -5333,9 +5333,9 @@ describe('LandWorks', function () {
                     // then:
                     await expect(tx)
                         .to.emit(landWorks, 'Rent')
-                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, protocolFees)
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(consumer.address, expectedMetaverseRegistryReferrerAmount);
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
@@ -5380,13 +5380,13 @@ describe('LandWorks', function () {
                     // then:
                     await expect(tx)
                         .to.emit(landWorks, 'Rent')
-                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedTotalProtocolFees)
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(rentReferrer.address, expectedRentReferrerAmount);
+                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedListReferrerAmount);
@@ -5428,11 +5428,11 @@ describe('LandWorks', function () {
                     // then:
                     await expect(tx)
                         .to.emit(landWorks, 'Rent')
-                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, protocolFees)
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(rentReferrer.address, expectedRentReferrerAmount);
+                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
@@ -5470,11 +5470,11 @@ describe('LandWorks', function () {
                     // then:
                     await expect(tx)
                         .to.emit(landWorks, 'Rent')
-                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, protocolFees)
+                        .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(listReferrer.address, expectedlistReferralAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(listReferrer.address, expectedlistReferralAmount);
+                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(0);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedlistReferralAmount * 2);
