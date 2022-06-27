@@ -82,6 +82,11 @@ contract RentFacet is IRentFacet {
             return (asset.paymentToken, amount);
         }
 
+        LibReferral.ReferrerPercentage memory rp = LibReferral
+            .referralStorage()
+            .referrerPercentages[_referrer];
+        require(rp.mainPercentage > 0, "_referrer not whitelisted");
+
         uint256 protocolFee = (amount *
             LibFee.feeStorage().feePercentages[asset.paymentToken]) /
             LibFee.FEE_PRECISION;
@@ -89,20 +94,12 @@ contract RentFacet is IRentFacet {
         LibReferral.MetaverseRegistryReferrer memory mrr = LibReferral
             .referralStorage()
             .metaverseRegistryReferrers[asset.metaverseRegistry];
-
-        // take out metaverse registry fee
         uint256 metaverseReferralAmount = (protocolFee * mrr.percentage) /
             10_000;
+
         uint256 feesLeft = protocolFee - metaverseReferralAmount;
 
-        LibReferral.ReferrerPercentage memory rp = LibReferral
-            .referralStorage()
-            .referrerPercentages[_referrer];
-
-        require(rp.mainPercentage > 0, "_referrer not whitelisted");
-
         uint256 rentReferrerFee = (feesLeft * rp.mainPercentage) / 10_000;
-
         uint256 renterDiscount = (rentReferrerFee * rp.secondaryPercentage) /
             10_000;
         return (asset.paymentToken, amount - renterDiscount);
