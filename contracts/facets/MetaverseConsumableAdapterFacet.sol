@@ -75,13 +75,15 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     /// consumable adapter once the rent is active
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
+    /// @param _referrer The target referrer
     function rentWithConsumer(
         uint256 _assetId,
         uint256 _period,
         uint256 _maxRentStart,
         address _consumer,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referrer
     ) public payable {
         require(_consumer != address(0), "_consumer must not be 0x0");
 
@@ -91,7 +93,8 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
                 _period: _period,
                 _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
-                _amount: _amount
+                _amount: _amount,
+                _referrer: _referrer
             })
         );
 

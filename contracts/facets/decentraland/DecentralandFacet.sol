@@ -15,13 +15,15 @@ contract DecentralandFacet is IDecentralandFacet {
     /// @param _operator The target operator, which will be set as operator once the rent is active
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
+    /// @param _referrer The target referrer
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
         uint256 _maxRentStart,
         address _operator,
         address _paymentToken,
-        uint256 _amount
+        uint256 _amount,
+        address _referrer
     ) external payable {
         require(_operator != address(0), "_operator must not be 0x0");
 
@@ -31,7 +33,8 @@ contract DecentralandFacet is IDecentralandFacet {
                 _period: _period,
                 _maxRentStart: _maxRentStart,
                 _paymentToken: _paymentToken,
-                _amount: _amount
+                _amount: _amount,
+                _referrer: _referrer
             })
         );
         LibDecentraland.setOperator(_assetId, rentId, _operator);

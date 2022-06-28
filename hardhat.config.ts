@@ -1,8 +1,8 @@
 import { task } from 'hardhat/config';
+import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-abi-exporter';
-import 'hardhat-typechain';
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
 import * as config from './config';
