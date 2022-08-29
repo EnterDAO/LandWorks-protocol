@@ -4,9 +4,9 @@ pragma solidity 0.8.10;
 import "../../interfaces/decentraland/IDecentralandFacet.sol";
 import "../../interfaces/decentraland/IDecentralandRegistry.sol";
 import "../../libraries/LibOwnership.sol";
-import "../../libraries/marketplace/LibRent.sol";
 import "../../libraries/marketplace/LibDecentraland.sol";
 import "../../libraries/marketplace/LibList.sol";
+import "../../libraries/marketplace/LibRent.sol";
 
 contract DecentralandFacet is IDecentralandFacet {
     /// @notice Provides asset of the given metaverse registry for rental.
