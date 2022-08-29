@@ -64,6 +64,16 @@ interface IDecentralandFacet is IRentable {
     function updateAdministrativeOperator(address _administrativeOperator)
         external;
 
+    /// @notice Clears the operators of Decentraland LANDs, which are part of a Decentraland Estate.
+    /// @dev LANDs' operators, which are part of an Estate, are not cleared upon Estate transfer.
+    /// The function's goal is to have the possibility to clear the operators of LANDs, which have been set
+    /// before the estate has been listed in LandWorks, otherwise whenever someone rents the estate, there might
+    /// be other operators, who can override the renter's scene.
+    function clearEstateLANDOperators(
+        uint256[] memory _assetIds,
+        uint256[][] memory _landIds
+    ) external;
+
     /// @notice Gets the administrative operator
     function administrativeOperator() external view returns (address);
 
