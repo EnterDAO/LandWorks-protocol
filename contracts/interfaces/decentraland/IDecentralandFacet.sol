@@ -69,6 +69,8 @@ interface IDecentralandFacet is IRentable {
     /// The function's goal is to have the possibility to clear the operators of LANDs, which have been set
     /// before the estate has been listed in LandWorks, otherwise whenever someone rents the estate, there might
     /// be other operators, who can override the renter's scene.
+    /// @param _assetIds - The list of LandWorks asset ids.
+    /// @param _landIds - The list of landIds for each asset.
     function clearEstateLANDOperators(
         uint256[] memory _assetIds,
         uint256[][] memory _landIds
