@@ -14,8 +14,6 @@ import "../marketplace/LibMarketplace.sol";
 library LibRent {
     using SafeERC20 for IERC20;
 
-    address constant ETHEREUM_PAYMENT_TOKEN = address(1);
-
     event Rent(
         uint256 indexed _assetId,
         uint256 _rentId,
@@ -150,13 +148,13 @@ library LibRent {
         );
 
         require(rentParams._amount == rds.renterCost, "invalid _amount");
-        if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
+        if (asset.paymentToken == LibTransfer.ETHEREUM_PAYMENT_TOKEN) {
             require(msg.value == rds.renterCost, "invalid msg.value");
         } else {
             require(msg.value == 0, "invalid token msg.value");
         }
 
-        if (asset.paymentToken != ETHEREUM_PAYMENT_TOKEN) {
+        if (asset.paymentToken != LibTransfer.ETHEREUM_PAYMENT_TOKEN) {
             LibTransfer.safeTransferFrom(
                 asset.paymentToken,
                 msg.sender,
