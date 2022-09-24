@@ -4065,7 +4065,7 @@ describe('LandWorks', function () {
 
                 it('should list successfully', async () => {
                     // when:
-                    await landWorks.listAndSetAdminConsumer(metaverseID, mockERC721Registry.address, secondMetaverseTokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero);
+                    await landWorks.listWithConsumableAdapter(metaverseID, mockERC721Registry.address, secondMetaverseTokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero);
 
                     // then:
                     expect(await mockERC721Registry.ownerOf(secondMetaverseTokenID)).to.equal(landWorks.address);
@@ -4092,7 +4092,7 @@ describe('LandWorks', function () {
                 it('should emit event with args', async () => {
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4121,7 +4121,7 @@ describe('LandWorks', function () {
 
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4162,7 +4162,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_metaverseRegistry must not be 0x0';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             ethers.constants.AddressZero,
                             secondMetaverseTokenID,
@@ -4180,7 +4180,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_minPeriod must not be 0';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4198,7 +4198,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_maxPeriod must not be 0';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4216,7 +4216,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_minPeriod more than _maxPeriod';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4234,7 +4234,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_maxPeriod more than _maxFutureTime';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4252,7 +4252,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = '_registry not supported';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             artificialRegistry.address,
                             secondMetaverseTokenID,
@@ -4270,7 +4270,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = 'payment type not supported';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4289,7 +4289,7 @@ describe('LandWorks', function () {
                     const expectedRevertMessage = 'ERC721: operator query for nonexistent token';
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             invalidTokenId,
@@ -4309,7 +4309,7 @@ describe('LandWorks', function () {
 
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             artificialRegistry.address,
                             secondMetaverseTokenID,
@@ -4331,7 +4331,7 @@ describe('LandWorks', function () {
 
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4351,7 +4351,7 @@ describe('LandWorks', function () {
                     // when:
                     await expect(landWorks
                         .connect(administrativeConsumer)
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4370,7 +4370,7 @@ describe('LandWorks', function () {
 
                     // when:
                     await expect(landWorks
-                        .listAndSetAdminConsumer(
+                        .listWithConsumableAdapter(
                             metaverseID,
                             mockERC721Registry.address,
                             secondMetaverseTokenID,
@@ -4387,11 +4387,11 @@ describe('LandWorks', function () {
                 it('withdrawing and listing again should not get the old token id for the latest asset', async () => {
                     const newlyGeneratedTokenId = 2;
                     // given:
-                    await landWorks.listAndSetAdminConsumer(metaverseID, mockERC721Registry.address, secondMetaverseTokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero);
+                    await landWorks.listWithConsumableAdapter(metaverseID, mockERC721Registry.address, secondMetaverseTokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero);
                     await landWorks.delist(assetId);
 
                     // when:
-                    await landWorks.listAndSetAdminConsumer(metaverseID, mockERC721Registry.address, secondMetaverseTokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero);
+                    await landWorks.listWithConsumableAdapter(metaverseID, mockERC721Registry.address, secondMetaverseTokenID, minPeriod, maxPeriod, maxFutureTime, ADDRESS_ONE, pricePerSecond, ethers.constants.AddressZero);
 
                     // then:
                     await expect(landWorks.ownerOf(assetId)).to.be.revertedWith('ERC721: owner query for nonexistent token');

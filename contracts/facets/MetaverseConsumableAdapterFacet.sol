@@ -34,7 +34,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     /// @param _pricePerSecond The price for rental per second
     /// @param _referrer The target referrer
     /// @return The newly created asset id.
-    function listAndSetAdminConsumer(
+    function listWithConsumableAdapter(
         uint256 _metaverseId,
         address _metaverseRegistry,
         uint256 _metaverseAssetId,
