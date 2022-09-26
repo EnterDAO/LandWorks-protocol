@@ -17,14 +17,14 @@ interface IReferralFacet {
     /// @notice Emitted once a referrer has been updated
     event SetReferrer(
         address indexed _referrer,
-        uint16 _mainPercentage,
-        uint16 _secondaryPercentage
+        uint24 _mainPercentage,
+        uint24 _secondaryPercentage
     );
     /// @notice Emitted once a metaverse registry referrer has been updated
     event SetMetaverseRegistryReferrer(
         address indexed _metaverseRegistry,
         address indexed _referrer,
-        uint16 _percentage
+        uint24 _percentage
     );
 
     /// @notice Sets a referral admin
@@ -37,8 +37,7 @@ interface IReferralFacet {
     /// Accrues part of the protocol fees upon each asset rent, which is from the
     /// given metaverse registry.
     /// @dev Metaverse registries, referrers & percentages are followed by array index.
-    /// Percentages are in basis points.
-    /// Maximum `percentage` is 10_000 (100%).
+    /// Maximum `percentage` is 100_000 (100%).
     /// Setting the percentage to 0 will no longer accrue fees upon rents from metaverse
     /// registries.
     /// @param _metaverseRegistries The target metaverse registries
@@ -47,7 +46,7 @@ interface IReferralFacet {
     function setMetaverseRegistryReferrers(
         address[] memory _metaverseRegistries,
         address[] memory _referrers,
-        uint16[] memory _percentages
+        uint24[] memory _percentages
     ) external;
 
     /// @notice Sets an array of referrers
@@ -61,8 +60,7 @@ interface IReferralFacet {
     /// * past listings will no longer accrue part of the protocol fees.
     /// * future listings/rents will no longer be allowed.
     /// @dev Referrers and percentages are followed by array index.
-    /// Percentages are in basis points.
-    /// Maximum `mainPercentage` is 5_000 (50%), as list and rent referrers
+    /// Maximum `mainPercentage` is 50_000 (50%), as list and rent referrers
     /// have equal split of the protocol fees.
     /// 'secondaryPercentage` takes a percetange of the calculated `mainPercentage` fraction.
     /// Changing the percentages for a referrer will affect past listings and future listings/rents.
@@ -74,8 +72,8 @@ interface IReferralFacet {
     /// @param _secondaryPercentages The to-be-set secondary percentages for referrers
     function setReferrers(
         address[] memory _referrers,
-        uint16[] memory _mainPercentages,
-        uint16[] memory _secondaryPercentages
+        uint24[] memory _mainPercentages,
+        uint24[] memory _secondaryPercentages
     ) external;
 
     /// @notice Claims unclaimed referrer fees for a given payment token

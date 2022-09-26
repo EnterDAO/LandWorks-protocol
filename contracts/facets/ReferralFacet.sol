@@ -5,6 +5,7 @@ import "../interfaces/IReferralFacet.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibReferral.sol";
 import "../libraries/LibTransfer.sol";
+import "../libraries/LibFee.sol";
 
 contract ReferralFacet is IReferralFacet {
     /// @notice Sets a referral admin
@@ -23,8 +24,7 @@ contract ReferralFacet is IReferralFacet {
     /// Accrues part of the protocol fees upon each asset rent, which is from the
     /// given metaverse registry.
     /// @dev Metaverse registries, referrers & percentages are followed by array index.
-    /// Percentages are in basis points.
-    /// Maximum `percentage` is 10_000 (100%).
+    /// Maximum `percentage` is 100_000 (100%).
     /// Setting the percentage to 0 will no longer accrue fees upon rents from metaverse
     /// registries.
     /// @param _metaverseRegistries The target metaverse registries
@@ -33,7 +33,7 @@ contract ReferralFacet is IReferralFacet {
     function setMetaverseRegistryReferrers(
         address[] memory _metaverseRegistries,
         address[] memory _referrers,
-        uint16[] memory _percentages
+        uint24[] memory _percentages
     ) external {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
         require(
@@ -48,7 +48,10 @@ contract ReferralFacet is IReferralFacet {
                 "_metaverseRegistry cannot be 0x0"
             );
             require(_referrers[i] != address(0), "_referrer cannot be 0x0");
-            require(_percentages[i] <= 10_000, "_percentage cannot exceed 100");
+            require(
+                _percentages[i] <= LibFee.FEE_PRECISION,
+                "_percentage cannot exceed 100"
+            );
 
             rs.metaverseRegistryReferrers[_metaverseRegistries[i]] = LibReferral
                 .MetaverseRegistryReferrer({
@@ -74,8 +77,7 @@ contract ReferralFacet is IReferralFacet {
     /// * past listings will no longer accrue part of the protocol fees.
     /// * future listings/rents will no longer be allowed.
     /// @dev Referrers and percentages are followed by array index.
-    /// Percentages are in basis points.
-    /// Maximum `mainPercentage` is 5_000 (50%), as list and rent referrers
+    /// Maximum `mainPercentage` is 50_000 (50%), as list and rent referrers
     /// have equal split of the protocol fees.
     /// 'secondaryPercentage` takes a percetange of the calculated `mainPercentage` fraction.
     /// Changing the percentages for a referrer will affect past listings and future listings/rents.
@@ -87,8 +89,8 @@ contract ReferralFacet is IReferralFacet {
     /// @param _secondaryPercentages The to-be-set secondary percentages for referrers
     function setReferrers(
         address[] memory _referrers,
-        uint16[] memory _mainPercentages,
-        uint16[] memory _secondaryPercentages
+        uint24[] memory _mainPercentages,
+        uint24[] memory _secondaryPercentages
     ) external {
         LibReferral.ReferralStorage storage rs = LibReferral.referralStorage();
         require(
@@ -100,11 +102,11 @@ contract ReferralFacet is IReferralFacet {
         for (uint256 i = 0; i < _referrers.length; i++) {
             require(_referrers[i] != address(0), "_referrer cannot be 0x0");
             require(
-                _mainPercentages[i] <= 5_000,
+                _mainPercentages[i] <= (LibFee.FEE_PRECISION / 2),
                 "_percentage cannot exceed 50"
             );
             require(
-                _secondaryPercentages[i] <= 10_000,
+                _secondaryPercentages[i] <= LibFee.FEE_PRECISION,
                 "_secondaryPercentage cannot exceed 100"
             );
 
