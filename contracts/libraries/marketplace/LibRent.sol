@@ -221,16 +221,17 @@ library LibRent {
                         .referrerPercentages[listReferrer];
 
                     if (rp.mainPercentage > 0) {
-                        uint256 totalReferralFee = (referralFeesLeft *
-                            rp.mainPercentage) / LibFee.FEE_PRECISION;
-                        rds.protocolFee -= totalReferralFee;
+                        uint256 referrerFee = (referralFeesLeft *
+                            (LibFee.FEE_PRECISION - rp.secondaryPercentage) *
+                            rp.mainPercentage) /
+                            (LibFee.FEE_PRECISION * LibFee.FEE_PRECISION);
 
-                        uint256 listerFee = (totalReferralFee *
-                            rp.secondaryPercentage) / LibFee.FEE_PRECISION;
+                        uint256 listerFee = (referralFeesLeft *
+                            rp.mainPercentage *
+                            rp.secondaryPercentage) /
+                            (LibFee.FEE_PRECISION * LibFee.FEE_PRECISION);
+                        rds.protocolFee -= (referrerFee + listerFee);
                         rds.listerReward += listerFee;
-
-                        uint256 referrerFee = totalReferralFee - listerFee;
-
                         rs.referrerFees[listReferrer][
                             params.paymentToken
                         ] += referrerFee;
@@ -249,15 +250,18 @@ library LibRent {
                     LibReferral.ReferrerPercentage memory rp = rs
                         .referrerPercentages[params.rentReferrer];
 
-                    uint256 totalReferralFee = (referralFeesLeft *
-                        rp.mainPercentage) / LibFee.FEE_PRECISION;
-                    rds.protocolFee -= totalReferralFee;
+                    uint256 referrerFee = (referralFeesLeft *
+                        (LibFee.FEE_PRECISION - rp.secondaryPercentage) *
+                        rp.mainPercentage) /
+                        (LibFee.FEE_PRECISION * LibFee.FEE_PRECISION);
 
-                    uint256 renterDiscount = (totalReferralFee *
-                        rp.secondaryPercentage) / LibFee.FEE_PRECISION;
+                    uint256 renterDiscount = (referralFeesLeft *
+                        rp.mainPercentage *
+                        rp.secondaryPercentage) /
+                        (LibFee.FEE_PRECISION * LibFee.FEE_PRECISION);
+                    rds.protocolFee -= (referrerFee + renterDiscount);
                     rds.renterCost -= renterDiscount;
 
-                    uint256 referrerFee = totalReferralFee - renterDiscount;
                     rs.referrerFees[params.rentReferrer][
                         params.paymentToken
                     ] += referrerFee;
