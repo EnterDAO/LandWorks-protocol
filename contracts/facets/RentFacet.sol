@@ -6,6 +6,7 @@ import "../interfaces/IRentFacet.sol";
 import "../libraries/LibERC721.sol";
 import "../libraries/LibTransfer.sol";
 import "../libraries/LibOwnership.sol";
+import "../libraries/LibFee.sol";
 import "../libraries/marketplace/LibRent.sol";
 
 contract RentFacet is IRentFacet {
@@ -101,13 +102,14 @@ contract RentFacet is IRentFacet {
             .referralStorage()
             .metaverseRegistryReferrers[asset.metaverseRegistry];
         uint256 metaverseReferralAmount = (protocolFee * mrr.percentage) /
-            10_000;
+            LibFee.FEE_PRECISION;
 
         uint256 feesLeft = protocolFee - metaverseReferralAmount;
 
-        uint256 rentReferrerFee = (feesLeft * rp.mainPercentage) / 10_000;
+        uint256 rentReferrerFee = (feesLeft * rp.mainPercentage) /
+            LibFee.FEE_PRECISION;
         uint256 renterDiscount = (rentReferrerFee * rp.secondaryPercentage) /
-            10_000;
+            LibFee.FEE_PRECISION;
         return (asset.paymentToken, amount - renterDiscount);
     }
 }

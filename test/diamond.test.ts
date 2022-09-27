@@ -5444,8 +5444,8 @@ describe('LandWorks', function () {
         const pricePerSecond = 1337;
         const value = minPeriod * pricePerSecond;
         const expectedProtocolFee = Math.floor((value * FEE_PERCENTAGE) / FEE_PRECISION);
-        const listMainPercentage = 5_000, listSecondaryPercentage = 2_000;
-        const rentMainPercentage = 3_000, rentSecondaryPercentage = 4_000;
+        const listMainPercentage = 50_000, listSecondaryPercentage = 20_000;
+        const rentMainPercentage = 30_000, rentSecondaryPercentage = 40_000;
         const rentId = 1;
 
         beforeEach(async () => {
@@ -5663,10 +5663,10 @@ describe('LandWorks', function () {
                 // given:
                 const expectedRevertMessage = '_percentage cannot exceed 50';
                 // when:
-                await expect(landWorks.setReferrers([listReferrer.address], [5_001], [10_000]))
+                await expect(landWorks.setReferrers([listReferrer.address], [50_001], [100_000]))
                     .to.be.revertedWith(expectedRevertMessage);
                 // and:
-                await expect(landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 5_001], [10_000, 0]))
+                await expect(landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 50_001], [100_000, 0]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
@@ -5674,24 +5674,24 @@ describe('LandWorks', function () {
                 // given:
                 const expectedRevertMessage = '_secondaryPercentage cannot exceed 100';
                 // when:
-                await expect(landWorks.connect(nonOwner).setReferrers([listReferrer.address], [3_000], [10_001]))
+                await expect(landWorks.connect(nonOwner).setReferrers([listReferrer.address], [30_000], [100_001]))
                     .to.be.revertedWith(expectedRevertMessage);
                 // and:
-                await expect(landWorks.connect(nonOwner).setReferrers([listReferrer.address, rentReferrer.address], [5_000, 5_000], [3_000, 10_001]))
+                await expect(landWorks.connect(nonOwner).setReferrers([listReferrer.address, rentReferrer.address], [50_000, 50_000], [30_000, 100_001]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when referrer is 0x0', async () => {
                 const expectedRevertMessage = '_referrer cannot be 0x0';
                 // when:
-                await expect(landWorks.setReferrers([ethers.constants.AddressZero], [3_000], [3_000]))
+                await expect(landWorks.setReferrers([ethers.constants.AddressZero], [30_000], [30_000]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when caller is not owner, nor referral admin', async () => {
                 const expectedRevertMessage = 'caller is neither admin, nor owner';
                 // when:
-                await expect(landWorks.connect(consumer).setReferrers([nonOwner.address], [3_000], [3_000]))
+                await expect(landWorks.connect(consumer).setReferrers([nonOwner.address], [30_000], [30_000]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
@@ -5768,34 +5768,34 @@ describe('LandWorks', function () {
                 // given:
                 const expectedRevertMessage = '_percentage cannot exceed 100';
                 // when:
-                await expect(landWorks.connect(nonOwner).setMetaverseRegistryReferrers([mockERC721Registry.address], [listReferrer.address], [10_001]))
+                await expect(landWorks.connect(nonOwner).setMetaverseRegistryReferrers([mockERC721Registry.address], [listReferrer.address], [100_001]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when metaverse registry is 0x0', async () => {
                 const expectedRevertMessage = '_metaverseRegistry cannot be 0x0';
                 // when:
-                await expect(landWorks.setMetaverseRegistryReferrers([ethers.constants.AddressZero], [listReferrer.address], [3_000]))
+                await expect(landWorks.setMetaverseRegistryReferrers([ethers.constants.AddressZero], [listReferrer.address], [30_000]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when referrer is 0x0', async () => {
                 const expectedRevertMessage = '_referrer cannot be 0x0';
                 // when:
-                await expect(landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [ethers.constants.AddressZero], [3_000]))
+                await expect(landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [ethers.constants.AddressZero], [30_000]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
 
             it('should revert when caller is not owner, nor referral admin', async () => {
                 const expectedRevertMessage = 'caller is neither admin, nor owner';
                 // when:
-                await expect(landWorks.connect(consumer).setMetaverseRegistryReferrers([mockERC721Registry.address], [listReferrer.address], [3_000]))
+                await expect(landWorks.connect(consumer).setMetaverseRegistryReferrers([mockERC721Registry.address], [listReferrer.address], [30_000]))
                     .to.be.revertedWith(expectedRevertMessage);
             });
         });
 
         describe('', async () => {
-            const expectedClaimReferralFee = (expectedProtocolFee * listMainPercentage) / 10_000;
+            const expectedClaimReferralFee = (expectedProtocolFee * listMainPercentage) / 100_000;
 
             beforeEach(async () => {
                 await landWorks.setFee(ADDRESS_ONE, FEE_PERCENTAGE);
@@ -5873,7 +5873,7 @@ describe('LandWorks', function () {
             });
 
             describe('claimMultipleReferrerFees', async () => {
-                const expectedClaimReferralFee = (expectedProtocolFee * listMainPercentage) / 10_000;
+                const expectedClaimReferralFee = (expectedProtocolFee * listMainPercentage) / 100_000;
 
                 it('should successfully claim referrer fees', async () => {
                     // given:
@@ -5957,8 +5957,8 @@ describe('LandWorks', function () {
 
                 it('should successfully return the changed amount based on referral percentages', async () => {
                     // given:
-                    const totalRentReferralFee = Math.floor((expectedProtocolFee * rentMainPercentage) / 10_000);
-                    const discount = Math.floor((totalRentReferralFee * rentSecondaryPercentage) / 10_000);
+                    const totalRentReferralFee = Math.floor((expectedProtocolFee * rentMainPercentage) / 100_000);
+                    const discount = Math.floor((totalRentReferralFee * rentSecondaryPercentage) / 100_000);
                     const expectedRentFee = value - discount;
 
                     // when:
@@ -5996,19 +5996,19 @@ describe('LandWorks', function () {
 
                 it('should successfully rent with all referrers taking portions', async () => {
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [1_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [10_000]);
                     // and:
                     await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 1_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 10_000);
-                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 10_000);
+                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 100_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 100_000);
                     const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedProtocolFees = listAndRentReferrers - listReferralAmount - rentReferralAmount;
                     const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
@@ -6048,12 +6048,12 @@ describe('LandWorks', function () {
 
                 it('should rent successfully when metaverse registry referrer takes all even if referrers have percentages', async () => {
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [10_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [100_000]);
                     // and:
                     await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 100_000) / 100_000);
                     const expectedOwnerReward = rentAmount - protocolFees;
 
                     // when:
@@ -6086,19 +6086,19 @@ describe('LandWorks', function () {
                     // List Referrer - 50%, Lister - 50%
                     // Rent referrer - 50%, renter - 50%
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [5_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [50_000]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 5_000], [5_000, 5_000]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 50_000], [50_000, 50_000]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const listReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedListerAmount = Math.floor((listReferralAmount * 5_000) / 10_000);
+                    const listReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * 50_000) / 100_000);
                     const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 50_000) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
                     const expectedOwnerReward = rentAmount - protocolFees + expectedListerAmount;
@@ -6137,16 +6137,16 @@ describe('LandWorks', function () {
                     // List Referrer - 0%, lister - 0%
                     // Rent referrer - 50%, renter - 50%
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [5_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [50_000]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 5_000], [2_000, 5_000]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 50_000], [20_000, 50_000]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 50_000) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedOwnerReward = rentAmount - protocolFees;
                     const expectedProtocolFees = listAndRentReferrers - rentReferralAmount;
@@ -6185,11 +6185,11 @@ describe('LandWorks', function () {
                     // given:
                     await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [0]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 0], [0, 0]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 0], [0, 0]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
 
-                    const expectedlistReferralAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedlistReferralAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const expectedOwnerReward = rentAmount - protocolFees;
                     const expectedProtocolFees = protocolFees - expectedlistReferralAmount * 2; // potential leftovers
 
@@ -6259,19 +6259,19 @@ describe('LandWorks', function () {
 
                 it('should successfully rent with all referrers taking portions', async () => {
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [1_000]);
+                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [10_000]);
                     // and:
                     await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 1_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 10_000);
-                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 10_000);
+                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 100_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 100_000);
                     const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedProtocolFees = listAndRentReferrers - listReferralAmount - rentReferralAmount;
                     const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
@@ -6315,12 +6315,12 @@ describe('LandWorks', function () {
 
                 it('should rent successfully when metaverse registry referrer takes all even if referrers have percentages', async () => {
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [10_000]);
+                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [100_000]);
                     // and:
                     await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 100_000) / 100_000);
                     const expectedOwnerReward = rentAmount - protocolFees;
 
                     // when:
@@ -6357,19 +6357,19 @@ describe('LandWorks', function () {
                     // List Referrer - 50%, Lister - 50%
                     // Rent referrer - 50%, renter - 50%
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [5_000]);
+                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [50_000]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 5_000], [5_000, 5_000]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 50_000], [50_000, 50_000]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const listReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedListerAmount = Math.floor((listReferralAmount * 5_000) / 10_000);
+                    const listReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * 50_000) / 100_000);
                     const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 50_000) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
                     const expectedOwnerReward = rentAmount - protocolFees + expectedListerAmount;
@@ -6412,16 +6412,16 @@ describe('LandWorks', function () {
                     // List Referrer - 0%, lister - 0%
                     // Rent referrer - 50%, renter - 50%
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [5_000]);
+                    await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [50_000]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 5_000], [2_000, 5_000]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 50_000], [20_000, 50_000]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 50_000) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedOwnerReward = rentAmount - protocolFees;
                     const expectedProtocolFees = listAndRentReferrers - rentReferralAmount;
@@ -6464,11 +6464,11 @@ describe('LandWorks', function () {
                     // given:
                     await landWorks.setMetaverseRegistryReferrers([landRegistry.address], [consumer.address], [0]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 0], [0, 0]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 0], [0, 0]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
 
-                    const expectedlistReferralAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedlistReferralAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const expectedOwnerReward = rentAmount - protocolFees;
                     const expectedProtocolFees = protocolFees - expectedlistReferralAmount * 2; // potential leftovers
 
@@ -6560,19 +6560,19 @@ describe('LandWorks', function () {
 
                 it('should successfully rent with all referrers taking portions', async () => {
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [1_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [10_000]);
                     // and:
                     await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 1_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 10_000);
-                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 10_000);
+                    const listReferralAmount = Math.floor((listAndRentReferrers * listMainPercentage) / 100_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * listSecondaryPercentage) / 100_000);
                     const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * rentMainPercentage) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * rentSecondaryPercentage) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedProtocolFees = listAndRentReferrers - listReferralAmount - rentReferralAmount;
                     const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
@@ -6618,12 +6618,12 @@ describe('LandWorks', function () {
 
                 it('should rent successfully when metaverse registry referrer takes all even if referrers have percentages', async () => {
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [10_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [100_000]);
                     // and:
                     await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [listMainPercentage, rentMainPercentage], [listSecondaryPercentage, rentSecondaryPercentage]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 10_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 100_000) / 100_000);
                     const expectedOwnerReward = rentAmount - protocolFees;
 
                     // when:
@@ -6662,19 +6662,19 @@ describe('LandWorks', function () {
                     // List Referrer - 50%, Lister - 50%
                     // Rent referrer - 50%, renter - 50%
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [5_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [50_000]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 5_000], [5_000, 5_000]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 50_000], [50_000, 50_000]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const listReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedListerAmount = Math.floor((listReferralAmount * 5_000) / 10_000);
+                    const listReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedListerAmount = Math.floor((listReferralAmount * 50_000) / 100_000);
                     const expectedListReferrerAmount = listReferralAmount - expectedListerAmount;
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 50_000) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedTotalProtocolFees = protocolFees - expectedListerAmount;
                     const expectedOwnerReward = rentAmount - protocolFees + expectedListerAmount;
@@ -6719,16 +6719,16 @@ describe('LandWorks', function () {
                     // List Referrer - 0%, lister - 0%
                     // Rent referrer - 50%, renter - 50%
                     // given:
-                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [5_000]);
+                    await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [50_000]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 5_000], [2_000, 5_000]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [0, 50_000], [20_000, 50_000]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
-                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedMetaverseRegistryReferrerAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const listAndRentReferrers = protocolFees - expectedMetaverseRegistryReferrerAmount;
 
-                    const rentReferralAmount = Math.floor((listAndRentReferrers * 5_000) / 10_000);
-                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 5_000) / 10_000);
+                    const rentReferralAmount = Math.floor((listAndRentReferrers * 50_000) / 100_000);
+                    const expectedRenterDiscount = Math.floor((rentReferralAmount * 50_000) / 100_000);
                     const expectedRentReferrerAmount = rentReferralAmount - expectedRenterDiscount;
                     const expectedOwnerReward = rentAmount - protocolFees;
                     const expectedProtocolFees = listAndRentReferrers - rentReferralAmount;
@@ -6773,11 +6773,11 @@ describe('LandWorks', function () {
                     // given:
                     await landWorks.setMetaverseRegistryReferrers([mockERC721Registry.address], [consumer.address], [0]);
                     // and:
-                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [5_000, 0], [0, 0]);
+                    await landWorks.setReferrers([listReferrer.address, rentReferrer.address], [50_000, 0], [0, 0]);
                     const rentAmount = maxPeriod * pricePerSecond;
                     const protocolFees = Math.floor((rentAmount * FEE_PERCENTAGE) / FEE_PRECISION);
 
-                    const expectedlistReferralAmount = Math.floor((protocolFees * 5_000) / 10_000);
+                    const expectedlistReferralAmount = Math.floor((protocolFees * 50_000) / 100_000);
                     const expectedOwnerReward = rentAmount - protocolFees;
                     const expectedProtocolFees = protocolFees - expectedlistReferralAmount * 2; // potential leftovers
 
