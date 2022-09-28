@@ -229,9 +229,6 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             block.timestamp > ms.rents[_assetId][asset.totalRents].end,
             "_assetId has an active rent"
         );
-        LibMetaverseConsumableAdapter.MetaverseConsumableAdapterStorage
-            storage mcas = LibMetaverseConsumableAdapter
-                .metaverseConsumableAdapterStorage();
 
         updateAdapterAdministrativeOperator(
             _assetId,
