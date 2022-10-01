@@ -220,6 +220,36 @@ contract DecentralandFacet is IDecentralandFacet {
         emit UpdateAdministrativeState(_assetId, operator);
     }
 
+    /// @notice Clears the operators of Decentraland LANDs, which are part of a Decentraland Estate.
+    /// @dev LANDs' operators, which are part of an Estate, are not cleared upon Estate transfer.
+    /// The function's goal is to have the possibility to clear the operators of LANDs, which have been set
+    /// before the estate has been listed in LandWorks, otherwise whenever someone rents the estate, there might
+    /// be other operators, who can override the renter's scene.
+    /// @param _assetIds - The list of LandWorks asset ids.
+    /// @param _landIds - The list of landIds for each asset.
+    function clearEstateLANDOperators(
+        uint256[] memory _assetIds,
+        uint256[][] memory _landIds
+    ) external {
+        require(
+            _assetIds.length == _landIds.length,
+            "_assetIds and _landIds length must match"
+        );
+        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
+            .marketplaceStorage();
+
+        for (uint256 i = 0; i < _landIds.length; i++) {
+            LibMarketplace.Asset memory asset = ms.assets[_assetIds[i]];
+
+            IDecentralandRegistry(asset.metaverseRegistry)
+                .setManyLandUpdateOperator(
+                    asset.metaverseAssetId,
+                    _landIds[i],
+                    address(0)
+                );
+        }
+    }
+
     /// @notice Gets the administrative operator
     function administrativeOperator() external view returns (address) {
         return LibDecentraland.administrativeOperator();

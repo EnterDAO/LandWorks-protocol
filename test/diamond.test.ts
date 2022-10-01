@@ -3490,6 +3490,12 @@ describe('LandWorks', function () {
                         .to.be.revertedWith(expectedRevertMessage);
                 });
             });
+
+            it('should revert when trying to clear operators of a land registry', async () => {
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
+                // when:
+                await expect(landWorks.clearEstateLANDOperators([assetId], [landId])).to.be.reverted;
+            });
         });
 
         describe('updateState', async () => {
@@ -3764,13 +3770,18 @@ describe('LandWorks', function () {
 
                 const coordsX = [];
                 const coordsY = [];
+                const landIds = [];
                 for (let x = 1, y = x; x <= parcels; x++) {
+                    const landId = await landRegistry.encodeTokenId(x, y);
                     await landRegistry.assignNewParcel(x, y, owner.address);
                     coordsX.push(x);
                     coordsY.push(y);
+                    landIds.push(landId);
                 }
 
                 await landRegistry.createEstate(coordsX, coordsY, owner.address);
+
+                await estateRegistry.setManyLandUpdateOperator(estateId, landIds, landRegistry.address);
 
                 await estateRegistry.approve(landWorks.address, estateId);
 
@@ -3839,6 +3850,27 @@ describe('LandWorks', function () {
                     .withArgs(estateAssetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedRentFee, expectedProtocolFee)
                     .to.emit(landWorks, 'UpdateState')
                     .withArgs(estateAssetId, rentId, nonOwner.address);
+            });
+
+            it('should clear operators of LANDs inside an estate', async () => {
+                const estateAssetId = 1;
+                // given:
+                const lands = [];
+                const size = await estateRegistry.getEstateSize(estateId);
+                for (let i = 0; i < size.toNumber(); i++) {
+                    const landId = await estateRegistry.estateLandIds(estateId, i);
+                    expect(await landRegistry.updateOperator(landId)).to.not.equal(ethers.constants.AddressZero);
+                    lands.push(landId);
+                }
+
+                // when:
+                await landWorks.clearEstateLANDOperators([estateAssetId], [lands]);
+
+                // then:
+                for (let i = 0; i < size.toNumber(); i++) {
+                    const landId = await estateRegistry.estateLandIds(estateId, i);
+                    expect(await landRegistry.updateOperator(landId)).to.equal(ethers.constants.AddressZero);
+                }
             });
         });
     });
