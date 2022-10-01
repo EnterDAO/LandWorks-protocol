@@ -6098,11 +6098,11 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount);
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedListReferrerAmount);
@@ -6139,7 +6139,7 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount);
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
@@ -6186,11 +6186,11 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount);
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedListReferrerAmount);
@@ -6234,9 +6234,9 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount);
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(expectedMetaverseRegistryReferrerAmount);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(0);
@@ -6276,9 +6276,9 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedlistReferralAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount);
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedlistReferralAmount);
                     // and:
                     expect(await landWorks.referrerFee(consumer.address, ADDRESS_ONE)).to.equal(0);
                     expect(await landWorks.referrerFee(listReferrer.address, ADDRESS_ONE)).to.equal(expectedlistReferralAmount * 2);
@@ -6363,11 +6363,11 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount)
                         .to.emit(landWorks, 'UpdateState')
                         .withArgs(assetId, rentId, nonOwner.address);
                     // and:
@@ -6408,7 +6408,7 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'UpdateState')
                         .withArgs(assetId, rentId, nonOwner.address);
                     // and:
@@ -6459,11 +6459,11 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount)
                         .to.emit(landWorks, 'UpdateState')
                         .withArgs(assetId, rentId, nonOwner.address);
                     // and:
@@ -6511,9 +6511,9 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount)
                         .to.emit(landWorks, 'UpdateState')
                         .withArgs(assetId, rentId, nonOwner.address);
                     // and:
@@ -6557,9 +6557,9 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedlistReferralAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedlistReferralAmount)
                         .to.emit(landWorks, 'UpdateState')
                         .withArgs(assetId, rentId, nonOwner.address);
                     // and:
@@ -6662,11 +6662,11 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount)
                         .to.emit(landWorks, 'UpdateRentConsumer')
                         .withArgs(assetId, rentId, nonOwner.address)
                         .to.emit(landWorks, 'UpdateAdapterConsumer')
@@ -6709,7 +6709,7 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'UpdateRentConsumer')
                         .withArgs(assetId, rentId, nonOwner.address)
                         .to.emit(landWorks, 'UpdateAdapterConsumer')
@@ -6762,11 +6762,11 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, 0)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedListReferrerAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedListReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount)
                         .to.emit(landWorks, 'UpdateRentConsumer')
                         .withArgs(assetId, rentId, nonOwner.address)
                         .to.emit(landWorks, 'UpdateAdapterConsumer')
@@ -6816,9 +6816,9 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, consumer.address, expectedMetaverseRegistryReferrerAmount)
+                        .withArgs(assetId, rentId, consumer.address, ADDRESS_ONE, expectedMetaverseRegistryReferrerAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, rentReferrer.address, expectedRentReferrerAmount)
+                        .withArgs(assetId, rentId, rentReferrer.address, ADDRESS_ONE, expectedRentReferrerAmount)
                         .to.emit(landWorks, 'UpdateRentConsumer')
                         .withArgs(assetId, rentId, nonOwner.address)
                         .to.emit(landWorks, 'UpdateAdapterConsumer')
@@ -6864,9 +6864,9 @@ describe('LandWorks', function () {
                         .to.emit(landWorks, 'Rent')
                         .withArgs(assetId, rentId, nonOwner.address, start, end, ADDRESS_ONE, expectedOwnerReward, expectedProtocolFees)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedlistReferralAmount)
                         .to.emit(landWorks, 'AccrueReferralFee')
-                        .withArgs(assetId, rentId, listReferrer.address, expectedlistReferralAmount)
+                        .withArgs(assetId, rentId, listReferrer.address, ADDRESS_ONE, expectedlistReferralAmount)
                         .to.emit(landWorks, 'UpdateRentConsumer')
                         .withArgs(assetId, rentId, nonOwner.address)
                         .to.emit(landWorks, 'UpdateAdapterConsumer')

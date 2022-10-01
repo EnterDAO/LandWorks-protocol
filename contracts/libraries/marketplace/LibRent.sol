@@ -28,6 +28,7 @@ library LibRent {
         uint256 indexed _assetId,
         uint256 _rentId,
         address indexed _referrer,
+        address indexed _paymentToken,
         uint256 _fee
     );
 
@@ -206,6 +207,7 @@ library LibRent {
                     params.assetId,
                     params.rentId,
                     mrr.referrer,
+                    params.paymentToken,
                     metaverseReferralAmount
                 );
             }
@@ -238,6 +240,7 @@ library LibRent {
                             params.assetId,
                             params.rentId,
                             listReferrer,
+                            params.paymentToken,
                             referrerFee
                         );
                     }
@@ -266,6 +269,7 @@ library LibRent {
                         params.assetId,
                         params.rentId,
                         params.rentReferrer,
+                        params.paymentToken,
                         referrerFee
                     );
                 }

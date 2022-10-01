@@ -7,6 +7,7 @@ interface IRentable {
         uint256 indexed _assetId,
         uint256 _rentId,
         address indexed _referrer,
+        address indexed _paymentToken,
         uint256 _fee
     );
 
