@@ -108,8 +108,7 @@ interface IMetaverseConsumableAdapterFacet {
     ) external payable;
 
     /// @notice Updates the consumer for the given rent of an asset
-    /// @dev If the current rent is active, after you update the consumer,
-    /// you will need to update the consumer in the metaverse consumable adapter as well.
+    /// @dev If the rent is active, it updates the metaverse consumable adapter consumer as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newConsumer The to-be-set new consumer

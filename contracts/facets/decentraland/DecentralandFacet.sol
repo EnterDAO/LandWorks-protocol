@@ -118,18 +118,11 @@ contract DecentralandFacet is IDecentralandFacet {
             block.timestamp < rent.end,
             "block timestamp more than or equal to rent end"
         );
-
-        LibMarketplace.Asset memory asset = ms.assets[_assetId];
         address operator = LibDecentraland.decentralandStorage().operators[
             _assetId
         ][_rentId];
 
-        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
-            asset.metaverseAssetId,
-            operator
-        );
-
-        emit UpdateState(_assetId, _rentId, operator);
+        updateState(_assetId, _rentId, operator);
     }
 
     /// @notice Updates the corresponding Estate/LAND operator with the administrative operator
@@ -153,6 +146,7 @@ contract DecentralandFacet is IDecentralandFacet {
     }
 
     /// @notice Updates the operator for the given rent of an asset
+    /// @dev If the rent is active, it updates the corresponding Estate/LAND scene registry operator as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newOperator The to-be-set new operator
@@ -171,8 +165,28 @@ contract DecentralandFacet is IDecentralandFacet {
             "caller is not renter"
         );
         LibDecentraland.setOperator(_assetId, _rentId, _newOperator);
-
         emit UpdateOperator(_assetId, _rentId, _newOperator);
+
+        LibMarketplace.Rent memory rent = ms.rents[_assetId][_rentId];
+        if (block.timestamp >= rent.start && block.timestamp < rent.end) {
+            updateState(_assetId, _rentId, _newOperator);
+        }
+    }
+
+    function updateState(
+        uint256 _assetId,
+        uint256 _rentId,
+        address _operator
+    ) internal {
+        LibMarketplace.Asset memory asset = LibMarketplace
+            .marketplaceStorage()
+            .assets[_assetId];
+        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
+            asset.metaverseAssetId,
+            _operator
+        );
+
+        emit UpdateState(_assetId, _rentId, _operator);
     }
 
     /// @notice Updates the administrative operator

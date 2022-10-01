@@ -3667,7 +3667,27 @@ describe('LandWorks', function () {
                 await expect(landWorks.connect(nonOwner)
                     .updateOperator(assetId, rentId, artificialRegistry.address))
                     .to.emit(landWorks, 'UpdateOperator')
-                    .withArgs(assetId, rentId, artificialRegistry.address);
+                    .withArgs(assetId, rentId, artificialRegistry.address)
+                    .to.not.emit(landWorks, 'UpdateState');
+            });
+
+            it('should update the LAND registry state when the rent is active', async () => {
+                const landId = (await landWorks.assetAt(assetId)).metaverseAssetId;
+                const paymentValue = value * maxPeriod;
+                // given:
+                await landWorks
+                    .connect(nonOwner)
+                    .rentDecentraland(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, paymentValue, ethers.constants.AddressZero, { value: paymentValue });
+
+                // when:
+                await expect(landWorks.connect(nonOwner)
+                    .updateOperator(assetId, rentId, artificialRegistry.address))
+                    .to.emit(landWorks, 'UpdateOperator')
+                    .withArgs(assetId, rentId, artificialRegistry.address)
+                    .to.emit(landWorks, 'UpdateState')
+                    .withArgs(assetId, rentId, artificialRegistry.address)
+                    .to.emit(landRegistry, 'UpdateOperator')
+                    .withArgs(landId, artificialRegistry.address);
             });
 
             it('should revert when operator is 0x0', async () => {
@@ -4815,6 +4835,24 @@ describe('LandWorks', function () {
                         .withArgs(assetId, rentId, artificialRegistry.address)
                         .to.not.emit(landWorks, 'UpdateAdapterConsumer')
                         .to.not.emit(metaverseAdapter, 'ConsumerChanged');
+                });
+
+                it('should update the metaverse consumable adapter when the rent is active', async () => {
+                    const paymentValue = maxPeriod * value;
+                    // given:
+                    await landWorks
+                        .connect(nonOwner)
+                        .rentWithConsumer(assetId, maxPeriod, MAX_RENT_START, nonOwner.address, ADDRESS_ONE, paymentValue, ethers.constants.AddressZero, { value: paymentValue });
+
+                    // when:
+                    await expect(landWorks.connect(nonOwner)
+                        .updateConsumer(assetId, rentId, artificialRegistry.address))
+                        .to.emit(landWorks, 'UpdateRentConsumer')
+                        .withArgs(assetId, rentId, artificialRegistry.address)
+                        .to.emit(landWorks, 'UpdateAdapterConsumer')
+                        .withArgs(assetId, rentId, metaverseAdapter.address, artificialRegistry.address)
+                        .to.emit(metaverseAdapter, 'ConsumerChanged')
+                        .withArgs(landWorks.address, artificialRegistry.address, tokenID);
                 });
 
                 it('should revert when consumer is 0x0', async () => {

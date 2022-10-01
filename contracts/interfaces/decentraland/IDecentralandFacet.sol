@@ -83,6 +83,7 @@ interface IDecentralandFacet is IRentable {
     function updateAdministrativeState(uint256 _assetId) external;
 
     /// @notice Updates the operator for the given rent of an asset
+    /// @dev If the rent is active, it updates the corresponding Estate/LAND scene registry operator as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newOperator The to-be-set new operator

@@ -164,8 +164,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     }
 
     /// @notice Updates the consumer for the given rent of an asset
-    /// @dev If the current rent is active, after you update the consumer,
-    /// you will need to update the consumer in the metaverse consumable adapter as well.
+    /// @dev If the rent is active, it updates the metaverse consumable adapter consumer as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newConsumer The to-be-set new consumer
@@ -188,6 +187,11 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             .consumers[_assetId][_rentId] = _newConsumer;
 
         emit UpdateRentConsumer(_assetId, _rentId, _newConsumer);
+
+        LibMarketplace.Rent memory rent = ms.rents[_assetId][_rentId];
+        if (block.timestamp >= rent.start && block.timestamp < rent.end) {
+            updateAdapterConsumer(_assetId, _rentId, _newConsumer);
+        }
     }
 
     /// @notice Updates the consumer for the given asset in the metaverse consumable adapter with rent's provided consumer.
