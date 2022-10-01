@@ -4,10 +4,64 @@ pragma solidity 0.8.10;
 import "../../interfaces/decentraland/IDecentralandFacet.sol";
 import "../../interfaces/decentraland/IDecentralandRegistry.sol";
 import "../../libraries/LibOwnership.sol";
-import "../../libraries/marketplace/LibRent.sol";
 import "../../libraries/marketplace/LibDecentraland.sol";
+import "../../libraries/marketplace/LibList.sol";
+import "../../libraries/marketplace/LibRent.sol";
 
 contract DecentralandFacet is IDecentralandFacet {
+    /// @notice Provides asset of the given metaverse registry for rental.
+    /// Transfers and locks the provided metaverse asset to the contract.
+    /// and mints an asset, representing the locked asset.
+    /// Listing with a referrer might lead to additional rewards upon rents.
+    /// Additional reward may vary depending on the referrer's requested portion for listers.
+    /// If the referrer is blacklisted after the listing,
+    /// listers will not receive additional rewards.
+    /// See {IReferralFacet-setMetaverseRegistryReferrers}, {IReferralFacet-setReferrers}.
+    /// Updates the corresponding Estate/LAND operator with the administrative operator.
+    /// @param _metaverseId The id of the metaverse
+    /// @param _metaverseRegistry The registry of the metaverse
+    /// @param _metaverseAssetId The id from the metaverse registry
+    /// @param _minPeriod The minimum number of time (in seconds) the asset can be rented
+    /// @param _maxPeriod The maximum number of time (in seconds) the asset can be rented
+    /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
+    /// the asset to be rented at an any given moment.
+    /// @param _paymentToken The token which will be accepted as a form of payment.
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH.
+    /// @param _pricePerSecond The price for rental per second
+    /// @param _referrer The target referrer
+    /// @return The newly created asset id.
+    function listDecentraland(
+        uint256 _metaverseId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId,
+        uint256 _minPeriod,
+        uint256 _maxPeriod,
+        uint256 _maxFutureTime,
+        address _paymentToken,
+        uint256 _pricePerSecond,
+        address _referrer
+    ) external returns (uint256) {
+        uint256 assetId = LibList.list(
+            _metaverseId,
+            _metaverseRegistry,
+            _metaverseAssetId,
+            _minPeriod,
+            _maxPeriod,
+            _maxFutureTime,
+            _paymentToken,
+            _pricePerSecond,
+            _referrer
+        );
+
+        updateAdministrativeOperator(
+            assetId,
+            _metaverseRegistry,
+            _metaverseAssetId
+        );
+
+        return assetId;
+    }
+
     /// @notice Rents Decentraland Estate/LAND.
     /// @param _assetId The target asset
     /// @param _period The target period of the rental
@@ -64,18 +118,11 @@ contract DecentralandFacet is IDecentralandFacet {
             block.timestamp < rent.end,
             "block timestamp more than or equal to rent end"
         );
-
-        LibMarketplace.Asset memory asset = ms.assets[_assetId];
         address operator = LibDecentraland.decentralandStorage().operators[
             _assetId
         ][_rentId];
 
-        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
-            asset.metaverseAssetId,
-            operator
-        );
-
-        emit UpdateState(_assetId, _rentId, operator);
+        updateState(_assetId, _rentId, operator);
     }
 
     /// @notice Updates the corresponding Estate/LAND operator with the administrative operator
@@ -91,17 +138,15 @@ contract DecentralandFacet is IDecentralandFacet {
             "_assetId has an active rent"
         );
 
-        address operator = LibDecentraland
-            .decentralandStorage()
-            .administrativeOperator;
-        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
-            asset.metaverseAssetId,
-            operator
+        updateAdministrativeOperator(
+            _assetId,
+            asset.metaverseRegistry,
+            asset.metaverseAssetId
         );
-        emit UpdateAdministrativeState(_assetId, operator);
     }
 
     /// @notice Updates the operator for the given rent of an asset
+    /// @dev If the rent is active, it updates the corresponding Estate/LAND scene registry operator as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newOperator The to-be-set new operator
@@ -120,8 +165,28 @@ contract DecentralandFacet is IDecentralandFacet {
             "caller is not renter"
         );
         LibDecentraland.setOperator(_assetId, _rentId, _newOperator);
-
         emit UpdateOperator(_assetId, _rentId, _newOperator);
+
+        LibMarketplace.Rent memory rent = ms.rents[_assetId][_rentId];
+        if (block.timestamp >= rent.start && block.timestamp < rent.end) {
+            updateState(_assetId, _rentId, _newOperator);
+        }
+    }
+
+    function updateState(
+        uint256 _assetId,
+        uint256 _rentId,
+        address _operator
+    ) internal {
+        LibMarketplace.Asset memory asset = LibMarketplace
+            .marketplaceStorage()
+            .assets[_assetId];
+        IDecentralandRegistry(asset.metaverseRegistry).setUpdateOperator(
+            asset.metaverseAssetId,
+            _operator
+        );
+
+        emit UpdateState(_assetId, _rentId, _operator);
     }
 
     /// @notice Updates the administrative operator
@@ -138,6 +203,21 @@ contract DecentralandFacet is IDecentralandFacet {
         LibDecentraland.setAdministrativeOperator(_administrativeOperator);
 
         emit UpdateAdministrativeOperator(_administrativeOperator);
+    }
+
+    function updateAdministrativeOperator(
+        uint256 _assetId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId
+    ) internal {
+        address operator = LibDecentraland
+            .decentralandStorage()
+            .administrativeOperator;
+        IDecentralandRegistry(_metaverseRegistry).setUpdateOperator(
+            _metaverseAssetId,
+            operator
+        );
+        emit UpdateAdministrativeState(_assetId, operator);
     }
 
     /// @notice Clears the operators of Decentraland LANDs, which are part of a Decentraland Estate.

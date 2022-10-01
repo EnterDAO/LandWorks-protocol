@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import "../interfaces/IERC721Consumable.sol";
 import "../interfaces/IMetaverseConsumableAdapterFacet.sol";
 import "../libraries/LibOwnership.sol";
+import "../libraries/marketplace/LibList.sol";
 import "../libraries/marketplace/LibMetaverseConsumableAdapter.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibRent.sol";
@@ -12,6 +13,59 @@ import "../libraries/marketplace/LibRent.sol";
 /// with metaverses having an external consumable adapter, used
 /// to store consumers of LandWorks NFTs upon rentals.
 contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
+    /// @notice Provides asset of the given metaverse registry for rental.
+    /// Transfers and locks the provided metaverse asset to the contract.
+    /// and mints an asset, representing the locked asset.
+    /// Listing with a referrer might lead to additional rewards upon rents.
+    /// Additional reward may vary depending on the referrer's requested portion for listers.
+    /// If the referrer is blacklisted after the listing,
+    /// listers will not receive additional rewards.
+    /// See {IReferralFacet-setMetaverseRegistryReferrers}, {IReferralFacet-setReferrers}.
+    /// Updates the corresponding Metaverse Consumer Adapter with the administrative operator.
+    /// @param _metaverseId The id of the metaverse
+    /// @param _metaverseRegistry The registry of the metaverse
+    /// @param _metaverseAssetId The id from the metaverse registry
+    /// @param _minPeriod The minimum number of time (in seconds) the asset can be rented
+    /// @param _maxPeriod The maximum number of time (in seconds) the asset can be rented
+    /// @param _maxFutureTime The timestamp delta after which the protocol will not allow
+    /// the asset to be rented at an any given moment.
+    /// @param _paymentToken The token which will be accepted as a form of payment.
+    /// Provide 0x0000000000000000000000000000000000000001 for ETH.
+    /// @param _pricePerSecond The price for rental per second
+    /// @param _referrer The target referrer
+    /// @return The newly created asset id.
+    function listWithConsumableAdapter(
+        uint256 _metaverseId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId,
+        uint256 _minPeriod,
+        uint256 _maxPeriod,
+        uint256 _maxFutureTime,
+        address _paymentToken,
+        uint256 _pricePerSecond,
+        address _referrer
+    ) external returns (uint256) {
+        uint256 assetId = LibList.list(
+            _metaverseId,
+            _metaverseRegistry,
+            _metaverseAssetId,
+            _minPeriod,
+            _maxPeriod,
+            _maxFutureTime,
+            _paymentToken,
+            _pricePerSecond,
+            _referrer
+        );
+
+        updateAdapterAdministrativeOperator(
+            assetId,
+            _metaverseRegistry,
+            _metaverseAssetId
+        );
+
+        return assetId;
+    }
+
     /// @notice Sets the metaverse consumable adapter
     /// @param _metaverseRegistry The target metaverse registry (token address)
     /// @param _consumableAdapter The address of the consumable adapter
@@ -110,8 +164,7 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     }
 
     /// @notice Updates the consumer for the given rent of an asset
-    /// @dev If the current rent is active, after you update the consumer,
-    /// you will need to update the consumer in the metaverse consumable adapter as well.
+    /// @dev If the rent is active, it updates the metaverse consumable adapter consumer as well.
     /// @param _assetId The target asset
     /// @param _rentId The target rent for the asset
     /// @param _newConsumer The to-be-set new consumer
@@ -134,6 +187,11 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             .consumers[_assetId][_rentId] = _newConsumer;
 
         emit UpdateRentConsumer(_assetId, _rentId, _newConsumer);
+
+        LibMarketplace.Rent memory rent = ms.rents[_assetId][_rentId];
+        if (block.timestamp >= rent.start && block.timestamp < rent.end) {
+            updateAdapterConsumer(_assetId, _rentId, _newConsumer);
+        }
     }
 
     /// @notice Updates the consumer for the given asset in the metaverse consumable adapter with rent's provided consumer.
@@ -175,20 +233,26 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
             block.timestamp > ms.rents[_assetId][asset.totalRents].end,
             "_assetId has an active rent"
         );
+
+        updateAdapterAdministrativeOperator(
+            _assetId,
+            asset.metaverseRegistry,
+            asset.metaverseAssetId
+        );
+    }
+
+    function updateAdapterAdministrativeOperator(
+        uint256 _assetId,
+        address _metaverseRegistry,
+        uint256 _metaverseAssetId
+    ) internal {
         LibMetaverseConsumableAdapter.MetaverseConsumableAdapterStorage
             storage mcas = LibMetaverseConsumableAdapter
                 .metaverseConsumableAdapterStorage();
 
-        address consumer = mcas.administrativeConsumers[
-            asset.metaverseRegistry
-        ];
-
-        address adapter = mcas.consumableAdapters[asset.metaverseRegistry];
-
-        IERC721Consumable(adapter).changeConsumer(
-            consumer,
-            asset.metaverseAssetId
-        );
+        address consumer = mcas.administrativeConsumers[_metaverseRegistry];
+        address adapter = mcas.consumableAdapters[_metaverseRegistry];
+        IERC721Consumable(adapter).changeConsumer(consumer, _metaverseAssetId);
 
         emit UpdateAdapterAdministrativeConsumer(_assetId, adapter, consumer);
     }
