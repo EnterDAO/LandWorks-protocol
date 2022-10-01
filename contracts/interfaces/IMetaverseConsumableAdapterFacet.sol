@@ -97,6 +97,8 @@ interface IMetaverseConsumableAdapterFacet {
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     /// @param _referrer The target referrer
+    /// @return rentId_ The id of the rent for the target asset
+    /// @return rentStartsNow_ Whether the rents begins in the current block
     function rentWithConsumer(
         uint256 _assetId,
         uint256 _period,
@@ -105,7 +107,7 @@ interface IMetaverseConsumableAdapterFacet {
         address _paymentToken,
         uint256 _amount,
         address _referrer
-    ) external payable;
+    ) external payable returns (uint256 rentId_, bool rentStartsNow_);
 
     /// @notice Updates the consumer for the given rent of an asset
     /// @dev If the rent is active, it updates the metaverse consumable adapter consumer as well.

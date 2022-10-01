@@ -130,6 +130,8 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     /// @param _referrer The target referrer
+    /// @return rentId_ The id of the rent for the target asset
+    /// @return rentStartsNow_ Whether the rents begins in the current block
     function rentWithConsumer(
         uint256 _assetId,
         uint256 _period,
@@ -138,10 +140,10 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
         address _paymentToken,
         uint256 _amount,
         address _referrer
-    ) public payable {
+    ) public payable returns (uint256 rentId_, bool rentStartsNow_) {
         require(_consumer != address(0), "_consumer must not be 0x0");
 
-        (uint256 rentId, bool rentStartsNow) = LibRent.rent(
+        (rentId_, rentStartsNow_) = LibRent.rent(
             LibRent.RentParams({
                 _assetId: _assetId,
                 _period: _period,
@@ -154,12 +156,12 @@ contract MetaverseConsumableAdapterFacet is IMetaverseConsumableAdapterFacet {
 
         LibMetaverseConsumableAdapter
             .metaverseConsumableAdapterStorage()
-            .consumers[_assetId][rentId] = _consumer;
+            .consumers[_assetId][rentId_] = _consumer;
 
-        emit UpdateRentConsumer(_assetId, rentId, _consumer);
+        emit UpdateRentConsumer(_assetId, rentId_, _consumer);
 
-        if (rentStartsNow) {
-            updateAdapterConsumer(_assetId, rentId, _consumer);
+        if (rentStartsNow_) {
+            updateAdapterConsumer(_assetId, rentId_, _consumer);
         }
     }
 

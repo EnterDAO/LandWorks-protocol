@@ -70,6 +70,8 @@ contract DecentralandFacet is IDecentralandFacet {
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     /// @param _referrer The target referrer
+    /// @return rentId_ The id of the rent for the target asset
+    /// @return rentStartsNow_ Whether the rents begins in the current block
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
@@ -78,10 +80,10 @@ contract DecentralandFacet is IDecentralandFacet {
         address _paymentToken,
         uint256 _amount,
         address _referrer
-    ) external payable {
+    ) external payable returns (uint256 rentId_, bool rentStartsNow_) {
         require(_operator != address(0), "_operator must not be 0x0");
 
-        (uint256 rentId, bool rentStartsNow) = LibRent.rent(
+        (rentId_, rentStartsNow_) = LibRent.rent(
             LibRent.RentParams({
                 _assetId: _assetId,
                 _period: _period,
@@ -91,11 +93,11 @@ contract DecentralandFacet is IDecentralandFacet {
                 _referrer: _referrer
             })
         );
-        LibDecentraland.setOperator(_assetId, rentId, _operator);
-        emit UpdateOperator(_assetId, rentId, _operator);
+        LibDecentraland.setOperator(_assetId, rentId_, _operator);
+        emit UpdateOperator(_assetId, rentId_, _operator);
 
-        if (rentStartsNow) {
-            updateState(_assetId, rentId);
+        if (rentStartsNow_) {
+            updateState(_assetId, rentId_);
         }
     }
 

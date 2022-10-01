@@ -61,6 +61,8 @@ interface IDecentralandFacet is IRentable {
     /// @param _paymentToken The current payment token for the asset
     /// @param _amount The target amount to be paid for the rent
     /// @param _referrer The target referrer
+    /// @return rentId_ The id of the rent for the target asset
+    /// @return rentStartsNow_ Whether the rents begins in the current block
     function rentDecentraland(
         uint256 _assetId,
         uint256 _period,
@@ -69,7 +71,7 @@ interface IDecentralandFacet is IRentable {
         address _paymentToken,
         uint256 _amount,
         address _referrer
-    ) external payable;
+    ) external payable returns (uint256 rentId_, bool rentStartsNow_);
 
     /// @notice Updates the corresponding Estate/LAND operator from the given rent.
     /// When the rent becomes active (the current block.timestamp is between the rent's start and end),
