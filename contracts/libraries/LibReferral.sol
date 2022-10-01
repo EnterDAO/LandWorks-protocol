@@ -12,16 +12,16 @@ library LibReferral {
         address referrer;
         // percentage from the rent protocol fee, which will be
         // accrued to the referrer
-        uint16 percentage;
+        uint24 percentage;
     }
 
     struct ReferrerPercentage {
         // Main referrer percentage, used as reward
         // for referrers + referees.
-        uint16 mainPercentage;
+        uint24 mainPercentage;
         // Secondary percentage, which is used to calculate
         // the reward for a given referee.
-        uint16 secondaryPercentage;
+        uint24 secondaryPercentage;
     }
 
     struct ReferralStorage {

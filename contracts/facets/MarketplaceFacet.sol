@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../interfaces/IERC721Consumable.sol";
 import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibERC721.sol";
-import "../libraries/LibTransfer.sol";
 import "../libraries/LibFee.sol";
+import "../libraries/LibTransfer.sol";
 import "../libraries/LibOwnership.sol";
 import "../libraries/LibReferral.sol";
+import "../libraries/marketplace/LibList.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibMetaverseConsumableAdapter.sol";
 import "../shared/RentPayout.sol";
@@ -48,69 +49,18 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         uint256 _pricePerSecond,
         address _referrer
     ) external returns (uint256) {
-        require(
-            _metaverseRegistry != address(0),
-            "_metaverseRegistry must not be 0x0"
-        );
-        require(
-            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
-            "_registry not supported"
-        );
-        require(_minPeriod != 0, "_minPeriod must not be 0");
-        require(_maxPeriod != 0, "_maxPeriod must not be 0");
-        require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
-        require(
-            _maxPeriod <= _maxFutureTime,
-            "_maxPeriod more than _maxFutureTime"
-        );
-        require(
-            LibFee.supportsTokenPayment(_paymentToken),
-            "payment type not supported"
-        );
-        if (_referrer != address(0)) {
-            LibReferral.ReferrerPercentage memory rp = LibReferral
-                .referralStorage()
-                .referrerPercentages[_referrer];
-            require(rp.mainPercentage > 0, "_referrer not whitelisted");
-        }
-
-        uint256 asset = LibERC721.safeMint(msg.sender);
-        {
-            LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-                .marketplaceStorage();
-            ms.assets[asset] = LibMarketplace.Asset({
-                metaverseId: _metaverseId,
-                metaverseRegistry: _metaverseRegistry,
-                metaverseAssetId: _metaverseAssetId,
-                paymentToken: _paymentToken,
-                minPeriod: _minPeriod,
-                maxPeriod: _maxPeriod,
-                maxFutureTime: _maxFutureTime,
-                pricePerSecond: _pricePerSecond,
-                status: LibMarketplace.AssetStatus.Listed,
-                totalRents: 0
-            });
-            LibReferral.referralStorage().listReferrer[asset] = _referrer;
-
-            LibTransfer.erc721SafeTransferFrom(
+        return
+            LibList.list(
+                _metaverseId,
                 _metaverseRegistry,
-                msg.sender,
-                address(this),
-                _metaverseAssetId
+                _metaverseAssetId,
+                _minPeriod,
+                _maxPeriod,
+                _maxFutureTime,
+                _paymentToken,
+                _pricePerSecond,
+                _referrer
             );
-        }
-        emit List(
-            asset,
-            _metaverseId,
-            _metaverseRegistry,
-            _metaverseAssetId,
-            _minPeriod,
-            _maxPeriod,
-            _maxFutureTime,
-            _paymentToken,
-            _pricePerSecond
-        );
-        return asset;
     }
 
     /// @notice Updates the lending conditions for a given asset.

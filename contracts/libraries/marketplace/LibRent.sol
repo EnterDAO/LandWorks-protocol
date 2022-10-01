@@ -14,8 +14,6 @@ import "../marketplace/LibMarketplace.sol";
 library LibRent {
     using SafeERC20 for IERC20;
 
-    address constant ETHEREUM_PAYMENT_TOKEN = address(1);
-
     event Rent(
         uint256 indexed _assetId,
         uint256 _rentId,
@@ -150,13 +148,13 @@ library LibRent {
         );
 
         require(rentParams._amount == rds.renterCost, "invalid _amount");
-        if (asset.paymentToken == ETHEREUM_PAYMENT_TOKEN) {
+        if (asset.paymentToken == LibTransfer.ETHEREUM_PAYMENT_TOKEN) {
             require(msg.value == rds.renterCost, "invalid msg.value");
         } else {
             require(msg.value == 0, "invalid token msg.value");
         }
 
-        if (asset.paymentToken != ETHEREUM_PAYMENT_TOKEN) {
+        if (asset.paymentToken != LibTransfer.ETHEREUM_PAYMENT_TOKEN) {
             LibTransfer.safeTransferFrom(
                 asset.paymentToken,
                 msg.sender,
@@ -198,7 +196,7 @@ library LibRent {
 
             if (mrr.percentage > 0) {
                 uint256 metaverseReferralAmount = (rds.protocolFee *
-                    mrr.percentage) / 10_000;
+                    mrr.percentage) / LibFee.FEE_PRECISION;
                 rs.referrerFees[mrr.referrer][
                     params.paymentToken
                 ] += metaverseReferralAmount;
@@ -224,11 +222,11 @@ library LibRent {
 
                     if (rp.mainPercentage > 0) {
                         uint256 totalReferralFee = (referralFeesLeft *
-                            rp.mainPercentage) / 10_000;
+                            rp.mainPercentage) / LibFee.FEE_PRECISION;
                         rds.protocolFee -= totalReferralFee;
 
                         uint256 listerFee = (totalReferralFee *
-                            rp.secondaryPercentage) / 10_000;
+                            rp.secondaryPercentage) / LibFee.FEE_PRECISION;
                         rds.listerReward += listerFee;
 
                         uint256 referrerFee = totalReferralFee - listerFee;
@@ -252,11 +250,11 @@ library LibRent {
                         .referrerPercentages[params.rentReferrer];
 
                     uint256 totalReferralFee = (referralFeesLeft *
-                        rp.mainPercentage) / 10_000;
+                        rp.mainPercentage) / LibFee.FEE_PRECISION;
                     rds.protocolFee -= totalReferralFee;
 
                     uint256 renterDiscount = (totalReferralFee *
-                        rp.secondaryPercentage) / 10_000;
+                        rp.secondaryPercentage) / LibFee.FEE_PRECISION;
                     rds.renterCost -= renterDiscount;
 
                     uint256 referrerFee = totalReferralFee - renterDiscount;
