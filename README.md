@@ -47,6 +47,21 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `ERC721OldHolder`: `0x3a754461f1b447a81D486B6d91821cbD983d86D5`
 - `LandWorks (Diamond)`: `0x1B39D334302e1F077442516488300a860C8cfC14`
 
+**Testnet Goerli Deployment Addresses**
+- `DiamondCutFacet`: `0x7d94Fd5A9a0B4615F9d1F555163a328F98EA2e46`
+- `DiamondLoupeFacet`: `0xEbDe2689E58f3af999953599CE830E63546100e3`
+- `OwnershipFacet`: `0xe55eED84655865fB7254c027ebeC3E5b4B4F0239`
+- `FeeFacet`: `0x0bF300BdE4ed60746937756A52e5F31A775Ee5A2`
+- `ERC-721Facet`: `0xeD8850710A4f41832085F78851f8573fbdd83348`
+- `MarketplaceFacet`: `0xf6f8C195Ff2976524858eff94295eEB0d37B9e98`
+- `DecentralandFacet`: `0x1da4DC5a26AEeD97F8E2bFE144AcAD8656746873`
+- `MetaverseAdditionFacet`: `0x504ca85285AcF6Ed39420bbD4e5b6ba0c3616FE4`
+- `MetaverseConsumableAdapterFacet`: `0x171fb4d69Af1965F8131bb6Df660781BF14dB69D`
+- `RentFacet`: `0x7025c7Ec885546418b1516a0Fc19C2C93Ec8aB45`
+- `ReferralFacet`: `0xc838706b84401287B5f5B83268C231097718E971`
+- `ERC721OldHolder`: `0x32DA48F1e768101453e573404eb18c44f8c3318c`
+- `LandWorks (Diamond)`: `0x45fdD921951F34Aa44621A4F6f2b9fFc86ecb40B`
+
 ## Development
 
 [hardhat](https://hardhat.org/) - framework used for the development and testing of the contracts
