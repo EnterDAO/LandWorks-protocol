@@ -21,12 +21,14 @@ Audits on the LandWorks Protocol and Yield Farming contracts:
 - `DiamondCutFacet`: `0xd86a91c5a96adede0d79ae11c63541f336d48a08`
 - `DiamondLoupeFacet`: `0x1c2fe56a7fa18e08e2cf1e8ac8543b9b190d1be1`
 - `OwnershipFacet`: `0x620d20a801c4e3c3d83a88354cc57b904998d137`
-- `FeeFacet`: `0x6c567026f5a1cd09313170ec77adbbf08fa7f409`
-- `ERC-721Facet`: `0x4e0ea52c528647cec98e78cfc1770f9e4e814204`
-- `MarketplaceFacet`: `0xfc4F61e2B432deBe686b9B5Dd079a9CC8aA4b688`
-- `DecentralandFacet`: `0xaF0F14a7c001c77cf8FBA1f3ED68A14ae2Cf5aa8`
+- `FeeFacet`: `0xFd448dA43dC9Cb457E35Ac1BEf39670bCeEC350A`
+- `ERC-721Facet`: `0xD16efB45ac2b88Eb94970613397c87d256821281`
+- `MarketplaceFacet`: `0x51a3701e64c68bE650F2Fdb829BD3d62E7Fc9115`
+- `DecentralandFacet`: `0x9B7D1d4266887B24fd22c229F627459Cd116c32e`
 - `MetaverseAdditionFacet`: `0x8fb39Bb931AC9C124c068050087d54A551fca23b`
-- `MetaverseConsumableAdapterFacet`: `0x1d5f19451F230D47988546e181a7C3E34cf8AC67`
+- `MetaverseConsumableAdapterFacet`: `0xaDeB3078f47750f0b891E5c5F9beeF25a7eDAF89`
+- `RentFacet`: `0x0939feE48bd5e8CfC8A96a9Ecaf135C5b2b7943b`
+- `ReferralFacet`: `0xD207074184b6FddC0104d3CA093A94B005E21cA6`
 - `ERC721OldHolder`: `0x4a2B97c0f81B55C9bAFa6266E191B9B04741EA97`
 - `LandWorks (Diamond)`: `0x678D837fA15eba2B59f6CD5F9F4C580AC2Dfc269`
 
