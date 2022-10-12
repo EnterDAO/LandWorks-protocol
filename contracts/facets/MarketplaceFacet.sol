@@ -8,18 +8,24 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../interfaces/IERC721Consumable.sol";
 import "../interfaces/IMarketplaceFacet.sol";
 import "../libraries/LibERC721.sol";
-import "../libraries/LibTransfer.sol";
 import "../libraries/LibFee.sol";
+import "../libraries/LibTransfer.sol";
 import "../libraries/LibOwnership.sol";
+import "../libraries/LibReferral.sol";
+import "../libraries/marketplace/LibList.sol";
 import "../libraries/marketplace/LibMarketplace.sol";
 import "../libraries/marketplace/LibMetaverseConsumableAdapter.sol";
-import "../libraries/marketplace/LibRent.sol";
 import "../shared/RentPayout.sol";
 
 contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @notice Provides asset of the given metaverse registry for rental.
     /// Transfers and locks the provided metaverse asset to the contract.
     /// and mints an asset, representing the locked asset.
+    /// Listing with a referrer might lead to additional rewards upon rents.
+    /// Additional reward may vary depending on the referrer's requested portion for listers.
+    /// If the referrer is blacklisted after the listing,
+    /// listers will not receive additional rewards.
+    /// See {IReferralFacet-setMetaverseRegistryReferrers}, {IReferralFacet-setReferrers}.
     /// @param _metaverseId The id of the metaverse
     /// @param _metaverseRegistry The registry of the metaverse
     /// @param _metaverseAssetId The id from the metaverse registry
@@ -30,6 +36,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
     /// @param _paymentToken The token which will be accepted as a form of payment.
     /// Provide 0x0000000000000000000000000000000000000001 for ETH.
     /// @param _pricePerSecond The price for rental per second
+    /// @param _referrer The target referrer
     /// @return The newly created asset id.
     function list(
         uint256 _metaverseId,
@@ -39,64 +46,21 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         uint256 _maxPeriod,
         uint256 _maxFutureTime,
         address _paymentToken,
-        uint256 _pricePerSecond
+        uint256 _pricePerSecond,
+        address _referrer
     ) external returns (uint256) {
-        require(
-            _metaverseRegistry != address(0),
-            "_metaverseRegistry must not be 0x0"
-        );
-        require(
-            LibMarketplace.supportsRegistry(_metaverseId, _metaverseRegistry),
-            "_registry not supported"
-        );
-        require(_minPeriod != 0, "_minPeriod must not be 0");
-        require(_maxPeriod != 0, "_maxPeriod must not be 0");
-        require(_minPeriod <= _maxPeriod, "_minPeriod more than _maxPeriod");
-        require(
-            _maxPeriod <= _maxFutureTime,
-            "_maxPeriod more than _maxFutureTime"
-        );
-        require(
-            LibFee.supportsTokenPayment(_paymentToken),
-            "payment type not supported"
-        );
-
-        uint256 asset = LibERC721.safeMint(msg.sender);
-
-        LibMarketplace.MarketplaceStorage storage ms = LibMarketplace
-            .marketplaceStorage();
-        ms.assets[asset] = LibMarketplace.Asset({
-            metaverseId: _metaverseId,
-            metaverseRegistry: _metaverseRegistry,
-            metaverseAssetId: _metaverseAssetId,
-            paymentToken: _paymentToken,
-            minPeriod: _minPeriod,
-            maxPeriod: _maxPeriod,
-            maxFutureTime: _maxFutureTime,
-            pricePerSecond: _pricePerSecond,
-            status: LibMarketplace.AssetStatus.Listed,
-            totalRents: 0
-        });
-
-        LibTransfer.erc721SafeTransferFrom(
-            _metaverseRegistry,
-            msg.sender,
-            address(this),
-            _metaverseAssetId
-        );
-
-        emit List(
-            asset,
-            _metaverseId,
-            _metaverseRegistry,
-            _metaverseAssetId,
-            _minPeriod,
-            _maxPeriod,
-            _maxFutureTime,
-            _paymentToken,
-            _pricePerSecond
-        );
-        return asset;
+        return
+            LibList.list(
+                _metaverseId,
+                _metaverseRegistry,
+                _metaverseAssetId,
+                _minPeriod,
+                _maxPeriod,
+                _maxFutureTime,
+                _paymentToken,
+                _pricePerSecond,
+                _referrer
+            );
     }
 
     /// @notice Updates the lending conditions for a given asset.
@@ -203,6 +167,7 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         clearConsumer(asset);
 
         delete LibMarketplace.marketplaceStorage().assets[_assetId];
+        delete LibReferral.referralStorage().listReferrer[_assetId];
         address owner = LibERC721.ownerOf(_assetId);
         LibERC721.burn(_assetId);
 
@@ -214,33 +179,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         );
 
         emit Withdraw(_assetId, owner);
-    }
-
-    /// @notice Rents an asset for a given period.
-    /// Charges user for the rent upfront. Rent starts from the last rented timestamp
-    /// or from the current timestamp of the transaction.
-    /// @param _assetId The target asset
-    /// @param _period The target rental period (in seconds)
-    /// @param _maxRentStart The maximum rent start allowed for the given rent
-    /// @param _paymentToken The current payment token for the asset
-    /// @param _amount The target amount to be paid for the rent
-    function rent(
-        uint256 _assetId,
-        uint256 _period,
-        uint256 _maxRentStart,
-        address _paymentToken,
-        uint256 _amount
-    ) external payable returns (uint256, bool) {
-        (uint256 rentId, bool rentStartsNow) = LibRent.rent(
-            LibRent.RentParams({
-                _assetId: _assetId,
-                _period: _period,
-                _maxRentStart: _maxRentStart,
-                _paymentToken: _paymentToken,
-                _amount: _amount
-            })
-        );
-        return (rentId, rentStartsNow);
     }
 
     /// @notice Sets name for a given Metaverse.
@@ -322,17 +260,6 @@ contract MarketplaceFacet is IMarketplaceFacet, ERC721Holder, RentPayout {
         returns (LibMarketplace.Asset memory)
     {
         return LibMarketplace.assetAt(_assetId);
-    }
-
-    /// @notice Gets all data for a specific rent of an asset
-    /// @param _assetId The taget asset
-    /// @param _rentId The target rent
-    function rentAt(uint256 _assetId, uint256 _rentId)
-        external
-        view
-        returns (LibMarketplace.Rent memory)
-    {
-        return LibMarketplace.rentAt(_assetId, _rentId);
     }
 
     function clearConsumer(LibMarketplace.Asset memory asset) internal {

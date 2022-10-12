@@ -9,7 +9,9 @@ interface IFeeFacet {
 
     /// @notice Claims unclaimed rent fees for a given asset to asset owner
     /// @param _assetId The target asset
-    function claimRentFee(uint256 _assetId) external;
+    /// @return paymentToken_ The current asset payment token
+    /// @return rentFee_ The rent fee amount in the current payment token
+    function claimRentFee(uint256 _assetId) external returns (address paymentToken_, uint256 rentFee_);
 
     /// @notice Claims unclaimed rent fees for a set of assets to assets' owners
     /// @param _assetIds The array of assets

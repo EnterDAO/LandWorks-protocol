@@ -37,18 +37,41 @@ async function deploy() {
     const erc721Facet = await Deployer.deployContract('ERC721Facet');
     console.log(`ERC-721Facet deployed to: ${erc721Facet.address}`);
 
+    console.log('Deploying MetaverseAdditionFacet...');
+    const metaverseAdditionFacet = await Deployer.deployContract('MetaverseAdditionFacet');
+    console.log(`MetaverseAdditionFacet deployed to: ${metaverseAdditionFacet.address}`);
+
+    console.log('Deploying ERC721OldHolder...');
+    const erc721OldHolderFacet = await Deployer.deployContract('ERC721OldHolder');
+    console.log(`ERC721OldHolder deployed to: ${erc721OldHolderFacet.address}`);
+
     console.log('Deploying MarketplaceFacet...');
     const marketplaceFacet = await Deployer.deployContract('MarketplaceFacet');
     console.log(`MarketplaceFacet deployed to: ${marketplaceFacet.address}`);
+
+    console.log('Deploying MetaverseConsumableAdapterFacet...');
+    const metaverseConsumableAdapterFacet = await Deployer.deployContract('MetaverseConsumableAdapterFacet');
+    console.log(`MetaverseConsumableAdapterFacet deployed to: ${metaverseConsumableAdapterFacet.address}`);
 
     console.log('Deploying DecentralandFacet...');
     const decentralandFacet = await Deployer.deployContract('DecentralandFacet');
     console.log(`DecentralandFacet deployed to: ${decentralandFacet.address}`);
 
+    console.log('Deploying RentFacet...');
+    const rentFacet = await Deployer.deployContract('RentFacet');
+    console.log(`RentFacet deployed to: ${rentFacet.address}`);
+
+    console.log('Deploying ReferralFacet...');
+    const referralFacet = await Deployer.deployContract('ReferralFacet');
+    console.log(`ReferralFacet deployed to: ${referralFacet.address}`);
+
     console.log('Deploying LandWorks (Diamond)...');
     const diamond = await Deployer.deployDiamond(
         'LandWorks',
-        [cutFacet, loupeFacet, ownershipFacet, feeFacet, erc721Facet, marketplaceFacet, decentralandFacet],
+        [
+            cutFacet, loupeFacet, ownershipFacet, feeFacet, erc721Facet, metaverseAdditionFacet, erc721OldHolderFacet,
+            marketplaceFacet, metaverseConsumableAdapterFacet, decentralandFacet, rentFacet, referralFacet
+        ],
         deployerAddress,
     );
     console.log(`LandWorks (Diamond) deployed at: ${diamond.address}`);
@@ -93,9 +116,27 @@ async function deploy() {
         constructorArguments: []
     });
 
+    console.log('Verifying MetaverseAdditionFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: metaverseAdditionFacet.address,
+        constructorArguments: []
+    });
+
+    console.log('Verifying ERC721OldHolder on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: erc721OldHolderFacet.address,
+        constructorArguments: []
+    });
+
     console.log('Verifying MarketplaceFacet on Etherscan...');
     await hardhat.run('verify:verify', {
         address: marketplaceFacet.address,
+        constructorArguments: []
+    });
+
+    console.log('Verifying MetaverseConsumableAdapterFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: metaverseConsumableAdapterFacet.address,
         constructorArguments: []
     });
 
@@ -105,11 +146,27 @@ async function deploy() {
         constructorArguments: []
     });
 
+    console.log('Verifying RentFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: rentFacet.address,
+        constructorArguments: []
+    });
+
+    console.log('Verifying ReferralFacet on Etherscan...');
+    await hardhat.run('verify:verify', {
+        address: referralFacet.address,
+        constructorArguments: []
+    });
+
     console.log('Verifying LandWorks (Diamond) on Etherscan...');
     await hardhat.run('verify:verify', {
         address: diamond.address,
         constructorArguments: [
-            Diamond.getAsAddCuts([cutFacet, loupeFacet, ownershipFacet, feeFacet, erc721Facet, marketplaceFacet, decentralandFacet]),
+            Diamond.getAsAddCuts(
+                [
+                    cutFacet, loupeFacet, ownershipFacet, feeFacet, erc721Facet, metaverseAdditionFacet, erc721OldHolderFacet,
+                    marketplaceFacet, metaverseConsumableAdapterFacet, decentralandFacet, rentFacet, referralFacet
+                ]),
             deployerAddress
         ]
     });
@@ -120,8 +177,13 @@ async function deploy() {
     console.log('OwnershipFacet address: ', ownershipFacet.address);
     console.log('FeeFacet address: ', feeFacet.address);
     console.log('ERC-721Facet address: ', erc721Facet.address);
+    console.log('MetaverseAdditionFacet address: ', metaverseAdditionFacet.address);
+    console.log('ERC721OldHolder address', erc721OldHolderFacet.address);
     console.log('MarketplaceFacet address: ', marketplaceFacet.address);
+    console.log('MetaverseConsumableAdapterFacet address: ', metaverseConsumableAdapterFacet.address);
     console.log('DecentralandFacet address: ', decentralandFacet.address);
+    console.log('RentFacet address: ', rentFacet.address);
+    console.log('ReferralFacet address: ', referralFacet.address);
     console.log('LandWorks (Diamond) address: ', diamond.address);
 }
 

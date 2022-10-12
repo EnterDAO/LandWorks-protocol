@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Diamond } from '../utils/diamond';
 import { Deployer } from "../utils/deployer";
-import { ConsumableAdapterV1, Erc721Mock } from '../typechain';
+import { ConsumableAdapterV1, ERC721Mock } from '../typechain-types';
 
 describe('Consumable Adapter V1', function () {
 	let snapshotId: any;
@@ -11,7 +11,7 @@ describe('Consumable Adapter V1', function () {
 	let owner: SignerWithAddress; let landworks: SignerWithAddress;
 	let consumer: string;
 	let adapter: ConsumableAdapterV1;
-	let erc721Mock: Erc721Mock;
+	let erc721Mock: ERC721Mock;
 
 	before(async () => {
 		const signers = await ethers.getSigners();
@@ -19,7 +19,7 @@ describe('Consumable Adapter V1', function () {
 		landworks = signers[1];
 		consumer = signers[2].address;
 
-		erc721Mock = await Deployer.deployContract('ERC721Mock') as Erc721Mock;
+		erc721Mock = await Deployer.deployContract('ERC721Mock') as ERC721Mock;
 		adapter = await Deployer.deployContract("ConsumableAdapterV1", undefined, [landworks.address, erc721Mock.address]) as ConsumableAdapterV1;
 	});
 
